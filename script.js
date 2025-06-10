@@ -1,4 +1,4 @@
-// script.js
+// Constants and Data Structure
 const standardHeaders = [
     'EquipmentType', 'Vendor', 'BrandModel', 'AssetNo', 'SerialNumber',
     'Location', 'Room No', 'EndDate', 'StartDate'
@@ -11,29 +11,24 @@ const ssoeHeaders = [
 ];
 
 const equipmentTypes = [
-    'SSOE',
-    'Projector',
-    'Projector Screen',
-    'Visualiser',
-    'Apple TV',
-    'SMAX',
-    'Portable HDD',
-    'Macbook',
-    'TV',
-    'OMR'
+    'SSOE', 'Projector', 'Projector Screen', 'Visualiser', 'Apple TV',
+    'SMAX', 'Portable HDD', 'Macbook', 'TV', 'OMR'
 ];
 
 let inventory = [];
 
+// Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
     setupEventListeners();
 });
 
+// Event Listeners Setup
 function setupEventListeners() {
     document.getElementById('categoryFilter').addEventListener('change', filterInventory);
     document.getElementById('addNewBtn').addEventListener('click', showAddModal);
     document.getElementById('uploadBtn').addEventListener('click', handleCsvUpload);
+    setupSidebarListeners();
     
     window.addEventListener('click', (event) => {
         const modal = document.getElementById('itemModal');
@@ -48,6 +43,24 @@ function setupEventListeners() {
     });
 }
 
+function setupSidebarListeners() {
+    document.querySelectorAll('#sidebar a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const category = e.target.dataset.category;
+            
+            // Update active state
+            document.querySelectorAll('#sidebar li').forEach(li => li.classList.remove('active'));
+            e.target.parentElement.classList.add('active');
+            
+            // Update category filter and display
+            document.getElementById('categoryFilter').value = category;
+            filterInventory();
+        });
+    });
+}
+
+// Modal Functions
 function showAddModal() {
     const modal = document.getElementById('itemModal');
     const category = document.getElementById('categoryFilter').value;
@@ -73,7 +86,19 @@ function showAddModal() {
     };
 
     const form = document.getElementById('itemForm');
-    form.innerHTML = headers.map(header => {
+    form.innerHTML = generateFormFields(headers, fieldIcons);
+    
+    modal.style.display = 'block';
+    initializeDatePickers();
+
+    if (category !== 'all') {
+        const equipmentTypeSelect = document.querySelector('select[name="EquipmentType"]');
+        equipmentTypeSelect.value = category;
+    }
+}
+
+function generateFormFields(headers, fieldIcons) {
+    const fields = headers.map(header => {
         const iconClass = fieldIcons[header] || 'bi-asterisk';
         
         if (header === 'EquipmentType') {
@@ -136,8 +161,8 @@ function showAddModal() {
             </div>
         `;
     }).join('');
-    
-    form.innerHTML += `
+
+    return fields + `
         <div class="button-group">
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-save"></i> Save
@@ -147,16 +172,15 @@ function showAddModal() {
             </button>
         </div>
     `;
-    
-    modal.style.display = 'block';
-    initializeDatePickers();
-
-    if (category !== 'all') {
-        const equipmentTypeSelect = document.querySelector('select[name="EquipmentType"]');
-        equipmentTypeSelect.value = category;
-    }
 }
 
+function closeModal() {
+    const modal = document.getElementById('itemModal');
+    modal.style.display = 'none';
+    document.getElementById('itemForm').reset();
+}
+
+// Date Picker Initialization
 function initializeDatePickers() {
     const startDatePicker = flatpickr("#StartDate", {
         dateFormat: "Y-m-d",
@@ -182,37 +206,17 @@ function initializeDatePickers() {
     }
 }
 
-function closeModal() {
-    const modal = document.getElementById('itemModal');
-    modal.style.display = 'none';
-    document.getElementById('itemForm').reset();
-}
-
+// Form Data Handling
 function saveFormData() {
     const form = document.getElementById('itemForm');
     
-    const requiredFields = form.querySelectorAll('[required]');
-    let isValid = true;
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            isValid = false;
-            field.classList.add('is-invalid');
-        } else {
-            field.classList.remove('is-invalid');
-        }
-    });
-
-    if (!isValid) {
+    if (!validateForm(form)) {
         alert('Please fill in all required fields');
         return;
     }
 
     const formData = new FormData(form);
-    const itemData = {};
-    
-    formData.forEach((value, key) => {
-        itemData[key] = value;
-    });
+    const itemData = Object.fromEntries(formData.entries());
     
     const existingItemIndex = inventory.findIndex(item => item.AssetNo === itemData.AssetNo);
     
@@ -227,6 +231,21 @@ function saveFormData() {
     closeModal();
 }
 
+function validateForm(form) {
+    const requiredFields = form.querySelectorAll('[required]');
+    let isValid = true;
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            isValid = false;
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    return isValid;
+}
+
+// CSV Upload Handling
 function handleCsvUpload() {
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
@@ -235,27 +254,73 @@ function handleCsvUpload() {
         const reader = new FileReader();
         reader.onload = function(e) {
             const text = e.target.result;
-            const data = parseCsv(text);
-            inventory = inventory.concat(data);
-            saveInventory();
-            displayInventory();
+            showUploadPreview(text);
         };
         reader.readAsText(file);
     }
 }
 
-function parseCsv(text) {
+function showUploadPreview(text) {
+    const preview = document.getElementById('uploadPreview');
+    const previewContent = preview.querySelector('.preview-content');
+    
     const lines = text.split('\n');
     const headers = lines[0].split(',');
-    return lines.slice(1).map(line => {
-        const values = line.split(',');
-        return headers.reduce((obj, header, index) => {
-            obj[header.trim()] = values[index]?.trim() || '';
-            return obj;
-        }, {});
-    });
+    
+    previewContent.innerHTML = `
+        <table class="table table-sm">
+            <thead>
+                <tr>${headers.map(h => `<th>${h.trim()}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+                ${lines.slice(1, 6).map(line => `
+                    <tr>${line.split(',').map(cell => `<td>${cell.trim()}</td>`).join('')}</tr>
+                `).join('')}
+            </tbody>
+        </table>
+        <div class="mt-3">
+            <button class="btn btn-primary" onclick="confirmUpload('${encodeURIComponent(text)}')">
+                <i class="bi bi-check-circle"></i> Confirm Upload
+            </button>
+            <button class="btn btn-secondary" onclick="cancelUpload()">
+                <i class="bi bi-x-circle"></i> Cancel
+            </button>
+        </div>
+    `;
+    
+    preview.style.display = 'block';
 }
 
+function confirmUpload(encodedText) {
+    const text = decodeURIComponent(encodedText);
+    const data = parseCsv(text);
+    inventory = inventory.concat(data);
+    saveInventory();
+    displayInventory();
+    
+    cancelUpload();
+}
+
+function cancelUpload() {
+    document.getElementById('csvFile').value = '';
+    document.getElementById('uploadPreview').style.display = 'none';
+}
+
+function parseCsv(text) {
+    const lines = text.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1)
+        .filter(line => line.trim())
+        .map(line => {
+            const values = line.split(',').map(v => v.trim());
+            return headers.reduce((obj, header, index) => {
+                obj[header] = values[index] || '';
+                return obj;
+            }, {});
+        });
+}
+
+// Inventory Display and Filtering
 function filterInventory() {
     const category = document.getElementById('categoryFilter').value;
     const filteredItems = category === 'all' 
@@ -291,6 +356,7 @@ function displayInventory(items = inventory) {
     `).join('');
 }
 
+// Item Management
 function editItem(assetNo) {
     const item = inventory.find(i => i.AssetNo === assetNo);
     if (item) {
@@ -319,6 +385,7 @@ function deleteItem(assetNo) {
     }
 }
 
+// Local Storage
 function saveInventory() {
     localStorage.setItem('inventory', JSON.stringify(inventory));
 }
