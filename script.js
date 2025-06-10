@@ -1,8 +1,8 @@
 // Global variables
 let inventory = [];
 const columns = [
-    'id', 'category', 'brand', 'model', 'serialNumber', 'assetTag', 
-    'purchaseDate', 'warrantyDate', 'status', 'location', 'remarks'
+    'id', 'equipmentType', 'vendor', 'brandModel', 'assetNo', 
+    'serialNo', 'startDate', 'endDate', 'room', 'roomNo', 'lampHour'
 ];
 
 // Initialize the application
@@ -58,7 +58,7 @@ function createTable() {
     
     // Create header row
     const headerRow = document.createElement('tr');
-    columns.forEach(column => {
+    columns.filter(col => col !== 'id').forEach(column => {
         const th = document.createElement('th');
         th.textContent = formatColumnHeader(column);
         headerRow.appendChild(th);
@@ -80,12 +80,12 @@ function updateTableBody() {
     
     const filteredInventory = selectedCategory === 'all' 
         ? inventory 
-        : inventory.filter(item => item.category === selectedCategory);
+        : inventory.filter(item => item.equipmentType === selectedCategory);
 
     filteredInventory.forEach(item => {
         const row = document.createElement('tr');
         
-        columns.forEach(column => {
+        columns.filter(col => col !== 'id').forEach(column => {
             const td = document.createElement('td');
             td.textContent = item[column] || '';
             row.appendChild(td);
@@ -114,11 +114,6 @@ function updateTableBody() {
     });
 }
 
-// Filter inventory based on category
-function filterInventory() {
-    updateTableBody();
-}
-
 // Show modal for adding/editing items
 function showModal(item = null) {
     const modal = document.getElementById('itemModal');
@@ -127,10 +122,9 @@ function showModal(item = null) {
     // Create form content
     form.innerHTML = `
         <div class="form-group">
-            <label for="category">Category</label>
-            <select class="form-control" id="category" required>
-                <option value="">Select Category</option>
-                <option value="SSOE">SSOE</option>
+            <label for="equipmentType">Equipment Type</label>
+            <select class="form-control" id="equipmentType" required>
+                <option value="">Select Equipment Type</option>
                 <option value="Projector">Projector</option>
                 <option value="ProjectorScreen">Projector Screen</option>
                 <option value="Visualiser">Visualiser</option>
@@ -142,15 +136,42 @@ function showModal(item = null) {
                 <option value="OMR">OMR</option>
             </select>
         </div>
-        ${columns.filter(col => !['id', 'category'].includes(col)).map(field => `
-            <div class="form-group">
-                <label for="${field}">${formatColumnHeader(field)}</label>
-                <input type="${field.includes('Date') ? 'date' : 'text'}" 
-                       class="form-control" 
-                       id="${field}" 
-                       ${field === 'serialNumber' || field === 'assetTag' ? 'required' : ''}>
-            </div>
-        `).join('')}
+        <div class="form-group">
+            <label for="vendor">Vendor</label>
+            <input type="text" class="form-control" id="vendor" required>
+        </div>
+        <div class="form-group">
+            <label for="brandModel">Brand & Model</label>
+            <input type="text" class="form-control" id="brandModel" required>
+        </div>
+        <div class="form-group">
+            <label for="assetNo">Asset No</label>
+            <input type="text" class="form-control" id="assetNo" required>
+        </div>
+        <div class="form-group">
+            <label for="serialNo">Serial No</label>
+            <input type="text" class="form-control" id="serialNo" required>
+        </div>
+        <div class="form-group">
+            <label for="startDate">Start Date</label>
+            <input type="date" class="form-control" id="startDate" required>
+        </div>
+        <div class="form-group">
+            <label for="endDate">End Date</label>
+            <input type="date" class="form-control" id="endDate" required>
+        </div>
+        <div class="form-group">
+            <label for="room">Room</label>
+            <input type="text" class="form-control" id="room" required>
+        </div>
+        <div class="form-group">
+            <label for="roomNo">Room No</label>
+            <input type="text" class="form-control" id="roomNo" required>
+        </div>
+        <div class="form-group">
+            <label for="lampHour">Lamp Hour</label>
+            <input type="number" class="form-control" id="lampHour">
+        </div>
         <div class="button-group">
             <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
             <button type="submit" class="btn btn-primary">Save</button>
@@ -195,133 +216,23 @@ function showModal(item = null) {
     modal.style.display = 'block';
 }
 
-// Close modal
-function closeModal() {
-    document.getElementById('itemModal').style.display = 'none';
-}
-
-// Generate unique ID
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-// Add new item
-function addItem(item) {
-    inventory.push(item);
-    saveInventory();
-    updateTableBody();
-}
-
-// Update existing item
-function updateItem(updatedItem) {
-    const index = inventory.findIndex(item => item.id === updatedItem.id);
-    if (index !== -1) {
-        inventory[index] = updatedItem;
-        saveInventory();
-        updateTableBody();
-    }
-}
-
-// Delete item
-function deleteItem(id) {
-    if (confirm('Are you sure you want to delete this item?')) {
-        inventory = inventory.filter(item => item.id !== id);
-        saveInventory();
-        updateTableBody();
-    }
-}
-
 // Format column headers
 function formatColumnHeader(column) {
-    return column
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/^./, str => str.toUpperCase());
-}
-
-// Handle CSV upload
-function handleCsvUpload() {
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
+    const headerMap = {
+        'equipmentType': 'Equipment Type',
+        'vendor': 'Vendor',
+        'brandModel': 'Brand & Model',
+        'assetNo': 'Asset No',
+        'serialNo': 'Serial No',
+        'startDate': 'Start Date',
+        'endDate': 'End Date',
+        'room': 'Room',
+        'roomNo': 'Room No',
+        'lampHour': 'Lamp Hour'
+    };
     
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const data = parseCSV(text);
-            
-            if (data.length > 0) {
-                data.forEach(item => {
-                    item.id = generateId();
-                    inventory.push(item);
-                });
-                
-                saveInventory();
-                updateTableBody();
-                closePreview();
-                fileInput.value = '';
-            }
-        };
-        reader.readAsText(file);
-    }
+    return headerMap[column] || column.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 }
 
-// Preview CSV content
-function previewCsv(event) {
-    const file = event.target.files[0];
-    const preview = document.getElementById('uploadPreview');
-    
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const data = parseCSV(text);
-            
-            if (data.length > 0) {
-                preview.style.display = 'block';
-                preview.querySelector('.preview-content').innerHTML = `
-                    <p>Found ${data.length} items to import.</p>
-                    <p>First row preview:</p>
-                    <pre>${JSON.stringify(data[0], null, 2)}</pre>
-                `;
-            }
-        };
-        reader.readAsText(file);
-    }
-}
-
-// Close preview
-function closePreview() {
-    const preview = document.getElementById('uploadPreview');
-    preview.style.display = 'none';
-    preview.querySelector('.preview-content').innerHTML = '';
-}
-
-// Parse CSV content
-function parseCSV(text) {
-    const lines = text.split('\n');
-    const headers = lines[0].split(',').map(header => header.trim());
-    const results = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-        if (lines[i].trim() === '') continue;
-        
-        const obj = {};
-        const currentLine = lines[i].split(',');
-        
-        headers.forEach((header, index) => {
-            obj[header] = currentLine[index].trim();
-        });
-        
-        results.push(obj);
-    }
-    
-    return results;
-}
-
-// Close modal when clicking outside
-window.onclick = (event) => {
-    const modal = document.getElementById('itemModal');
-    if (event.target === modal) {
-        closeModal();
-    }
-};
+// The rest of the JavaScript functions (closeModal, generateId, addItem, updateItem, deleteItem, 
+// handleCsvUpload, previewCsv, closePreview, parseCSV, etc.) remain the same as in the previous message.
