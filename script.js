@@ -36,6 +36,7 @@ function setupEventListeners() {
     document.getElementById('uploadBtn').addEventListener('click', handleCsvUpload);
     document.getElementById('csvFile').addEventListener('change', previewCsv);
     document.getElementById('categoryFilter').addEventListener('change', filterInventory);
+    document.getElementById('exportBtn').addEventListener('click', handleExport);
 }
 
 // Setup sidebar menu listeners
@@ -200,6 +201,132 @@ function showModal(item = null) {
     modal.style.display = 'block';
 }
 
+// Handle export functionality
+function handleExport() {
+    const format = document.getElementById('exportFormat').value;
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    
+    // Filter data based on selected category
+    const dataToExport = selectedCategory === 'all' 
+        ? inventory 
+        : inventory.filter(item => item.equipmentType === selectedCategory);
+
+    switch (format) {
+        case 'csv':
+            exportToCSV(dataToExport);
+            break;
+        case 'json':
+            exportToJSON(dataToExport);
+            break;
+        case 'excel':
+            exportToExcel(dataToExport);
+            break;
+    }
+}
+
+function exportToCSV(data) {
+    if (data.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    // Get all possible headers from all items
+    const headers = new Set();
+    data.forEach(item => {
+        Object.keys(item).forEach(key => headers.add(key));
+    });
+    const headerRow = Array.from(headers);
+
+    // Create CSV content
+    const csvContent = [
+        headerRow.join(','),
+        ...data.map(item => 
+            headerRow.map(header => 
+                JSON.stringify(item[header] || '')
+                    .replace(/\\"/g, '""') // Handle quotes in content
+            ).join(',')
+        )
+    ].join('\n');
+
+    // Create and trigger download
+    downloadFile(csvContent, 'equipment_inventory.csv', 'text/csv');
+}
+
+function exportToJSON(data) {
+    if (data.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    const jsonContent = JSON.stringify(data, null, 2);
+    downloadFile(jsonContent, 'equipment_inventory.json', 'application/json');
+}
+
+function exportToExcel(data) {
+    if (data.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    // Get all possible headers
+    const headers = new Set();
+    data.forEach(item => {
+        Object.keys(item).forEach(key => headers.add(key));
+    });
+    const headerRow = Array.from(headers);
+
+    // Create Excel XML content
+    let excelContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            <!--[if gte mso 9]>
+            <xml>
+                <x:ExcelWorkbook>
+                    <x:ExcelWorksheets>
+                        <x:ExcelWorksheet>
+                            <x:Name>Equipment Inventory</x:Name>
+                            <x:WorksheetOptions>
+                                <x:DisplayGridlines/>
+                            </x:WorksheetOptions>
+                        </x:ExcelWorksheet>
+                    </x:ExcelWorksheets>
+                </x:ExcelWorkbook>
+            </xml>
+            <![endif]-->
+        </head>
+        <body>
+            <table>
+                <tr>
+                    ${headerRow.map(header => `<th>${header}</th>`).join('')}
+                </tr>
+                ${data.map(item => `
+                    <tr>
+                        ${headerRow.map(header => `<td>${item[header] || ''}</td>`).join('')}
+                    </tr>
+                `).join('')}
+            </table>
+        </body>
+        </html>
+    `;
+
+    downloadFile(excelContent, 'equipment_inventory.xls', 'application/vnd.ms-excel');
+}
+
+function downloadFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = fileName;
+    
+    // Append link to body, click it, and remove it
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    window.URL.revokeObjectURL(url);
+}
+
 // Generate form fields based on equipment type
 function generateFormFields(isSSOE) {
     if (isSSOE) {
@@ -303,47 +430,21 @@ function generateFormFields(isSSOE) {
     }
 }
 
-// Handle equipment type change
-function handleEquipmentTypeChange(value) {
-    const form = document.getElementById('itemForm');
-    const currentFields = form.innerHTML;
-    const newFields = generateFormFields(value === 'SSOE');
-    
-    // Replace all fields after the equipment type selector
-    const equipmentTypeField = currentFields.split('</select>')[0] + '</select>';
-    form.innerHTML = equipmentTypeField + newFields + `
-        <div class="button-group">
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-    `;
-    
-    // Reinitialize date pickers
-    document.querySelectorAll('input[type="date"]').forEach(input => {
-        flatpickr(input, {
-            dateFormat: "Y-m-d"
-        });
-    });
-}
-
-// Close modal
+// Other utility functions
 function closeModal() {
     document.getElementById('itemModal').style.display = 'none';
 }
 
-// Generate unique ID
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// Add new item
 function addItem(item) {
     inventory.push(item);
     saveInventory();
     createTable();
 }
 
-// Update existing item
 function updateItem(updatedItem) {
     const index = inventory.findIndex(item => item.id === updatedItem.id);
     if (index !== -1) {
@@ -353,7 +454,6 @@ function updateItem(updatedItem) {
     }
 }
 
-// Delete item
 function deleteItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
         inventory = inventory.filter(item => item.id !== id);
@@ -362,7 +462,6 @@ function deleteItem(id) {
     }
 }
 
-// Format column headers
 function formatColumnHeader(column) {
     const headerMap = {
         'equipmentType': 'Equipment Type',
@@ -388,12 +487,11 @@ function formatColumnHeader(column) {
     return headerMap[column] || column.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 }
 
-// Filter inventory based on selected category
 function filterInventory() {
     createTable();
 }
 
-// Handle CSV upload
+// CSV handling functions
 function handleCsvUpload() {
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
@@ -418,7 +516,6 @@ function handleCsvUpload() {
     }
 }
 
-// Preview CSV content
 function previewCsv() {
     const fileInput = document.getElementById('csvFile');
     const previewDiv = document.getElementById('uploadPreview');
@@ -442,14 +539,12 @@ function previewCsv() {
     }
 }
 
-// Close preview
 function closePreview() {
     const previewDiv = document.getElementById('uploadPreview');
     previewDiv.style.display = 'none';
     document.getElementById('csvFile').value = '';
 }
 
-// Parse CSV content
 function parseCSV(text) {
     const lines = text.split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
