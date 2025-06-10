@@ -1,62 +1,68 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inventory System</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="style.css" />
+    <title>Inventory Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container my-4">
-    <h1 class="mb-4">Inventory Management System</h1>
-    <button class="btn btn-primary mb-3" onclick="showAddModal()">Add Item</button>
-    <table class="table table-bordered" id="inventoryTable">
-      <thead>
-        <tr>
-          <th>Item Name</th>
-          <th>Category</th>
-          <th>Quantity</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
+    <div class="container">
+        <h1>Inventory Management System</h1>
+        
+        <!-- Category Filter -->
+        <div class="filter-section">
+            <select id="categoryFilter" class="form-select">
+                <option value="all">All Categories</option>
+                <option value="SSOE">SSOE</option>
+                <option value="Projector">Projector</option>
+                <option value="ProjectorScreen">Projector Screen</option>
+                <option value="Visualiser">Visualiser</option>
+                <option value="AppleTV">Apple TV</option>
+                <option value="SMAX">SMAX</option>
+                <option value="PortableHDD">Portable HDD</option>
+                <option value="Macbook">Macbook</option>
+                <option value="TV">TV</option>
+                <option value="OMR">OMR</option>
+            </select>
+        </div>
 
-  <!-- Modal -->
-  <div class="modal" id="itemModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="itemForm" onsubmit="saveItem(event)">
-          <div class="modal-header">
-            <h5 class="modal-title">Add/Edit Item</h5>
-            <button type="button" class="btn-close" onclick="closeModal()"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="editIndex" />
-            <div class="mb-3">
-              <label class="form-label">Item Name</label>
-              <input type="text" class="form-control" id="itemName" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Category</label>
-              <input type="text" class="form-control" id="itemCategory" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Quantity</label>
-              <input type="number" class="form-control" id="itemQuantity" required />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Save</button>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          </div>
-        </form>
-      </div>
+        <!-- Add New Item Button -->
+        <button id="addNewBtn" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Item
+        </button>
+        
+        <!-- Mass Upload -->
+        <div class="mass-upload">
+            <input type="file" id="csvFile" accept=".csv" class="form-control">
+            <button id="uploadBtn" class="btn btn-success">
+                <i class="bi bi-upload"></i> Upload CSV
+            </button>
+        </div>
+
+        <!-- Inventory Table -->
+        <table id="inventoryTable" class="table">
+            <thead>
+                <!-- Headers will be dynamically populated -->
+            </thead>
+            <tbody>
+                <!-- Data will be dynamically populated -->
+            </tbody>
+        </table>
     </div>
-  </div>
 
-  <script src="script.js"></script>
+    <!-- Add/Edit Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <form id="itemForm">
+                <!-- Form fields will be dynamically populated -->
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="script.js"></script>
 </body>
 </html>
