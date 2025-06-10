@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container my-4">
+    <h1 class="mb-4">Inventory Management System</h1>
+    <button class="btn btn-primary mb-3" onclick="showAddModal()">Add Item</button>
+    <table class="table table-bordered" id="inventoryTable">
+      <thead>
+        <tr>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th>Quantity</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="itemModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="itemForm" onsubmit="saveItem(event)">
+          <div class="modal-header">
+            <h5 class="modal-title">Add/Edit Item</h5>
+            <button type="button" class="btn-close" onclick="closeModal()"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editIndex" />
+            <div class="mb-3">
+              <label class="form-label">Item Name</label>
+              <input type="text" class="form-control" id="itemName" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Category</label>
+              <input type="text" class="form-control" id="itemCategory" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="itemQuantity" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
