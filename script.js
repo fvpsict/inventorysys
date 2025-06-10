@@ -1,57 +1,73 @@
-// Constants and Data Structure
-const standardHeaders = [
-    'EquipmentType', 'Vendor', 'BrandModel', 'AssetNo', 'SerialNumber',
-    'Location', 'Room No', 'EndDate', 'StartDate'
-];
-
-const ssoeHeaders = [
-    'EquipmentType', 'Vendor', 'BrandModel', 'Profile', 'Custodian',
-    'AssetNo', 'SerialNumber', 'Location', 'EndDate', 'StartDate',
-    'Hostname', 'SSOE PO Number', 'Cart No', 'SanitiseDate', 'Fault'
-];
-
-const equipmentTypes = [
-    'SSOE', 'Projector', 'Projector Screen', 'Visualiser', 'Apple TV',
-    'SMAX', 'Portable HDD', 'Macbook', 'TV', 'OMR'
-];
-
+// Global variables
 let inventory = [];
+const columns = [
+    { id: 'id', label: 'ID', type: 'text', required: true },
+    { id: 'category', label: 'Category', type: 'select', required: true, options: [
+        'SSOE', 'Projector', 'ProjectorScreen', 'Visualiser', 'AppleTV',
+        'SMAX', 'PortableHDD', 'Macbook', 'TV', 'OMR'
+    ]},
+    { id: 'model', label: 'Model', type: 'text', required: true },
+    { id: 'serialNumber', label: 'Serial Number', type: 'text', required: true },
+    { id: 'location', label: 'Location', type: 'text', required: true },
+    { id: 'status', label: 'Status', type: 'select', required: true, options: [
+        'In Use', 'Available', 'Under Repair', 'Disposed'
+    ]},
+    { id: 'purchaseDate', label: 'Purchase Date', type: 'date', required: true },
+    { id: 'warrantyDate', label: 'Warranty Date', type: 'date', required: true },
+    { id: 'remarks', label: 'Remarks', type: 'text', required: false }
+];
 
-// Initialize Application
+// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    loadInventory();
+    setupTable();
     setupEventListeners();
+    setupSidebarListeners();
+    loadInventory();
 });
 
-// Event Listeners Setup
-function setupEventListeners() {
-    document.getElementById('categoryFilter').addEventListener('change', filterInventory);
-    document.getElementById('addNewBtn').addEventListener('click', showAddModal);
-    document.getElementById('uploadBtn').addEventListener('click', handleCsvUpload);
-    setupSidebarListeners();
+// Setup the table structure
+function setupTable() {
+    const thead = document.querySelector('#inventoryTable thead');
+    const headerRow = document.createElement('tr');
     
-    window.addEventListener('click', (event) => {
-        const modal = document.getElementById('itemModal');
-        if (event.target === modal) {
-            closeModal();
-        }
+    columns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column.label;
+        headerRow.appendChild(th);
     });
-
-    document.getElementById('itemForm').addEventListener('submit', (event) => {
-        event.preventDefault();
-        saveFormData();
-    });
+    
+    // Add action column header
+    const actionTh = document.createElement('th');
+    actionTh.textContent = 'Actions';
+    headerRow.appendChild(actionTh);
+    
+    thead.appendChild(headerRow);
 }
 
+// Setup event listeners
+function setupEventListeners() {
+    // Add new item button
+    document.getElementById('addNewBtn').addEventListener('click', () => {
+        showModal();
+    });
+
+    // CSV upload button
+    document.getElementById('uploadBtn').addEventListener('click', handleCsvUpload);
+    
+    // Category filter change
+    document.getElementById('categoryFilter').addEventListener('change', filterInventory);
+}
+
+// Setup sidebar menu listeners
 function setupSidebarListeners() {
-    document.querySelectorAll('#sidebar a').forEach(link => {
+    document.querySelectorAll('.menu-list a').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const category = e.target.dataset.category;
+            const category = e.target.closest('a').dataset.category;
             
             // Update active state
-            document.querySelectorAll('#sidebar li').forEach(li => li.classList.remove('active'));
-            e.target.parentElement.classList.add('active');
+            document.querySelectorAll('.menu-list li').forEach(li => li.classList.remove('active'));
+            e.target.closest('li').classList.add('active');
             
             // Update category filter and display
             document.getElementById('categoryFilter').value = category;
@@ -60,338 +76,198 @@ function setupSidebarListeners() {
     });
 }
 
-// Modal Functions
-function showAddModal() {
-    const modal = document.getElementById('itemModal');
-    const category = document.getElementById('categoryFilter').value;
-    const headers = category === 'SSOE' ? ssoeHeaders : standardHeaders;
-    
-    const fieldIcons = {
-        EquipmentType: 'bi-pc-display',
-        Vendor: 'bi-shop',
-        BrandModel: 'bi-tag',
-        AssetNo: 'bi-upc-scan',
-        SerialNumber: 'bi-123',
-        Location: 'bi-geo-alt',
-        'Room No': 'bi-door-closed',
-        EndDate: 'bi-calendar-event',
-        StartDate: 'bi-calendar-check',
-        Profile: 'bi-person-vcard',
-        Custodian: 'bi-person',
-        Hostname: 'bi-pc',
-        'SSOE PO Number': 'bi-file-text',
-        'Cart No': 'bi-cart',
-        SanitiseDate: 'bi-calendar2-check',
-        Fault: 'bi-exclamation-triangle'
-    };
+// Load inventory from localStorage
+function loadInventory() {
+    const savedInventory = localStorage.getItem('inventory');
+    if (savedInventory) {
+        inventory = JSON.parse(savedInventory);
+        displayInventory();
+    }
+}
 
+// Save inventory to localStorage
+function saveInventory() {
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+}
+
+// Display inventory items
+function displayInventory() {
+    const tbody = document.querySelector('#inventoryTable tbody');
+    tbody.innerHTML = '';
+    
+    const filteredInventory = filterInventoryItems();
+    
+    filteredInventory.forEach(item => {
+        const row = document.createElement('tr');
+        
+        columns.forEach(column => {
+            const td = document.createElement('td');
+            td.textContent = item[column.id];
+            row.appendChild(td);
+        });
+        
+        // Add action buttons
+        const actionTd = document.createElement('td');
+        actionTd.innerHTML = `
+            <button class="btn btn-sm btn-primary edit-btn" data-id="${item.id}">
+                <i class="bi bi-pencil"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        `;
+        
+        // Add event listeners to buttons
+        const editBtn = actionTd.querySelector('.edit-btn');
+        const deleteBtn = actionTd.querySelector('.delete-btn');
+        
+        editBtn.addEventListener('click', () => editItem(item));
+        deleteBtn.addEventListener('click', () => deleteItem(item.id));
+        
+        row.appendChild(actionTd);
+        tbody.appendChild(row);
+    });
+}
+
+// Filter inventory based on selected category
+function filterInventory() {
+    displayInventory();
+}
+
+function filterInventoryItems() {
+    const category = document.getElementById('categoryFilter').value;
+    if (category === 'all') {
+        return inventory;
+    }
+    return inventory.filter(item => item.category === category);
+}
+
+// Show modal for adding/editing items
+function showModal(item = null) {
+    const modal = document.getElementById('itemModal');
     const form = document.getElementById('itemForm');
-    form.innerHTML = generateFormFields(headers, fieldIcons);
+    
+    // Clear existing form
+    form.innerHTML = '';
+    
+    // Create form fields
+    columns.forEach(column => {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+        
+        const label = document.createElement('label');
+        label.textContent = column.label;
+        
+        let input;
+        
+        if (column.type === 'select') {
+            input = document.createElement('select');
+            input.className = 'form-control';
+            
+            // Add empty option
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = `Select ${column.label}`;
+            input.appendChild(emptyOption);
+            
+            // Add options
+            column.options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                input.appendChild(optionElement);
+            });
+        } else {
+            input = document.createElement('input');
+            input.type = column.type;
+            input.className = 'form-control';
+        }
+        
+        input.id = column.id;
+        input.name = column.id;
+        input.required = column.required;
+        
+        // Set value if editing
+        if (item) {
+            input.value = item[column.id];
+        }
+        
+        formGroup.appendChild(label);
+        formGroup.appendChild(input);
+        form.appendChild(formGroup);
+    });
+    
+    // Add submit button
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'submit';
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.textContent = item ? 'Update Item' : 'Add Item';
+    
+    // Add cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => modal.style.display = 'none';
+    
+    const buttonGroup = document.createElement('div');
+    buttonGroup.className = 'button-group';
+    buttonGroup.appendChild(cancelBtn);
+    buttonGroup.appendChild(submitBtn);
+    form.appendChild(buttonGroup);
+    
+    // Form submit handler
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const newItem = Object.fromEntries(formData);
+        
+        if (item) {
+            // Update existing item
+            const index = inventory.findIndex(i => i.id === item.id);
+            inventory[index] = newItem;
+        } else {
+            // Add new item
+            inventory.push(newItem);
+        }
+        
+        saveInventory();
+        displayInventory();
+        modal.style.display = 'none';
+    };
+    
+    // Initialize date pickers
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        flatpickr(input, {
+            dateFormat: "Y-m-d"
+        });
+    });
     
     modal.style.display = 'block';
-    initializeDatePickers();
-
-    if (category !== 'all') {
-        const equipmentTypeSelect = document.querySelector('select[name="EquipmentType"]');
-        equipmentTypeSelect.value = category;
-    }
 }
 
-function generateFormFields(headers, fieldIcons) {
-    const fields = headers.map(header => {
-        const iconClass = fieldIcons[header] || 'bi-asterisk';
-        
-        if (header === 'EquipmentType') {
-            return `
-                <div class="form-group">
-                    <label for="${header}">
-                        <i class="bi ${iconClass}"></i> ${header}
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi ${iconClass}"></i>
-                        </span>
-                        <select id="${header}" name="${header}" class="form-select" required>
-                            <option value="">Select Equipment Type</option>
-                            ${equipmentTypes.map(type => 
-                                `<option value="${type}">${type}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                </div>
-            `;
-        }
-        else if (header === 'StartDate' || header === 'EndDate' || header === 'SanitiseDate') {
-            return `
-                <div class="form-group">
-                    <label for="${header}">
-                        <i class="bi ${iconClass}"></i> ${header}
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi ${iconClass}"></i>
-                        </span>
-                        <input type="text" 
-                               id="${header}" 
-                               name="${header}" 
-                               class="form-control datepicker" 
-                               required 
-                               readonly 
-                               placeholder="Select ${header}">
-                    </div>
-                </div>
-            `;
-        }
-        return `
-            <div class="form-group">
-                <label for="${header}">
-                    <i class="bi ${iconClass}"></i> ${header}
-                </label>
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="bi ${iconClass}"></i>
-                    </span>
-                    <input type="text" 
-                           id="${header}" 
-                           name="${header}" 
-                           class="form-control" 
-                           required 
-                           placeholder="Enter ${header}">
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    return fields + `
-        <div class="button-group">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Save
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">
-                <i class="bi bi-x-circle"></i> Cancel
-            </button>
-        </div>
-    `;
+// Edit item
+function editItem(item) {
+    showModal(item);
 }
 
-function closeModal() {
-    const modal = document.getElementById('itemModal');
-    modal.style.display = 'none';
-    document.getElementById('itemForm').reset();
-}
-
-// Date Picker Initialization
-function initializeDatePickers() {
-    const startDatePicker = flatpickr("#StartDate", {
-        dateFormat: "Y-m-d",
-        allowInput: false,
-        onChange: function(selectedDates, dateStr) {
-            endDatePicker.set('minDate', dateStr);
-        }
-    });
-
-    const endDatePicker = flatpickr("#EndDate", {
-        dateFormat: "Y-m-d",
-        allowInput: false,
-        onChange: function(selectedDates, dateStr) {
-            startDatePicker.set('maxDate', dateStr);
-        }
-    });
-
-    if (document.getElementById('SanitiseDate')) {
-        flatpickr("#SanitiseDate", {
-            dateFormat: "Y-m-d",
-            allowInput: false
-        });
-    }
-}
-
-// Form Data Handling
-function saveFormData() {
-    const form = document.getElementById('itemForm');
-    
-    if (!validateForm(form)) {
-        alert('Please fill in all required fields');
-        return;
-    }
-
-    const formData = new FormData(form);
-    const itemData = Object.fromEntries(formData.entries());
-    
-    const existingItemIndex = inventory.findIndex(item => item.AssetNo === itemData.AssetNo);
-    
-    if (existingItemIndex >= 0) {
-        inventory[existingItemIndex] = itemData;
-    } else {
-        inventory.push(itemData);
-    }
-    
-    saveInventory();
-    displayInventory();
-    closeModal();
-}
-
-function validateForm(form) {
-    const requiredFields = form.querySelectorAll('[required]');
-    let isValid = true;
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            isValid = false;
-            field.classList.add('is-invalid');
-        } else {
-            field.classList.remove('is-invalid');
-        }
-    });
-    return isValid;
-}
-
-// CSV Upload Handling
-function handleCsvUpload() {
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
-    
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            showUploadPreview(text);
-        };
-        reader.readAsText(file);
-    }
-}
-
-function showUploadPreview(text) {
-    const preview = document.getElementById('uploadPreview');
-    const previewContent = preview.querySelector('.preview-content');
-    
-    const lines = text.split('\n');
-    const headers = lines[0].split(',');
-    
-    previewContent.innerHTML = `
-        <table class="table table-sm">
-            <thead>
-                <tr>${headers.map(h => `<th>${h.trim()}</th>`).join('')}</tr>
-            </thead>
-            <tbody>
-                ${lines.slice(1, 6).map(line => `
-                    <tr>${line.split(',').map(cell => `<td>${cell.trim()}</td>`).join('')}</tr>
-                `).join('')}
-            </tbody>
-        </table>
-        <div class="mt-3">
-            <button class="btn btn-primary" onclick="confirmUpload('${encodeURIComponent(text)}')">
-                <i class="bi bi-check-circle"></i> Confirm Upload
-            </button>
-            <button class="btn btn-secondary" onclick="cancelUpload()">
-                <i class="bi bi-x-circle"></i> Cancel
-            </button>
-        </div>
-    `;
-    
-    preview.style.display = 'block';
-}
-
-function confirmUpload(encodedText) {
-    const text = decodeURIComponent(encodedText);
-    const data = parseCsv(text);
-    inventory = inventory.concat(data);
-    saveInventory();
-    displayInventory();
-    
-    cancelUpload();
-}
-
-function cancelUpload() {
-    document.getElementById('csvFile').value = '';
-    document.getElementById('uploadPreview').style.display = 'none';
-}
-
-function parseCsv(text) {
-    const lines = text.split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
-    return lines.slice(1)
-        .filter(line => line.trim())
-        .map(line => {
-            const values = line.split(',').map(v => v.trim());
-            return headers.reduce((obj, header, index) => {
-                obj[header] = values[index] || '';
-                return obj;
-            }, {});
-        });
-}
-
-// Inventory Display and Filtering
-function filterInventory() {
-    const category = document.getElementById('categoryFilter').value;
-    const filteredItems = category === 'all' 
-        ? inventory 
-        : inventory.filter(item => item.EquipmentType === category);
-    displayInventory(filteredItems);
-}
-
-function displayInventory(items = inventory) {
-    const table = document.getElementById('inventoryTable');
-    const category = document.getElementById('categoryFilter').value;
-    const headers = category === 'SSOE' ? ssoeHeaders : standardHeaders;
-    
-    table.querySelector('thead').innerHTML = `
-        <tr>
-            ${headers.map(header => `<th>${header}</th>`).join('')}
-            <th>Actions</th>
-        </tr>
-    `;
-    
-    table.querySelector('tbody').innerHTML = items.map(item => `
-        <tr>
-            ${headers.map(header => `<td>${item[header] || ''}</td>`).join('')}
-            <td>
-                <button onclick="editItem('${item.AssetNo}')" class="btn btn-sm btn-warning">
-                    <i class="bi bi-pencil"></i> Edit
-                </button>
-                <button onclick="deleteItem('${item.AssetNo}')" class="btn btn-sm btn-danger">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Item Management
-function editItem(assetNo) {
-    const item = inventory.find(i => i.AssetNo === assetNo);
-    if (item) {
-        showAddModal();
-        Object.keys(item).forEach(key => {
-            const input = document.querySelector(`#itemForm [name="${key}"]`);
-            if (input) {
-                if (key === 'StartDate' || key === 'EndDate' || key === 'SanitiseDate') {
-                    const fp = input._flatpickr;
-                    if (fp) {
-                        fp.setDate(item[key]);
-                    }
-                } else {
-                    input.value = item[key];
-                }
-            }
-        });
-    }
-}
-
-function deleteItem(assetNo) {
+// Delete item
+function deleteItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
-        inventory = inventory.filter(i => i.AssetNo !== assetNo);
+        inventory = inventory.filter(item => item.id !== id);
         saveInventory();
         displayInventory();
     }
 }
 
-// Local Storage
-function saveInventory() {
-    localStorage.setItem('inventory', JSON.stringify(inventory));
-}
-
-function loadInventory() {
-    const saved = localStorage.getItem('inventory');
-    inventory = saved ? JSON.parse(saved) : [];
-    displayInventory();
-}
+// Handle CSV upload
+function handleCsvUpload() {
+    const file = document.getElementById('csvFile').files[0];
+    if (!file) {
+        alert('Please select a CSV file first.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text
