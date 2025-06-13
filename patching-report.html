@@ -3,159 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fault Report - Inventory System</title>
+  <title>Patching Report - Inventory System</title>
   <link rel="stylesheet" href="styles.css" />
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
   <style>
-    /* Page-specific styles */
-    .main-content {
-      padding: 1rem;
-      margin-left: 220px; /* leave space for sidebar */
-      min-height: 100vh;
-    }
-
     textarea {
       width: 100%;
       height: 150px;
       font-family: monospace;
       margin-bottom: 1rem;
-      padding: 0.5rem;
-      resize: vertical;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-bottom: 1rem;
-    }
-
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th {
-      background: #f4f4f4;
-    }
-
-    tfoot tr {
-      background-color: #eee;
-      font-weight: bold;
-    }
-
-    button {
-      padding: 8px 15px;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-bottom: 1rem;
-      border-radius: 4px;
-      border: 1px solid #444;
-      background-color: #fff;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #ddd;
-    }
-
-    /* Sidebar styles */
-    .menu-sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 220px;
-      height: 100vh;
-      background-color: #222;
-      color: #fff;
-      padding: 1rem;
-      box-sizing: border-box;
-    }
-
-    .menu-sidebar h3 {
-      margin-top: 0;
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
-      border-bottom: 1px solid #444;
-      padding-bottom: 0.5rem;
-    }
-
-    .menu-sidebar ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .menu-sidebar ul li {
-      margin: 1rem 0;
-    }
-
-    .menu-sidebar ul li a {
-      color: #ccc;
-      text-decoration: none;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .menu-sidebar ul li.active a {
-      color: #fff;
-      text-decoration: underline;
     }
   </style>
 </head>
 <body>
+  <div class="menu-wrapper">
+    <!-- Sidebar -->
+    <nav class="menu-sidebar" aria-label="Inventory System Navigation">
+      <h3>Inventory Menu</h3>
+      <ul class="menu-list">
+        <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
+        <li><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
+        <li class="active"><a href="#"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+      </ul>
+    </nav>
 
-  <nav class="menu-sidebar" aria-label="Inventory System Navigation">
-    <h3>Inventory Menu</h3>
-    <ul>
-      <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
-      <li class="active"><a href="#"><i class="fas fa-tools"></i> Fault Report</a></li>
-      <li><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
-    </ul>
-  </nav>
+    <!-- Main content -->
+    <main class="main-content" role="main" tabindex="-1">
+      <h1>Patching Report</h1>
+      <p>
+        Paste your raw weekly patching data below (tab or comma separated, with headers).
+        The system will calculate counts and percentages automatically.
+      </p>
 
-  <main class="main-content" role="main" tabindex="-1">
-    <h1>Fault Report</h1>
+      <section class="action-buttons">
+        <textarea
+          id="rawPatchingData"
+          aria-label="Raw Patching Data Input"
+          placeholder="Paste patching data here, including headers"
+        ></textarea>
+        <button class="button" onclick="processPatchingData()">Process Data</button>
+      </section>
 
-    <p>
-      Paste your raw fault report data below (tab or comma separated columns) including headers.<br />
-      Then click "Process Data" to generate the table and summary counts.
-    </p>
+      <section id="patchingReportSection" style="display:none;">
+        <h2>Parsed Patching Data</h2>
+        <table id="patchingTable" class="table" aria-label="Patching Data Table">
+          <thead></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
 
-    <textarea
-      id="rawFaultData"
-      placeholder="Paste raw fault report data here..."
-    ></textarea>
-    <br />
-    <button onclick="processFaultData()">Process Data</button>
-
-    <h2>Parsed Fault Report Data</h2>
-    <table id="faultTable" aria-label="Fault Report Data Table">
-      <thead></thead>
-      <tbody></tbody>
-      <tfoot></tfoot>
-    </table>
-
-    <h2>Summary by Status</h2>
-    <ul id="statusSummary"></ul>
-  </main>
+        <h2>Overall Summary</h2>
+        <ul id="patchingSummary"></ul>
+      </section>
+    </main>
+  </div>
 
   <script>
-    // Columns expected for fault status summary - adjust as needed
-    const statusColumnName = 'STATUS'; // header column for status
+    // Column names expected in patching report for automatic calculations
+    const patchingHeadersExpected = [
+      'DATE',
+      'ADMIN INSTALLED',
+      'ACAD INSTALLED',
+      'ADMIN SCCM EPP > 4 wks',
+      'ACAD SCCM EPP > 4 wks',
+      'ADMIN NOT CONNECTED',
+      'ACAD NOT CONNECTED',
+      'ADMIN REQUIRED',
+      'ACAD REQUIRED',
+      'ADMIN UNKNOWN',
+      'ACAD UNKNOWN',
+      'E-EXAM',
+      'FAULTY',
+      'Tech Refresh',
+      'Percentage',
+    ];
 
-    function processFaultData() {
-      const raw = document.getElementById('rawFaultData').value.trim();
+    function processPatchingData() {
+      const raw = document.getElementById('rawPatchingData').value.trim();
       if (!raw) {
-        alert('Please paste your raw fault report data first.');
+        alert('Please paste your raw patching data first.');
         return;
       }
 
@@ -165,20 +94,30 @@
       // Parse headers
       const headers = lines[0].split(delimiter).map((h) => h.trim());
 
-      // Get index of STATUS column for summary
-      const statusIdx = headers.findIndex(
-        (h) => h.toUpperCase() === statusColumnName.toUpperCase()
+      // Validate headers
+      const missingHeaders = patchingHeadersExpected.filter(
+        (h) => !headers.includes(h)
       );
+      if (missingHeaders.length > 0) {
+        alert(
+          'Warning: Missing expected headers: ' + missingHeaders.join(', ') + '. The calculation may be inaccurate.'
+        );
+      }
 
-      const table = document.getElementById('faultTable');
+      const table = document.getElementById('patchingTable');
       const thead = table.querySelector('thead');
       const tbody = table.querySelector('tbody');
       const tfoot = table.querySelector('tfoot');
-      const summaryList = document.getElementById('statusSummary');
+      const summaryList = document.getElementById('patchingSummary');
+      const patchingReportSection = document.getElementById('patchingReportSection');
+
       thead.innerHTML = '';
       tbody.innerHTML = '';
       tfoot.innerHTML = '';
       summaryList.innerHTML = '';
+
+      // Show section
+      patchingReportSection.style.display = 'block';
 
       // Build header row
       const headerRow = document.createElement('tr');
@@ -189,52 +128,110 @@
       });
       thead.appendChild(headerRow);
 
-      // Collect status counts
-      const statusCounts = {};
+      // Map header to index for quick lookup
+      const idxMap = {};
+      headers.forEach((h, i) => (idxMap[h] = i));
 
-      // Build data rows
+      // Prepare summary counters for numeric columns except DATE and Percentage
+      const numericCols = headers.filter(
+        (h) =>
+          h !== 'DATE' &&
+          h !== 'Percentage' &&
+          !isNaN(Number(lines[1].split(delimiter)[idxMap[h]])) // simple check if value is numeric
+      );
+      const overallSums = {};
+      numericCols.forEach((col) => (overallSums[col] = 0));
+
+      // Build data rows and calculate sums and percentages
       for (let i = 1; i < lines.length; i++) {
         const row = document.createElement('tr');
         const cells = lines[i].split(delimiter);
+
+        // Defensive: Fill missing cells with empty string
+        while (cells.length < headers.length) cells.push('');
+
+        // Calculate percentage for this row if not given
+        if (idxMap['Percentage'] !== undefined) {
+          const adminInstalled = Number(cells[idxMap['ADMIN INSTALLED']] || 0);
+          const acadInstalled = Number(cells[idxMap['ACAD INSTALLED']] || 0);
+          const adminFaulty = Number(cells[idxMap['FAULTY']] || 0);
+          const acadFaulty = Number(cells[idxMap['FAULTY']] || 0); // Assuming FAULTY applies to both admin and acad?
+
+          // Calculate total installed + faulty (simplified)
+          const totalInstalled = adminInstalled + acadInstalled + adminFaulty + acadFaulty;
+
+          // Calculate total required (sum of all except DATE and Percentage)
+          let totalRequired = 0;
+          numericCols.forEach((col) => {
+            if (col !== 'FAULTY' && col !== 'Percentage') {
+              totalRequired += Number(cells[idxMap[col]] || 0);
+            }
+          });
+
+          // Compute percentage safely
+          let percentage = 0;
+          if (totalRequired > 0) {
+            percentage = ((adminInstalled + acadInstalled) / totalRequired) * 100;
+          }
+          cells[idxMap['Percentage']] = percentage.toFixed(2) + '%';
+        }
+
+        // Create cells in the table row
         cells.forEach((cell, idx) => {
           const td = document.createElement('td');
           td.textContent = cell.trim();
           row.appendChild(td);
         });
+
         tbody.appendChild(row);
 
-        // Count statuses
-        if (statusIdx !== -1) {
-          const statusVal = (cells[statusIdx] || '').trim().toUpperCase();
-          if (statusVal) {
-            statusCounts[statusVal] = (statusCounts[statusVal] || 0) + 1;
-          }
-        }
+        // Add to overall sums for numeric columns
+        numericCols.forEach((col) => {
+          overallSums[col] += Number(cells[idxMap[col]] || 0);
+        });
       }
 
-      // Footer row: total count of rows
+      // Footer row with sums for numeric columns
       const footerRow = document.createElement('tr');
       headers.forEach((h, idx) => {
         const td = document.createElement('td');
         if (idx === 0) {
-          td.textContent = 'TOTAL ROWS';
+          td.textContent = 'TOTAL';
           td.style.fontWeight = 'bold';
           td.style.textAlign = 'left';
-        } else if (idx === 1) {
-          td.textContent = lines.length - 1;
-        } else {
-          td.textContent = '';
+        } else if (numericCols.includes(h)) {
+          td.textContent = overallSums[h];
+          td.style.fontWeight = 'bold';
+        } else if (h === 'Percentage') {
+          // Calculate overall percentage
+          const totalInstalled =
+            (overallSums['ADMIN INSTALLED'] || 0) +
+            (overallSums['ACAD INSTALLED'] || 0);
+          let totalRequired = 0;
+          numericCols.forEach((col) => {
+            if (col !== 'FAULTY' && col !== 'Percentage') {
+              totalRequired += overallSums[col];
+            }
+          });
+          let overallPercent = 0;
+          if (totalRequired > 0) {
+            overallPercent = (totalInstalled / totalRequired) * 100;
+          }
+          td.textContent = overallPercent.toFixed(2) + '%';
+          td.style.fontWeight = 'bold';
         }
         footerRow.appendChild(td);
       });
       tfoot.appendChild(footerRow);
 
-      // Display summary counts
-      for (const [status, count] of Object.entries(statusCounts)) {
-        const li = document.createElement('li');
-        li.textContent = `${status}: ${count}`;
-        summaryList.appendChild(li);
-      }
+      // Display summary - you can customize summary as needed
+      summaryList.innerHTML = '';
+      summaryList.appendChild(
+        document.createElement('li')
+      ).textContent = `Total rows processed: ${lines.length - 1}`;
+      summaryList.appendChild(
+        document.createElement('li')
+      ).textContent = `Overall installation percentage: ${overallPercent.toFixed(2)}%`;
     }
   </script>
 </body>
