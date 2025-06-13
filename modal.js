@@ -1,37 +1,18 @@
-// Open the modal and clear form
-function openModal() {
-  const modal = document.getElementById("itemModal");
-  const form = document.getElementById("itemForm");
+const modal = document.getElementById("itemModal");
+const form = document.getElementById("itemForm");
 
-  form.reset(); // Clear previous entries
+function openModal() {
   modal.style.display = "block";
+  form.reset();
 }
 
-// Close the modal
 function closeModal() {
-  const modal = document.getElementById("itemModal");
   modal.style.display = "none";
 }
 
-// Handle form submission
-document.getElementById("itemForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  // Capture form data
-  const formData = new FormData(e.target);
-  const newItem = {};
-
-  for (let [key, value] of formData.entries()) {
-    newItem[key] = value.trim();
+// Close modal when clicking outside modal content
+window.onclick = function (event) {
+  if (event.target === modal) {
+    closeModal();
   }
-
-  // Basic validation
-  if (!newItem.equipmentType || !newItem.assetNo) {
-    alert("Please fill in at least Equipment Type and Asset No.");
-    return;
-  }
-
-  // Add to table and close modal
-  addInventoryItem(newItem);
-  closeModal();
-});
+};
