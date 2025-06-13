@@ -9,230 +9,77 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
-  <style>
-    textarea {
-      width: 100%;
-      height: 150px;
-      font-family: monospace;
-      margin-bottom: 1rem;
-    }
-  </style>
 </head>
 <body>
   <div class="menu-wrapper">
-    <!-- Sidebar -->
-    <nav class="menu-sidebar" aria-label="Inventory System Navigation">
+    <nav class="menu-sidebar">
       <h3>Inventory Menu</h3>
       <ul class="menu-list">
         <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
         <li><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
-        <li class="active"><a href="#"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+        <li class="active"><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
       </ul>
     </nav>
 
-    <!-- Main content -->
-    <main class="main-content" role="main" tabindex="-1">
+    <main class="main-content">
       <h1>Patching Report</h1>
-      <p>
-        Paste your raw weekly patching data below (tab or comma separated, with headers).
-        The system will calculate counts and percentages automatically.
-      </p>
+      <p>This page summarizes patching status of devices weekly.</p>
 
-      <section class="action-buttons">
-        <textarea
-          id="rawPatchingData"
-          aria-label="Raw Patching Data Input"
-          placeholder="Paste patching data here, including headers"
-        ></textarea>
-        <button class="button" onclick="processPatchingData()">Process Data</button>
-      </section>
-
-      <section id="patchingReportSection" style="display:none;">
-        <h2>Parsed Patching Data</h2>
-        <table id="patchingTable" class="table" aria-label="Patching Data Table">
-          <thead></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
-
-        <h2>Overall Summary</h2>
-        <ul id="patchingSummary"></ul>
-      </section>
+      <table class="table" aria-label="Patching Report Table" id="patchingTable">
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>Week 1</th>
+            <th>Week 2</th>
+            <th>Week 3</th>
+            <th>Week 4</th>
+            <th>Status Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Patching data rows inserted dynamically here -->
+        </tbody>
+      </table>
     </main>
   </div>
 
   <script>
-    // Column names expected in patching report for automatic calculations
-    const patchingHeadersExpected = [
-      'DATE',
-      'ADMIN INSTALLED',
-      'ACAD INSTALLED',
-      'ADMIN SCCM EPP > 4 wks',
-      'ACAD SCCM EPP > 4 wks',
-      'ADMIN NOT CONNECTED',
-      'ACAD NOT CONNECTED',
-      'ADMIN REQUIRED',
-      'ACAD REQUIRED',
-      'ADMIN UNKNOWN',
-      'ACAD UNKNOWN',
-      'E-EXAM',
-      'FAULTY',
-      'Tech Refresh',
-      'Percentage',
+    // Sample data for patching report
+    const patchingData = [
+      {
+        device: "Macbook MBK-5678",
+        week1: "Installed",
+        week2: "Installed",
+        week3: "Installed",
+        week4: "Not Connected",
+        statusSummary: "Mostly Installed"
+      },
+      {
+        device: "Projector PRJ-1234",
+        week1: "Installed",
+        week2: "Installed",
+        week3: "Not Connected",
+        week4: "Installed",
+        statusSummary: "Mixed Status"
+      }
     ];
 
-    function processPatchingData() {
-      const raw = document.getElementById('rawPatchingData').value.trim();
-      if (!raw) {
-        alert('Please paste your raw patching data first.');
-        return;
-      }
+    const patchingTableBody = document.querySelector("#patchingTable tbody");
 
-      const lines = raw.split(/\r?\n/).filter((l) => l.trim() !== '');
-      const delimiter = lines[0].includes('\t') ? '\t' : ',';
-
-      // Parse headers
-      const headers = lines[0].split(delimiter).map((h) => h.trim());
-
-      // Validate headers
-      const missingHeaders = patchingHeadersExpected.filter(
-        (h) => !headers.includes(h)
-      );
-      if (missingHeaders.length > 0) {
-        alert(
-          'Warning: Missing expected headers: ' + missingHeaders.join(', ') + '. The calculation may be inaccurate.'
-        );
-      }
-
-      const table = document.getElementById('patchingTable');
-      const thead = table.querySelector('thead');
-      const tbody = table.querySelector('tbody');
-      const tfoot = table.querySelector('tfoot');
-      const summaryList = document.getElementById('patchingSummary');
-      const patchingReportSection = document.getElementById('patchingReportSection');
-
-      thead.innerHTML = '';
-      tbody.innerHTML = '';
-      tfoot.innerHTML = '';
-      summaryList.innerHTML = '';
-
-      // Show section
-      patchingReportSection.style.display = 'block';
-
-      // Build header row
-      const headerRow = document.createElement('tr');
-      headers.forEach((h) => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-
-      // Map header to index for quick lookup
-      const idxMap = {};
-      headers.forEach((h, i) => (idxMap[h] = i));
-
-      // Prepare summary counters for numeric columns except DATE and Percentage
-      const numericCols = headers.filter(
-        (h) =>
-          h !== 'DATE' &&
-          h !== 'Percentage' &&
-          !isNaN(Number(lines[1].split(delimiter)[idxMap[h]])) // simple check if value is numeric
-      );
-      const overallSums = {};
-      numericCols.forEach((col) => (overallSums[col] = 0));
-
-      // Build data rows and calculate sums and percentages
-      for (let i = 1; i < lines.length; i++) {
-        const row = document.createElement('tr');
-        const cells = lines[i].split(delimiter);
-
-        // Defensive: Fill missing cells with empty string
-        while (cells.length < headers.length) cells.push('');
-
-        // Calculate percentage for this row if not given
-        if (idxMap['Percentage'] !== undefined) {
-          const adminInstalled = Number(cells[idxMap['ADMIN INSTALLED']] || 0);
-          const acadInstalled = Number(cells[idxMap['ACAD INSTALLED']] || 0);
-          const adminFaulty = Number(cells[idxMap['FAULTY']] || 0);
-          const acadFaulty = Number(cells[idxMap['FAULTY']] || 0); // Assuming FAULTY applies to both admin and acad?
-
-          // Calculate total installed + faulty (simplified)
-          const totalInstalled = adminInstalled + acadInstalled + adminFaulty + acadFaulty;
-
-          // Calculate total required (sum of all except DATE and Percentage)
-          let totalRequired = 0;
-          numericCols.forEach((col) => {
-            if (col !== 'FAULTY' && col !== 'Percentage') {
-              totalRequired += Number(cells[idxMap[col]] || 0);
-            }
-          });
-
-          // Compute percentage safely
-          let percentage = 0;
-          if (totalRequired > 0) {
-            percentage = ((adminInstalled + acadInstalled) / totalRequired) * 100;
-          }
-          cells[idxMap['Percentage']] = percentage.toFixed(2) + '%';
-        }
-
-        // Create cells in the table row
-        cells.forEach((cell, idx) => {
-          const td = document.createElement('td');
-          td.textContent = cell.trim();
+    function renderPatchingReport() {
+      patchingTableBody.innerHTML = "";
+      patchingData.forEach(entry => {
+        const row = document.createElement("tr");
+        Object.values(entry).forEach(val => {
+          const td = document.createElement("td");
+          td.textContent = val || "-";
           row.appendChild(td);
         });
-
-        tbody.appendChild(row);
-
-        // Add to overall sums for numeric columns
-        numericCols.forEach((col) => {
-          overallSums[col] += Number(cells[idxMap[col]] || 0);
-        });
-      }
-
-      // Footer row with sums for numeric columns
-      const footerRow = document.createElement('tr');
-      headers.forEach((h, idx) => {
-        const td = document.createElement('td');
-        if (idx === 0) {
-          td.textContent = 'TOTAL';
-          td.style.fontWeight = 'bold';
-          td.style.textAlign = 'left';
-        } else if (numericCols.includes(h)) {
-          td.textContent = overallSums[h];
-          td.style.fontWeight = 'bold';
-        } else if (h === 'Percentage') {
-          // Calculate overall percentage
-          const totalInstalled =
-            (overallSums['ADMIN INSTALLED'] || 0) +
-            (overallSums['ACAD INSTALLED'] || 0);
-          let totalRequired = 0;
-          numericCols.forEach((col) => {
-            if (col !== 'FAULTY' && col !== 'Percentage') {
-              totalRequired += overallSums[col];
-            }
-          });
-          let overallPercent = 0;
-          if (totalRequired > 0) {
-            overallPercent = (totalInstalled / totalRequired) * 100;
-          }
-          td.textContent = overallPercent.toFixed(2) + '%';
-          td.style.fontWeight = 'bold';
-        }
-        footerRow.appendChild(td);
+        patchingTableBody.appendChild(row);
       });
-      tfoot.appendChild(footerRow);
-
-      // Display summary - you can customize summary as needed
-      summaryList.innerHTML = '';
-      summaryList.appendChild(
-        document.createElement('li')
-      ).textContent = `Total rows processed: ${lines.length - 1}`;
-      summaryList.appendChild(
-        document.createElement('li')
-      ).textContent = `Overall installation percentage: ${overallPercent.toFixed(2)}%`;
     }
+
+    document.addEventListener("DOMContentLoaded", renderPatchingReport);
   </script>
 </body>
 </html>
