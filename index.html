@@ -1,160 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Equipment Management System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equipment Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-    <div class="menu-wrapper">
-        <!-- Left Menu -->
-        <nav class="menu-sidebar">
-            <h3>Equipment Types</h3>
-            <ul class="menu-list">
-                <li class="active">
-                    <a href="#" data-category="all">
-                        <i class="bi bi-grid-fill"></i>
-                        <span>All Equipment</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="SSOE">
-                        <i class="bi bi-pc-display"></i>
-                        <span>SSOE</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="Projector">
-                        <i class="bi bi-projector"></i>
-                        <span>Projector</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="ProjectorScreen">
-                        <i class="bi bi-display"></i>
-                        <span>Projector Screen</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="Visualiser">
-                        <i class="bi bi-camera"></i>
-                        <span>Visualiser</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="AppleTV">
-                        <i class="bi bi-apple"></i>
-                        <span>Apple TV</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="SMAX">
-                        <i class="bi bi-box"></i>
-                        <span>SMAX</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="PortableHDD">
-                        <i class="bi bi-device-hdd"></i>
-                        <span>Portable HDD</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="Macbook">
-                        <i class="bi bi-laptop"></i>
-                        <span>Macbook</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="TV">
-                        <i class="bi bi-tv"></i>
-                        <span>TV</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-category="OMR">
-                        <i class="bi bi-scanner"></i>
-                        <span>OMR</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+  <div class="d-flex">
+    <!-- Sidebar Navigation -->
+    <nav class="bg-light p-3 vh-100" style="width: 250px;">
+      <h4 class="mb-4">Equipment Types</h4>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link active" href="full-inventory.html"><i class="bi bi-grid-fill me-2"></i>All Equipment</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="ssoe.html"><i class="bi bi-pc-display me-2"></i>SSOE</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="projector.html"><i class="bi bi-projector me-2"></i>Projector</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="projectorscreen.html"><i class="bi bi-display me-2"></i>Projector Screen</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="visualiser.html"><i class="bi bi-camera me-2"></i>Visualiser</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="appletv.html"><i class="bi bi-apple me-2"></i>Apple TV</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="smax.html"><i class="bi bi-box me-2"></i>SMAX</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="portablehdd.html"><i class="bi bi-device-hdd me-2"></i>Portable HDD</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="macbook.html"><i class="bi bi-laptop me-2"></i>Macbook</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="tv.html"><i class="bi bi-tv me-2"></i>TV</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="omr.html"><i class="bi bi-scanner me-2"></i>OMR</a>
+        </li>
+      </ul>
+    </nav>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <h1>Equipment Management System</h1>
-            
-            <!-- Hidden Category Filter -->
-            <select id="categoryFilter" class="form-select d-none">
-                <option value="all">All Equipment Types</option>
-                <option value="SSOE">SSOE</option>
-                <option value="Projector">Projector</option>
-                <option value="ProjectorScreen">Projector Screen</option>
-                <option value="Visualiser">Visualiser</option>
-                <option value="AppleTV">Apple TV</option>
-                <option value="SMAX">SMAX</option>
-                <option value="PortableHDD">Portable HDD</option>
-                <option value="Macbook">Macbook</option>
-                <option value="TV">TV</option>
-                <option value="OMR">OMR</option>
-            </select>
+    <!-- Main Content -->
+    <main class="container-fluid p-4">
+      <h1 class="mb-4">Equipment Management System</h1>
 
-            <div class="action-buttons">
-                <button id="addNewBtn" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Add New Equipment
-                </button>
-                
-                <div class="mass-upload">
-                    <div class="upload-container">
-                        <input type="file" id="csvFile" accept=".csv" class="form-control">
-                        <button id="uploadBtn" class="btn btn-success">
-                            <i class="bi bi-upload"></i> Upload CSV
-                        </button>
-                    </div>
-                    <div class="upload-preview" id="uploadPreview">
-                        <h4>Upload Preview</h4>
-                        <div class="preview-content"></div>
-                    </div>
-                </div>
+      <!-- Action Buttons -->
+      <div class="mb-3 d-flex flex-wrap gap-3">
+        <button id="addNewBtn" class="btn btn-primary">
+          <i class="bi bi-plus-circle me-1"></i>Add New Equipment
+        </button>
 
-                <div class="export-container">
-                    <button id="exportBtn" class="btn btn-info">
-                        <i class="bi bi-download"></i> Export Data
-                    </button>
-                    <select id="exportFormat" class="form-select">
-                        <option value="csv">CSV</option>
-                        <option value="json">JSON</option>
-                        <option value="excel">Excel</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Equipment Table -->
-            <div class="table-responsive">
-                <table id="inventoryTable" class="table">
-                    <thead>
-                        <!-- Headers will be dynamically populated -->
-                    </thead>
-                    <tbody>
-                        <!-- Data will be dynamically populated -->
-                    </tbody>
-                </table>
-            </div>
+        <div class="input-group" style="max-width: 300px;">
+          <input type="file" id="csvFile" accept=".csv" class="form-control" />
+          <button id="uploadBtn" class="btn btn-success">
+            <i class="bi bi-upload me-1"></i>Upload CSV
+          </button>
         </div>
-    </div>
 
-    <!-- Add/Edit Modal -->
-    <div id="itemModal" class="modal">
-        <div class="modal-content">
-            <form id="itemForm">
-                <!-- Form fields will be dynamically populated -->
-            </form>
+        <div>
+          <button id="exportBtn" class="btn btn-info">
+            <i class="bi bi-download me-1"></i>Export
+          </button>
+          <select id="exportFormat" class="form-select d-inline-block w-auto">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+            <option value="excel">Excel</option>
+          </select>
         </div>
-    </div>
+      </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="script.js"></script>
+      <!-- Table -->
+      <div class="table-responsive">
+        <table id="inventoryTable" class="table table-bordered table-striped">
+          <thead>
+            <!-- Dynamic Headers -->
+          </thead>
+          <tbody>
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Template (use Bootstrap modal structure) -->
+  <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="itemForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="itemModalLabel">Add/Edit Equipment</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Dynamic form fields -->
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="script.js"></script>
 </body>
 </html>
