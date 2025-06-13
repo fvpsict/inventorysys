@@ -9,6 +9,36 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
+  <style>
+    /* Basic form and table styling */
+    .input-form, table {
+      width: 100%;
+      margin-bottom: 1rem;
+      border-collapse: collapse;
+    }
+    .input-form td, table th, table td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .input-form th {
+      background-color: #f4f4f4;
+    }
+    input[type="text"], input[type="date"], select {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 6px 12px;
+      margin: 5px 0;
+      cursor: pointer;
+    }
+    .actions-btns button {
+      margin: 0 2px;
+    }
+  </style>
 </head>
 <body>
   <div class="menu-wrapper">
@@ -23,66 +53,153 @@
 
     <main class="main-content">
       <h1>Fault Report</h1>
-      <p>This page will show reported faults on inventory items.</p>
+      <p>Add, update, and track faults for inventory items.</p>
 
-      <table class="table" aria-label="Fault Report Table" id="faultTable">
+      <form id="faultForm" class="input-form">
+        <table>
+          <thead>
+            <tr>
+              <th>Date Reported</th>
+              <th>Item</th>
+              <th>Fault Description</th>
+              <th>Status</th>
+              <th>Date Resolved</th>
+              <th>Action Taken</th>
+              <th>Lamphour</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="date" name="dateReported" required></td>
+              <td><input type="text" name="item" required></td>
+              <td><input type="text" name="faultDescription" required></td>
+              <td>
+                <select name="status" required>
+                  <option value="">Select</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </td>
+              <td><input type="date" name="dateResolved"></td>
+              <td><input type="text" name="actionTaken"></td>
+              <td><input type="number" name="lamphour" min="0" value="0"></td>
+              <td><button type="submit">Add Fault</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+
+      <h2>Fault Report List</h2>
+      <table id="faultTable" aria-label="Fault Report Table" border="1" cellspacing="0" cellpadding="5">
         <thead>
           <tr>
-            <th>Equipment Type</th>
-            <th>Asset No</th>
+            <th>Date Reported</th>
+            <th>Item</th>
             <th>Fault Description</th>
             <th>Status</th>
-            <th>Date Reported</th>
             <th>Date Resolved</th>
             <th>Action Taken</th>
+            <th>Lamphour</th>
+            <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Fault data rows inserted dynamically here -->
+        <tbody id="faultTableBody">
+          <!-- Fault entries will appear here -->
         </tbody>
       </table>
     </main>
   </div>
 
-  <script>
-    // Placeholder sample data, replace with actual fetch or data source
-    const faultData = [
-      {
-        equipmentType: "Projector",
-        assetNo: "PRJ-1234",
-        faultDescription: "Lamp flickering",
-        status: "Open",
-        dateReported: "2025-06-01",
-        dateResolved: "",
-        actionTaken: ""
-      },
-      {
-        equipmentType: "Macbook",
-        assetNo: "MBK-5678",
-        faultDescription: "Battery not charging",
-        status: "Resolved",
-        dateReported: "2025-05-20",
-        dateResolved: "2025-05-25",
-        actionTaken: "Battery replaced"
-      }
-    ];
+<script>
+  const faultForm = document.getElementById('faultForm');
+  const faultTableBody = document.getElementById('faultTableBody');
 
-    const faultTableBody = document.querySelector("#faultTable tbody");
+  // Store fault entries in an array
+  let faultEntries = [];
 
-    function renderFaultReport() {
-      faultTableBody.innerHTML = "";
-      faultData.forEach(fault => {
-        const row = document.createElement("tr");
-        Object.values(fault).forEach(val => {
-          const td = document.createElement("td");
-          td.textContent = val || "-";
-          row.appendChild(td);
-        });
-        faultTableBody.appendChild(row);
-      });
+  // Render fault entries in the table
+  function renderFaultTable() {
+    faultTableBody.innerHTML = '';
+    faultEntries.forEach((entry, index) => {
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>${entry.dateReported}</td>
+        <td>${entry.item}</td>
+        <td>${entry.faultDescription}</td>
+        <td>${entry.status}</td>
+        <td>${entry.dateResolved || ''}</td>
+        <td>${entry.actionTaken || ''}</td>
+        <td>${entry.lamphour}</td>
+        <td class="actions-btns">
+          <button onclick="editEntry(${index})">Edit</button>
+          <button onclick="deleteEntry(${index})">Delete</button>
+        </td>
+      `;
+
+      faultTableBody.appendChild(tr);
+    });
+  }
+
+  // Add new fault entry from form
+  faultForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(faultForm);
+    const newEntry = {
+      dateReported: formData.get('dateReported'),
+      item: formData.get('item').trim(),
+      faultDescription: formData.get('faultDescription').trim(),
+      status: formData.get('status'),
+      dateResolved: formData.get('dateResolved'),
+      actionTaken: formData.get('actionTaken').trim(),
+      lamphour: Number(formData.get('lamphour')) || 0
+    };
+
+    if (faultForm.dataset.editIndex !== undefined) {
+      // Editing existing entry
+      faultEntries[faultForm.dataset.editIndex] = newEntry;
+      delete faultForm.dataset.editIndex;
+      faultForm.querySelector('button[type="submit"]').textContent = 'Add Fault';
+    } else {
+      // Add new entry
+      faultEntries.push(newEntry);
     }
 
-    document.addEventListener("DOMContentLoaded", renderFaultReport);
-  </script>
+    faultForm.reset();
+    renderFaultTable();
+  });
+
+  // Delete entry by index
+  function deleteEntry(index) {
+    if (confirm('Are you sure you want to delete this fault entry?')) {
+      faultEntries.splice(index, 1);
+      renderFaultTable();
+    }
+  }
+
+  // Edit entry by index
+  function editEntry(index) {
+    const entry = faultEntries[index];
+    faultForm.dateReported.value = entry.dateReported;
+    faultForm.item.value = entry.item;
+    faultForm.faultDescription.value = entry.faultDescription;
+    faultForm.status.value = entry.status;
+    faultForm.dateResolved.value = entry.dateResolved || '';
+    faultForm.actionTaken.value = entry.actionTaken || '';
+    faultForm.lamphour.value = entry.lamphour;
+
+    faultForm.dataset.editIndex = index;
+    faultForm.querySelector('button[type="submit"]').textContent = 'Update Fault';
+  }
+
+  // Initialize empty table on load
+  window.onload = () => {
+    renderFaultTable();
+  };
+</script>
 </body>
 </html>
