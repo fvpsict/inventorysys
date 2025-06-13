@@ -1,144 +1,112 @@
-// csv.js
+// Store inventory globally (can be synced with inventory.js)
+let uploadedInventoryData = [];
 
+// Preview CSV file content
 function previewCsv() {
-  const input = document.getElementById("csvFile");
-  if (!input.files.length) return;
+  const fileInput = document.getElementById("csvFile");
+  const file = fileInput.files[0];
 
-  const file = input.files[0];
+  if (!file) {
+    alert("No file selected.");
+    return;
+  }
+
   const reader = new FileReader();
-
   reader.onload = function (e) {
-    const text = e.target.result;
-    const rows = text.trim().split(/\r?\n/);
+    const csvText = e.target.result;
+    uploadedInventoryData = parseCsv(csvText);
 
-    const previewDiv = document.querySelector(".preview-content");
-    previewDiv.innerHTML = "";
+    if (uploadedInventoryData.length === 0) {
+      alert("CSV file is empty or invalid.");
+      return;
+    }
 
-    // Simple preview: show first 10 rows in a table
-    const table = document.createElement("table");
-    table.className = "table";
+    // Preview first 5 rows
+    const previewContent = document.querySelector(".preview-content");
+    const headers = Object.keys(uploadedInventoryData[0]);
+    let html = "<table><thead><tr>";
 
-    rows.slice(0, 10).forEach((row, idx) => {
-      const tr = document.createElement("tr");
-      const cols = row.split(",");
-      cols.forEach((col) => {
-        const cell = idx === 0 ? document.createElement("th") : document.createElement("td");
-        cell.textContent = col;
-        tr.appendChild(cell);
+    headers.forEach((header) => {
+      html += `<th>${header}</th>`;
+    });
+    html += "</tr></thead><tbody>";
+
+    uploadedInventoryData.slice(0, 5).forEach((row) => {
+      html += "<tr>";
+      headers.forEach((header) => {
+        html += `<td>${row[header] || ""}</td>`;
       });
-      table.appendChild(tr);
+      html += "</tr>";
     });
 
-    previewDiv.appendChild(table);
+    html += "</tbody></table>";
+    previewContent.innerHTML = html;
     document.getElementById("uploadPreview").style.display = "block";
   };
 
   reader.readAsText(file);
 }
 
-function closePreview() {
-  document.getElementById("uploadPreview").style.display = "none";
-  document.querySelector(".preview-content").innerHTML = "";
-  document.getElementById("csvFile").value = "";
+// Parse CSV string to array of objects
+function parseCsv(csvText) {
+  const lines = csvText.trim().split("\n");
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(",").map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const values = line.split(",").map(v => v.trim());
+    const row = {};
+    headers.forEach((h, i) => {
+      row[h] = values[i] || "";
+    });
+    return row;
+  });
 }
 
+// Import previewed data into the inventory system
 function handleCsvUpload() {
-  const input = document.getElementById("csvFile");
-  if (!input.files.length) {
-    alert("Please select a CSV file first.");
+  if (uploadedInventoryData.length === 0) {
+    alert("No previewed data available to import.");
     return;
   }
 
-  const file = input.files[0];
-  const reader = new FileReader();
+  // Add data to inventoryData and re-render
+  uploadedInventoryData.forEach(item => addInventoryItem(item));
+  uploadedInventoryData = []; // Clear cache
 
-  reader.onload = function (e) {
-    const text = e.target.result;
-    const rows = text.trim().split(/\r?\n/);
-    if (rows.length < 2) {
-      alert("CSV must have header and at least one data row.");
-      return;
-    }
-
-    // Parse header row and map to keys
-    const headers = rows[0].split(",").map((h) => h.trim().toLowerCase().replace(/\s/g, ""));
-
-    // Map CSV headers to your keys
-    // For example: "equipmenttype", "vendor", etc.
-    // We'll try to match them loosely
-    const keyMap = {};
-    headers.forEach((header, idx) => {
-      tableHeadersKeys.forEach((key) => {
-        if (header.includes(key.toLowerCase())) {
-          keyMap[key] = idx;
-        }
-      });
-    });
-
-    // Clear current data
-    inventoryData = [];
-
-    // Parse data rows
-    for (let i = 1; i < rows.length; i++) {
-      const cols = rows[i].split(",");
-      const item = {};
-      for (const key of tableHeadersKeys) {
-        if (keyMap[key] !== undefined) {
-          item[key] = cols[keyMap[key]] ? cols[keyMap[key]].trim() : "";
-        } else {
-          item[key] = "";
-        }
-      }
-      inventoryData.push(item);
-    }
-
-    renderTable();
-    closePreview();
-    alert("CSV imported successfully!");
-  };
-
-  reader.readAsText(file);
+  document.getElementById("uploadPreview").style.display = "none";
+  document.getElementById("csvFile").value = ""; // Reset file input
 }
 
+// Export current inventory to CSV or JSON
 function exportToCsv() {
-  const formatSelect = document.getElementById("exportFormat");
-  const format = formatSelect.value;
+  const format = document.getElementById("exportFormat").value;
+  const data = inventoryData;
 
-  if (!inventoryData.length) {
-    alert("No data to export.");
+  if (data.length === 0) {
+    alert("No inventory data to export.");
     return;
   }
 
+  let blob;
   if (format === "csv") {
-    let csvContent = tableHeaders.join(",") + "\n";
-
-    inventoryData.forEach((item) => {
-      const row = tableHeadersKeys.map((key) => {
-        // Escape commas and quotes in values
-        const val = item[key] || "";
-        if (val.includes(",") || val.includes('"')) {
-          return `"${val.replace(/"/g, '""')}"`;
-        }
-        return val;
-      });
-      csvContent += row.join(",") + "\n";
+    const headers = Object.keys(data[0]);
+    const csvRows = [headers.join(",")];
+    data.forEach(row => {
+      const values = headers.map(h => `"${row[h] || ""}"`);
+      csvRows.push(values.join(","));
     });
-
-    downloadFile(csvContent, "inventory_export.csv", "text/csv");
+    blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
   } else if (format === "json") {
-    const jsonContent = JSON.stringify(inventoryData, null, 2);
-    downloadFile(jsonContent, "inventory_export.json", "application/json");
+    blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  } else {
+    alert("Unsupported export format.");
+    return;
   }
-}
 
-function downloadFile(content, filename, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
+  // Create download link
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `inventory_export.${format}`;
+  link.click();
 }
