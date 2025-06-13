@@ -2,123 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Equipment Management System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory System</title>
+  <link rel="stylesheet" href="styles.css" /> <!-- Your CSS file -->
 </head>
-
 <body>
-  <div class="d-flex">
-    <!-- Sidebar Navigation -->
-    <nav class="bg-light p-3 vh-100" style="width: 250px;">
-      <h4 class="mb-4">Equipment Types</h4>
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <a class="nav-link active" href="full-inventory.html"><i class="bi bi-grid-fill me-2"></i>All Equipment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="ssoe.html"><i class="bi bi-pc-display me-2"></i>SSOE</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="projector.html"><i class="bi bi-projector me-2"></i>Projector</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="projectorscreen.html"><i class="bi bi-display me-2"></i>Projector Screen</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="visualiser.html"><i class="bi bi-camera me-2"></i>Visualiser</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="appletv.html"><i class="bi bi-apple me-2"></i>Apple TV</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="smax.html"><i class="bi bi-box me-2"></i>SMAX</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="portablehdd.html"><i class="bi bi-device-hdd me-2"></i>Portable HDD</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="macbook.html"><i class="bi bi-laptop me-2"></i>Macbook</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="tv.html"><i class="bi bi-tv me-2"></i>TV</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="omr.html"><i class="bi bi-scanner me-2"></i>OMR</a>
-        </li>
-      </ul>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="container-fluid p-4">
-      <h1 class="mb-4">Equipment Management System</h1>
+  <!-- Your HTML content goes here -->
 
-      <!-- Action Buttons -->
-      <div class="mb-3 d-flex flex-wrap gap-3">
-        <button id="addNewBtn" class="btn btn-primary">
-          <i class="bi bi-plus-circle me-1"></i>Add New Equipment
-        </button>
-
-        <div class="input-group" style="max-width: 300px;">
-          <input type="file" id="csvFile" accept=".csv" class="form-control" />
-          <button id="uploadBtn" class="btn btn-success">
-            <i class="bi bi-upload me-1"></i>Upload CSV
-          </button>
-        </div>
-
-        <div>
-          <button id="exportBtn" class="btn btn-info">
-            <i class="bi bi-download me-1"></i>Export
-          </button>
-          <select id="exportFormat" class="form-select d-inline-block w-auto">
-            <option value="csv">CSV</option>
-            <option value="json">JSON</option>
-            <option value="excel">Excel</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="table-responsive">
-        <table id="inventoryTable" class="table table-bordered table-striped">
-          <thead>
-            <!-- Dynamic Headers -->
-          </thead>
-          <tbody>
-            <!-- Dynamic Rows -->
-          </tbody>
-        </table>
-      </div>
-    </main>
+  <!-- Modal -->
+  <div id="itemModal" style="display:none;">
+    <!-- Modal content here -->
   </div>
 
-  <!-- Modal Template (use Bootstrap modal structure) -->
-  <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <form id="itemForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="itemModalLabel">Add/Edit Equipment</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <!-- Dynamic form fields -->
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
+  <!-- CSV Upload -->
+  <input type="file" id="csvFile" accept=".csv" />
+  <button onclick="previewCsv()">Preview CSV</button>
+  <button onclick="handleCsvUpload()">Import CSV</button>
+  <button onclick="closePreview()">Close Preview</button>
+
+  <div id="uploadPreview" style="display:none;">
+    <div class="preview-content"></div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="script.js"></script>
+  <!-- Inventory Table placeholder -->
+  <table id="inventoryTable">
+    <!-- Table will be dynamically created -->
+  </table>
+
+  <!-- Your other HTML UI elements -->
+
+  <!-- JavaScript files -->
+  <script src="modal.js"></script>
+  <script src="inventory.js"></script>
+  <script src="formatting.js"></script>
+  <script src="filter.js"></script>
+  <script src="csvParse.js"></script>
+  <script src="csvUpload.js"></script>
+
+  <!-- Initialize inventory and table -->
+  <script>
+    // Make sure to declare the inventory array and functions like saveInventory, createTable globally
+    let inventory = [];
+
+    function saveInventory() {
+      localStorage.setItem('inventory', JSON.stringify(inventory));
+    }
+
+    function loadInventory() {
+      const data = localStorage.getItem('inventory');
+      if (data) inventory = JSON.parse(data);
+    }
+
+    function createTable() {
+      // Implement table creation based on inventory array here
+      const table = document.getElementById('inventoryTable');
+      table.innerHTML = '';
+
+      if(inventory.length === 0) {
+        table.innerHTML = '<tr><td>No items</td></tr>';
+        return;
+      }
+
+      // Create header row dynamically from keys of first item
+      const headers = Object.keys(inventory[0]).filter(k => k !== 'id');
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = formatColumnHeader(h);
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+
+      // Create body rows
+      const tbody = document.createElement('tbody');
+      inventory.forEach(item => {
+        const tr = document.createElement('tr');
+        headers.forEach(h => {
+          const td = document.createElement('td');
+          td.textContent = item[h] || '';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
+
+    // Load inventory and display table on page load
+    window.onload = () => {
+      loadInventory();
+      createTable();
+    };
+  </script>
+
 </body>
 </html>
