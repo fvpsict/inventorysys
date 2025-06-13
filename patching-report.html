@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patching Report - Inventory System</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+</head>
+<body>
+  <div class="menu-wrapper">
+    <nav class="menu-sidebar">
+      <h3>Inventory Menu</h3>
+      <ul class="menu-list">
+        <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
+        <li><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
+        <li class="active"><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1>Patching Report</h1>
+      <p>This page summarizes patching status of devices weekly.</p>
+
+      <table class="table" aria-label="Patching Report Table" id="patchingTable">
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>Week 1</th>
+            <th>Week 2</th>
+            <th>Week 3</th>
+            <th>Week 4</th>
+            <th>Status Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Patching data rows inserted dynamically here -->
+        </tbody>
+      </table>
+    </main>
+  </div>
+
+  <script>
+    // Sample data for patching report
+    const patchingData = [
+      {
+        device: "Macbook MBK-5678",
+        week1: "Installed",
+        week2: "Installed",
+        week3: "Installed",
+        week4: "Not Connected",
+        statusSummary: "Mostly Installed"
+      },
+      {
+        device: "Projector PRJ-1234",
+        week1: "Installed",
+        week2: "Installed",
+        week3: "Not Connected",
+        week4: "Installed",
+        statusSummary: "Mixed Status"
+      }
+    ];
+
+    const patchingTableBody = document.querySelector("#patchingTable tbody");
+
+    function renderPatchingReport() {
+      patchingTableBody.innerHTML = "";
+      patchingData.forEach(entry => {
+        const row = document.createElement("tr");
+        Object.values(entry).forEach(val => {
+          const td = document.createElement("td");
+          td.textContent = val || "-";
+          row.appendChild(td);
+        });
+        patchingTableBody.appendChild(row);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", renderPatchingReport);
+  </script>
+</body>
+</html>
