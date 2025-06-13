@@ -5,13 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Inventory System</title>
     <link rel="stylesheet" href="styles.css" />
-    <!-- Optional: FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- FontAwesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
 </head>
 <body>
     <div class="menu-wrapper">
         <!-- Sidebar -->
-        <nav class="menu-sidebar">
+        <nav class="menu-sidebar" aria-label="Main Menu">
             <h3>Inventory Menu</h3>
             <ul class="menu-list">
                 <li class="active"><a href="#"><i class="fas fa-boxes"></i> View Inventory</a></li>
@@ -21,30 +26,30 @@
         </nav>
 
         <!-- Main content -->
-        <main class="main-content">
-            <section class="action-buttons">
+        <main class="main-content" role="main" aria-live="polite">
+            <section class="action-buttons" aria-label="Inventory Actions">
                 <div class="mass-upload">
                     <label for="csvFile" class="button secondary" style="cursor:pointer;">
                         <i class="fas fa-upload"></i> Upload CSV
                     </label>
-                    <input type="file" id="csvFile" accept=".csv" class="d-none" onchange="previewCsv()" />
+                    <input type="file" id="csvFile" accept=".csv" class="d-none" onchange="previewCsv()" aria-describedby="uploadHelp" />
                     <button class="button" onclick="handleCsvUpload()">Import CSV</button>
                     <button class="button secondary" onclick="closePreview()">Cancel Preview</button>
+                    <div id="uploadHelp" class="sr-only">Select a CSV file to preview and import inventory data</div>
                 </div>
 
                 <div class="export-container">
-                    <button class="button" onclick="exportToCsv()">Export CSV</button>
-                    <select id="exportFormat" title="Choose export format">
+                    <button class="button" onclick="exportToCsv()">Export</button>
+                    <select id="exportFormat" title="Choose export format" aria-label="Export format">
                         <option value="csv">CSV</option>
                         <option value="json">JSON</option>
-                        <!-- Add more export formats if needed -->
                     </select>
                 </div>
             </section>
 
-            <div id="uploadPreview" class="upload-preview">
+            <section id="uploadPreview" class="upload-preview" aria-live="polite" aria-atomic="true" style="display:none;">
                 <div class="preview-content"></div>
-            </div>
+            </section>
 
             <table id="inventoryTable" class="table" aria-label="Inventory Table">
                 <thead>
@@ -59,15 +64,14 @@
         </main>
     </div>
 
-    <!-- Modal -->
-    <div id="itemModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <!-- Modal for Add/Edit Inventory Item -->
+    <div id="itemModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc" tabindex="-1">
         <div class="modal-content">
             <h2 id="modalTitle">Inventory Item</h2>
-            <form id="itemForm">
-                <!-- Dynamically generated form fields will go here -->
+            <form id="itemForm" novalidate>
                 <div class="form-group">
-                    <label for="equipmentType">Equipment Type</label>
-                    <input type="text" id="equipmentType" name="equipmentType" required />
+                    <label for="equipmentType">Equipment Type <span aria-hidden="true" style="color:red;">*</span></label>
+                    <input type="text" id="equipmentType" name="equipmentType" required aria-required="true" />
                 </div>
                 <div class="form-group">
                     <label for="vendor">Vendor</label>
@@ -89,7 +93,6 @@
                     <label for="location">Location</label>
                     <input type="text" id="location" name="location" />
                 </div>
-                <!-- Add other form groups as needed -->
 
                 <div class="button-group">
                     <button type="button" class="button secondary" onclick="closeModal()">Cancel</button>
@@ -101,5 +104,6 @@
 
     <script src="inventory.js"></script>
     <script src="csv.js"></script>
+    <script src="modal.js"></script>
 </body>
 </html>
