@@ -1,39 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Patching Report</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  textarea { width: 100%; height: 200px; font-family: monospace; }
-  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-  th { background-color: #eee; }
-  button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patching Report - Inventory System</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-family: monospace;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      resize: vertical;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #f4f4f4;
+    }
+    tfoot tr {
+      background-color: #eee;
+      font-weight: bold;
+    }
+    button {
+      padding: 8px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    .menu-sidebar {
+      float: left;
+      width: 200px;
+      background: #222;
+      color: #fff;
+      height: 100vh;
+      padding: 1rem;
+    }
+    .menu-sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .menu-sidebar ul li {
+      margin: 1rem 0;
+    }
+    .menu-sidebar ul li a {
+      color: #ccc;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .menu-sidebar ul li.active a {
+      color: #fff;
+      text-decoration: underline;
+    }
+    .main-content {
+      margin-left: 220px;
+      padding: 1rem;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Patching Report</h1>
+  <nav class="menu-sidebar">
+    <h3>Inventory Menu</h3>
+    <ul>
+      <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
+      <li><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
+      <li class="active"><a href="#"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+    </ul>
+  </nav>
 
-<p>Paste your raw data here (CSV or tab-separated):</p>
-<textarea id="rawData" placeholder="Paste raw data here, including header row..."></textarea>
-<br />
-<button onclick="processRawData()">Process Data</button>
+  <main class="main-content">
+    <h1>Patching Report</h1>
 
-<h2>Summary Report</h2>
-<table id="summaryTable">
-  <thead>
-    <tr id="summaryHeaderRow"></tr>
-  </thead>
-  <tbody id="summaryBody"></tbody>
-</table>
+    <p>
+      Paste your raw patching data below (tab or comma separated columns) including headers.
+      Then click "Process Data" to generate the table and summary.
+    </p>
+
+    <textarea id="rawData" placeholder="Paste raw patching data here..."></textarea>
+    <br />
+    <button onclick="processData()">Process Data</button>
+
+    <h2>Parsed Data</h2>
+    <table id="dataTable" aria-label="Patching Data Table">
+      <thead></thead>
+      <tbody></tbody>
+      <tfoot></tfoot>
+    </table>
+  </main>
 
 <script>
-  // Define the summary columns exactly as requested
-  const summaryHeaders = [
-    'DATE',
+  // Column headers we expect and want to sum (case-insensitive)
+  const numericColumns = [
     'ADMIN INSTALLED',
     'ACAD INSTALLED',
     'ADMIN SCCM EPP > 4 wks',
@@ -47,83 +122,83 @@
     'E-EXAM',
     'FAULTY',
     'Tech Refresh',
-    'Percentage'
   ];
 
-  function processRawData() {
-    const rawText = document.getElementById('rawData').value.trim();
-    if (!rawText) {
-      alert('Please paste raw data before processing.');
+  function processData() {
+    const raw = document.getElementById('rawData').value.trim();
+    if (!raw) {
+      alert('Please paste your raw data first.');
       return;
     }
 
-    // Split raw text into lines
-    const lines = rawText.split(/\r?\n/);
-    if (lines.length < 2) {
-      alert('Raw data must include a header and at least one data row.');
-      return;
-    }
+    // Split into lines
+    const lines = raw.split(/\r?\n/).filter(l => l.trim() !== '');
 
-    // Parse CSV or TSV (comma or tab separated)
-    let delimiter = ',';
-    if (lines[0].includes('\t')) delimiter = '\t';
+    // Parse header line - split by tab or comma
+    const headerLine = lines[0];
+    const delimiter = headerLine.includes('\t') ? '\t' : ',';
+    const headers = headerLine.split(delimiter).map(h => h.trim());
 
-    // Parse header row
-    const rawHeaders = lines[0].split(delimiter).map(h => h.trim());
+    // Clear previous table
+    const table = document.getElementById('dataTable');
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    const tfoot = table.querySelector('tfoot');
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '';
 
-    // Expected headers in raw data (you gave these):
-    // Asset Tag, Serial Number, School, Hostname, Device Type, Brand, Model, Profile, Custodian Name, CSM, SSOE Location, Status
-    // Let's find indices of important columns:
-    const dateIdx = rawHeaders.indexOf('Date') !== -1 ? rawHeaders.indexOf('Date') : -1;
-    const statusIdx = rawHeaders.indexOf('Status');
-    const profileIdx = rawHeaders.indexOf('Profile');
-    const custodianIdx = rawHeaders.indexOf('Custodian Name');
-    const hostnameIdx = rawHeaders.indexOf('Hostname');
+    // Create header row
+    const headerRow = document.createElement('tr');
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
 
-    if (statusIdx === -1) {
-      alert('Raw data must include a "Status" column.');
-      return;
-    }
+    // Prepare array to accumulate sums for numeric columns
+    const sums = Array(headers.length).fill(0);
 
-    // We'll assume raw data includes a 'Date' or you can input it manually (or use today's date)
-    // For simplicity, if no 'Date' column, set a default date "Unknown Date"
-
-    // Group data by Date
-    const summaryData = {};
-
+    // Process data rows
     for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      const cols = lines[i].split(delimiter).map(c => c.trim());
-      const date = dateIdx !== -1 ? cols[dateIdx] : 'Unknown Date';
-      const status = cols[statusIdx].toUpperCase();
+      const row = document.createElement('tr');
+      const cells = lines[i].split(delimiter);
+      for (let j = 0; j < headers.length; j++) {
+        const cellText = (cells[j] || '').trim();
+        const td = document.createElement('td');
+        td.textContent = cellText;
+        row.appendChild(td);
 
-      if (!summaryData[date]) {
-        summaryData[date] = {
-          'ADMIN INSTALLED': 0,
-          'ACAD INSTALLED': 0,
-          'ADMIN SCCM EPP > 4 wks': 0,
-          'ACAD SCCM EPP > 4 wks': 0,
-          'ADMIN NOT CONNECTED': 0,
-          'ACAD NOT CONNECTED': 0,
-          'ADMIN REQUIRED': 0,
-          'ACAD REQUIRED': 0,
-          'ADMIN UNKNOWN': 0,
-          'ACAD UNKNOWN': 0,
-          'E-EXAM': 0,
-          'FAULTY': 0,
-          'Tech Refresh': 0,
-          totalDevices: 0,  // for percentage calculation
-        };
+        // If this header is numeric, accumulate sum
+        if (numericColumns.includes(headers[j].toUpperCase())) {
+          const val = parseFloat(cellText.replace(/,/g, ''));
+          if (!isNaN(val)) {
+            sums[j] += val;
+          }
+        }
       }
+      tbody.appendChild(row);
+    }
 
-      // Increment total devices count
-      summaryData[date].totalDevices++;
+    // Add footer summary row
+    const footerRow = document.createElement('tr');
+    headers.forEach((h, idx) => {
+      const td = document.createElement('td');
+      if (numericColumns.includes(h.toUpperCase())) {
+        td.textContent = sums[idx];
+      } else if (idx === 0) {
+        td.textContent = 'TOTAL';
+        td.style.fontWeight = 'bold';
+        td.style.textAlign = 'left';
+      } else {
+        td.textContent = '';
+      }
+      footerRow.appendChild(td);
+    });
+    tfoot.appendChild(footerRow);
+  }
+</script>
 
-      // Count based on status and profile or other logic
-      // For example, we guess based on Status and Profile or Custodian who is admin or acad.
-
-      // For simplicity, some example logic (you can customize this):
-      // If status includes "INSTALLED" and profile or custodian contains "ADMIN" or "ACAD" count accordingly
-      // For more accurate, you'd provide mapping rules.
-
-      // Example (you must adapt based on your real data m
+</body>
+</html>
