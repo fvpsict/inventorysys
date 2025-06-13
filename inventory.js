@@ -1,117 +1,74 @@
-// inventory.js
-
-let inventoryData = []; // in-memory inventory array of objects
-
-const tableHeaders = [
-  "Equipment Type",
-  "Vendor",
-  "Brand & Model",
-  "Serial No",
-  "Asset No",
-  "Location",
+// Sample data for demonstration
+const inventoryData = [
+  {
+    equipmentType: "Projector",
+    vendor: "Epson",
+    brandModel: "EB-X41",
+    serialNo: "12345ABC",
+    assetNo: "A-001",
+    location: "Room 101"
+  },
+  {
+    equipmentType: "Laptop",
+    vendor: "HP",
+    brandModel: "EliteBook 840",
+    serialNo: "98765XYZ",
+    assetNo: "A-002",
+    location: "IT Room"
+  }
 ];
 
-const tableHeadersKeys = [
-  "equipmentType",
-  "vendor",
-  "brandModel",
-  "serialNo",
-  "assetNo",
-  "location",
-];
+// Dynamically render headers and data into table
+function renderInventoryTable(data) {
+  const tableHeaders = document.getElementById("tableHeaders");
+  const tableBody = document.getElementById("tableBody");
 
-const inventoryTableHeaders = document.getElementById("tableHeaders");
-const inventoryTableBody = document.getElementById("tableBody");
-const itemModal = document.getElementById("itemModal");
-const itemForm = document.getElementById("itemForm");
+  tableHeaders.innerHTML = "";
+  tableBody.innerHTML = "";
 
-let currentEditIndex = -1;
+  if (data.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="10">No data available</td></tr>`;
+    return;
+  }
 
-function renderTableHeaders() {
-  inventoryTableHeaders.innerHTML = "";
-  tableHeaders.forEach((header) => {
+  // Extract keys from first object as headers
+  const headers = Object.keys(data[0]);
+
+  // Render table headers
+  headers.forEach((key) => {
     const th = document.createElement("th");
-    th.textContent = header;
-    inventoryTableHeaders.appendChild(th);
+    th.textContent = toTitleCase(key);
+    tableHeaders.appendChild(th);
   });
-}
 
-function renderTable() {
-  inventoryTableBody.innerHTML = "";
-  inventoryData.forEach((item, index) => {
+  // Render table rows
+  data.forEach((row) => {
     const tr = document.createElement("tr");
-    tr.addEventListener("click", () => openModal(index));
-
-    tableHeadersKeys.forEach((key) => {
+    headers.forEach((key) => {
       const td = document.createElement("td");
-      td.textContent = item[key] || "";
+      td.textContent = row[key] || "";
       tr.appendChild(td);
     });
-
-    inventoryTableBody.appendChild(tr);
+    tableBody.appendChild(tr);
   });
 }
 
-function openModal(index = -1) {
-  currentEditIndex = index;
-
-  if (index >= 0) {
-    // Edit existing item
-    const item = inventoryData[index];
-    tableHeadersKeys.forEach((key) => {
-      const input = document.getElementById(key);
-      if (input) input.value = item[key] || "";
+// Utility function to convert camelCase to Title Case
+function toTitleCase(str) {
+  return str
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, function (s) {
+      return s.toUpperCase();
     });
-  } else {
-    // New item
-    itemForm.reset();
-  }
-
-  itemModal.style.display = "block";
-  // Set focus to first input
-  document.getElementById(tableHeadersKeys[0]).focus();
 }
 
-function closeModal() {
-  itemModal.style.display = "none";
-  currentEditIndex = -1;
+// Add new item to table (can be extended to use modal form)
+function addInventoryItem(item) {
+  inventoryData.push(item);
+  renderInventoryTable(inventoryData);
 }
 
-itemForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  // Gather form data
-  const newItem = {};
-  let valid = true;
-  tableHeadersKeys.forEach((key) => {
-    const val = document.getElementById(key).value.trim();
-    if (key === "equipmentType" && val === "") {
-      alert("Equipment Type is required");
-      valid = false;
-    }
-    newItem[key] = val;
-  });
-
-  if (!valid) return;
-
-  if (currentEditIndex >= 0) {
-    // Update existing
-    inventoryData[currentEditIndex] = newItem;
-  } else {
-    // Add new
-    inventoryData.push(newItem);
-  }
-
-  renderTable();
-  closeModal();
+// Call on page load
+document.addEventListener("DOMContentLoaded", function () {
+  renderInventoryTable(inventoryData);
 });
-
-window.onclick = function (event) {
-  if (event.target === itemModal) {
-    closeModal();
-  }
-};
-
-// Initialization
-renderTableHeaders();
-renderTable();
