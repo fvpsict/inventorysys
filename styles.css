@@ -158,3 +158,19 @@ h1 {
   display: flex;
   justify-content: flex-end;
 }
+
+.submenu-list {
+  list-style: none;
+  padding-left: 1rem;
+  margin-top: 0.25rem;
+}
+
+.submenu-list li a {
+  font-size: 0.9rem;
+  color: #ccc;
+  text-decoration: none;
+}
+
+.submenu-list li a:hover {
+  text-decoration: underline;
+}
