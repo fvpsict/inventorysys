@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fault Report - Inventory System</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+</head>
+<body>
+  <div class="menu-wrapper">
+    <nav class="menu-sidebar">
+      <h3>Inventory Menu</h3>
+      <ul class="menu-list">
+        <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
+        <li class="active"><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
+        <li><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1>Fault Report</h1>
+      <p>This page will show reported faults on inventory items.</p>
+
+      <table class="table" aria-label="Fault Report Table" id="faultTable">
+        <thead>
+          <tr>
+            <th>Equipment Type</th>
+            <th>Asset No</th>
+            <th>Fault Description</th>
+            <th>Status</th>
+            <th>Date Reported</th>
+            <th>Date Resolved</th>
+            <th>Action Taken</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Fault data rows inserted dynamically here -->
+        </tbody>
+      </table>
+    </main>
+  </div>
+
+  <script>
+    // Placeholder sample data, replace with actual fetch or data source
+    const faultData = [
+      {
+        equipmentType: "Projector",
+        assetNo: "PRJ-1234",
+        faultDescription: "Lamp flickering",
+        status: "Open",
+        dateReported: "2025-06-01",
+        dateResolved: "",
+        actionTaken: ""
+      },
+      {
+        equipmentType: "Macbook",
+        assetNo: "MBK-5678",
+        faultDescription: "Battery not charging",
+        status: "Resolved",
+        dateReported: "2025-05-20",
+        dateResolved: "2025-05-25",
+        actionTaken: "Battery replaced"
+      }
+    ];
+
+    const faultTableBody = document.querySelector("#faultTable tbody");
+
+    function renderFaultReport() {
+      faultTableBody.innerHTML = "";
+      faultData.forEach(fault => {
+        const row = document.createElement("tr");
+        Object.values(fault).forEach(val => {
+          const td = document.createElement("td");
+          td.textContent = val || "-";
+          row.appendChild(td);
+        });
+        faultTableBody.appendChild(row);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", renderFaultReport);
+  </script>
+</body>
+</html>
