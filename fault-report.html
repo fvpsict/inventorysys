@@ -1,82 +1,141 @@
-<!-- fault-report.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fault Report</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fault Report - Inventory System</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
   <div class="menu-wrapper">
     <nav class="menu-sidebar">
       <h3>Inventory Menu</h3>
       <ul class="menu-list">
-        <li><a href="view-inventory/index.html">View Inventory</a></li>
-        <li class="active"><a href="fault-report.html">Fault Report</a></li>
-        <li><a href="patching-weekly.html">Patching Report</a></li>
-        <li><a href="patching-summary.html">Summary</a></li>
+        <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
+        <li class="active"><a href="#"><i class="fas fa-tools"></i> Fault Report</a></li>
+        <li><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
       </ul>
     </nav>
 
     <main class="main-content">
-      <h2>Fault Report</h2>
+      <h1>Fault Report</h1>
 
-      <textarea id="faultInput" rows="8" placeholder="Paste or enter fault data (comma or tab separated)"></textarea>
-      <div class="button-group">
-        <button onclick="loadFaultData()">Submit</button>
-        <button onclick="clearFaultData()">Clear</button>
+      <section class="action-buttons">
+        <button class="button" onclick="showFaultForm()">Add Fault Report</button>
+        <button class="button secondary" onclick="downloadFaultCSV()">Export CSV</button>
+      </section>
+
+      <table id="faultTable" class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Equipment</th>
+            <th>Serial No</th>
+            <th>Room</th>
+            <th>Status</th>
+            <th>Action Taken</th>
+            <th>Date Resolved</th>
+          </tr>
+        </thead>
+        <tbody id="faultBody">
+          <!-- Fault entries go here -->
+        </tbody>
+      </table>
+
+      <!-- Modal for Fault Entry -->
+      <div id="faultModal" class="modal">
+        <div class="modal-content">
+          <h2>Add Fault Report</h2>
+          <form id="faultForm">
+            <div class="form-group">
+              <label for="faultDate">Date</label>
+              <input type="date" id="faultDate" required />
+            </div>
+            <div class="form-group">
+              <label for="faultEquipment">Equipment</label>
+              <input type="text" id="faultEquipment" required />
+            </div>
+            <div class="form-group">
+              <label for="faultSerial">Serial No</label>
+              <input type="text" id="faultSerial" />
+            </div>
+            <div class="form-group">
+              <label for="faultRoom">Room</label>
+              <input type="text" id="faultRoom" />
+            </div>
+            <div class="form-group">
+              <label for="faultStatus">Status</label>
+              <select id="faultStatus">
+                <option value="Pending">Pending</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="faultAction">Action Taken</label>
+              <textarea id="faultAction"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="faultResolved">Date Resolved</label>
+              <input type="date" id="faultResolved" />
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="button secondary" onclick="closeFaultModal()">Cancel</button>
+              <button type="submit" class="button">Save</button>
+            </div>
+          </form>
+        </div>
       </div>
-      <div id="faultTableContainer"></div>
     </main>
   </div>
 
   <script>
-    function loadFaultData() {
-      const input = document.getElementById('faultInput').value.trim();
-      const lines = input.split('\n');
-      const parsed = lines.map(line => line.split(/\t|,/));
-      localStorage.setItem('faultData', JSON.stringify(parsed));
-      renderFaultTable(parsed);
+    const faultModal = document.getElementById('faultModal');
+    const faultForm = document.getElementById('faultForm');
+    const faultBody = document.getElementById('faultBody');
+
+    function showFaultForm() {
+      faultModal.style.display = 'block';
     }
 
-    function renderFaultTable(data) {
-      if (!data.length) return;
-      const headers = data[0];
-      let html = `<table class="table"><thead><tr>`;
-      headers.forEach(h => html += `<th>${h}</th>`);
-      html += `</tr></thead><tbody>`;
-      for (let i = 1; i < data.length; i++) {
-        html += '<tr>' + data[i].map(cell => `<td contenteditable="true" oninput="updateStoredFault(${i}, ${data[i].indexOf(cell)}, this.innerText)">${cell}</td>`).join('') + '</tr>';
-      }
-      html += '</tbody></table>';
-      document.getElementById('faultTableContainer').innerHTML = html;
+    function closeFaultModal() {
+      faultModal.style.display = 'none';
+      faultForm.reset();
     }
 
-    function updateStoredFault(row, col, value) {
-      const stored = JSON.parse(localStorage.getItem('faultData'));
-      if (stored[row]) {
-        stored[row][col] = value;
-        localStorage.setItem('faultData', JSON.stringify(stored));
-      }
+    faultForm.onsubmit = (e) => {
+      e.preventDefault();
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${faultDate.value}</td>
+        <td>${faultEquipment.value}</td>
+        <td>${faultSerial.value}</td>
+        <td>${faultRoom.value}</td>
+        <td>${faultStatus.value}</td>
+        <td>${faultAction.value}</td>
+        <td>${faultResolved.value}</td>
+      `;
+      faultBody.appendChild(row);
+      closeFaultModal();
+    };
+
+    function downloadFaultCSV() {
+      let csv = "Date,Equipment,Serial No,Room,Status,Action Taken,Date Resolved\n";
+      document.querySelectorAll("#faultBody tr").forEach(row => {
+        const cells = row.querySelectorAll("td");
+        csv += Array.from(cells).map(td => `"${td.textContent}"`).join(",") + "\n";
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "fault-report.csv";
+      a.click();
     }
 
-    function clearFaultData() {
-      localStorage.removeItem('faultData');
-      document.getElementById('faultTableContainer').innerHTML = '';
-      document.getElementById('faultInput').value = '';
-    }
-
-    window.onload = () => {
-      const stored = localStorage.getItem('faultData');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        renderFaultTable(parsed);
-        document.getElementById('faultInput').value = parsed.map(r => r.join(',')).join('\n');
-      }
+    window.onclick = function(e) {
+      if (e.target == faultModal) closeFaultModal();
     }
   </script>
 </body>
 </html>
-
-<!-- patching-summary.html is already provided in the previous message -->
