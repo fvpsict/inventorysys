@@ -4,111 +4,52 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Patching Report - Inventory System</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 1rem;
-    }
-    textarea {
-      width: 100%;
-      height: 150px;
-      font-family: monospace;
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-      resize: vertical;
+    body { font-family: Arial, sans-serif; margin: 1rem; }
+    textarea, input[type="date"] {
+      width: 100%; margin-bottom: 1rem; padding: 0.5rem; font-family: monospace;
     }
     table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-bottom: 1rem;
+      border-collapse: collapse; width: 100%; margin-top: 1rem;
     }
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
+      border: 1px solid #ddd; padding: 8px; text-align: center;
     }
     th {
       background: #f4f4f4;
     }
     tfoot tr {
+      font-weight: bold;
       background-color: #eee;
-      font-weight: bold;
     }
+    label { font-weight: bold; }
     button {
-      padding: 8px 15px;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-bottom: 1rem;
-    }
-    .menu-sidebar {
-      float: left;
-      width: 200px;
-      background: #222;
-      color: #fff;
-      height: 100vh;
-      padding: 1rem;
-    }
-    .menu-sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-    .menu-sidebar ul li {
-      margin: 1rem 0;
-    }
-    .menu-sidebar ul li a {
-      color: #ccc;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .menu-sidebar ul li.active a {
-      color: #fff;
-      text-decoration: underline;
-    }
-    .main-content {
-      margin-left: 220px;
-      padding: 1rem;
+      padding: 8px 15px; font-size: 1rem; cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <nav class="menu-sidebar">
-    <h3>Inventory Menu</h3>
-    <ul>
-      <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
-      <li><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
-      <li class="active"><a href="#"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
-    </ul>
-  </nav>
+<h1>Patching Report</h1>
 
-  <main class="main-content">
-    <h1>Patching Report</h1>
+<label for="reportDate">Select Date for this Data:</label>
+<input type="date" id="reportDate" />
 
-    <p>
-      Paste your raw patching data below (tab or comma separated columns) including headers.
-      Then click "Process Data" to generate the table and summary.
-    </p>
+<label for="rawData">Paste Raw Device Data Here (with headers):</label>
+<textarea id="rawData" rows="10" placeholder="Paste raw CSV or tab-separated data including headers"></textarea>
 
-    <textarea id="rawData" placeholder="Paste raw patching data here..."></textarea>
-    <br />
-    <button onclick="processData()">Process Data</button>
+<button onclick="processData()">Process Data</button>
 
-    <h2>Parsed Data</h2>
-    <table id="dataTable" aria-label="Patching Data Table">
-      <thead></thead>
-      <tbody></tbody>
-      <tfoot></tfoot>
-    </table>
-  </main>
+<h2>Summary Table</h2>
+<table id="summaryTable" aria-label="Patching Summary Table">
+  <thead></thead>
+  <tbody></tbody>
+</table>
 
 <script>
-  // Column headers we expect and want to sum (case-insensitive)
-  const numericColumns = [
+  // Expected summary columns
+  const summaryHeaders = [
+    'DATE',
     'ADMIN INSTALLED',
     'ACAD INSTALLED',
     'ADMIN SCCM EPP > 4 wks',
@@ -122,81 +63,116 @@
     'E-EXAM',
     'FAULTY',
     'Tech Refresh',
+    'Percentage'
   ];
+
+  // Status categories mapped to summary columns
+  // This mapping depends on Status text in raw data, you can adjust it here:
+  const statusMapping = {
+    'INSTALLED': ['ADMIN INSTALLED', 'ACAD INSTALLED'],
+    'SCCM EPP > 4 wks': ['ADMIN SCCM EPP > 4 wks', 'ACAD SCCM EPP > 4 wks'],
+    'NOT CONNECTED': ['ADMIN NOT CONNECTED', 'ACAD NOT CONNECTED'],
+    'REQUIRED': ['ADMIN REQUIRED', 'ACAD REQUIRED'],
+    'UNKNOWN': ['ADMIN UNKNOWN', 'ACAD UNKNOWN'],
+    'E-EXAM': ['E-EXAM'],
+    'FAULTY': ['FAULTY'],
+    'Tech Refresh': ['Tech Refresh']
+  };
 
   function processData() {
     const raw = document.getElementById('rawData').value.trim();
+    const reportDate = document.getElementById('reportDate').value;
+
+    if (!reportDate) {
+      alert('Please select the date for this report data.');
+      return;
+    }
     if (!raw) {
-      alert('Please paste your raw data first.');
+      alert('Please paste the raw device data first.');
       return;
     }
 
-    // Split into lines
     const lines = raw.split(/\r?\n/).filter(l => l.trim() !== '');
+    const delimiter = lines[0].includes('\t') ? '\t' : ',';
+    const headers = lines[0].split(delimiter).map(h => h.trim());
 
-    // Parse header line - split by tab or comma
-    const headerLine = lines[0];
-    const delimiter = headerLine.includes('\t') ? '\t' : ',';
-    const headers = headerLine.split(delimiter).map(h => h.trim());
+    // Required columns in raw data
+    const requiredColumns = ['Profile', 'Status'];
 
-    // Clear previous table
-    const table = document.getElementById('dataTable');
-    const thead = table.querySelector('thead');
-    const tbody = table.querySelector('tbody');
-    const tfoot = table.querySelector('tfoot');
+    for (const col of requiredColumns) {
+      if (!headers.includes(col)) {
+        alert(`Raw data must include the "${col}" column.`);
+        return;
+      }
+    }
+
+    const profileIndex = headers.indexOf('Profile');
+    const statusIndex = headers.indexOf('Status');
+
+    // Initialize counters
+    const summary = {};
+    // Initialize all summary headers (except DATE and Percentage) to 0
+    summaryHeaders.forEach(h => {
+      if (h !== 'DATE' && h !== 'Percentage') summary[h] = 0;
+    });
+
+    let totalDevices = 0;
+    let totalInstalled = 0;
+
+    // Process each data line
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split(delimiter).map(c => c.trim());
+      const profile = cells[profileIndex]?.toUpperCase() || '';
+      const status = cells[statusIndex]?.toUpperCase() || '';
+
+      totalDevices++;
+
+      // Map status to summary column(s)
+      for (const [key, columns] of Object.entries(statusMapping)) {
+        if (status.includes(key)) {
+          columns.forEach(col => {
+            if (col.startsWith('ADMIN') && profile === 'ADMIN') summary[col]++;
+            else if (col.startsWith('ACAD') && profile === 'ACAD') summary[col]++;
+            else if (!col.startsWith('ADMIN') && !col.startsWith('ACAD')) summary[col]++;
+          });
+        }
+      }
+
+      // Count installed for percentage calculation
+      if (status.includes('INSTALLED')) {
+        if ((profile === 'ADMIN') || (profile === 'ACAD')) {
+          totalInstalled++;
+        }
+      }
+    }
+
+    // Calculate Percentage (Installed / totalDevices * 100)
+    summary['Percentage'] = totalDevices > 0 ? ((totalInstalled / totalDevices) * 100).toFixed(2) + '%' : '0%';
+
+    // Show summary in table
+    const thead = document.querySelector('#summaryTable thead');
+    const tbody = document.querySelector('#summaryTable tbody');
     thead.innerHTML = '';
     tbody.innerHTML = '';
-    tfoot.innerHTML = '';
 
     // Create header row
     const headerRow = document.createElement('tr');
-    headers.forEach(h => {
+    summaryHeaders.forEach(h => {
       const th = document.createElement('th');
       th.textContent = h;
       headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
 
-    // Prepare array to accumulate sums for numeric columns
-    const sums = Array(headers.length).fill(0);
-
-    // Process data rows
-    for (let i = 1; i < lines.length; i++) {
-      const row = document.createElement('tr');
-      const cells = lines[i].split(delimiter);
-      for (let j = 0; j < headers.length; j++) {
-        const cellText = (cells[j] || '').trim();
-        const td = document.createElement('td');
-        td.textContent = cellText;
-        row.appendChild(td);
-
-        // If this header is numeric, accumulate sum
-        if (numericColumns.includes(headers[j].toUpperCase())) {
-          const val = parseFloat(cellText.replace(/,/g, ''));
-          if (!isNaN(val)) {
-            sums[j] += val;
-          }
-        }
-      }
-      tbody.appendChild(row);
-    }
-
-    // Add footer summary row
-    const footerRow = document.createElement('tr');
-    headers.forEach((h, idx) => {
+    // Create data row
+    const dataRow = document.createElement('tr');
+    summaryHeaders.forEach(h => {
       const td = document.createElement('td');
-      if (numericColumns.includes(h.toUpperCase())) {
-        td.textContent = sums[idx];
-      } else if (idx === 0) {
-        td.textContent = 'TOTAL';
-        td.style.fontWeight = 'bold';
-        td.style.textAlign = 'left';
-      } else {
-        td.textContent = '';
-      }
-      footerRow.appendChild(td);
+      if (h === 'DATE') td.textContent = reportDate;
+      else td.textContent = summary[h] !== undefined ? summary[h] : '';
+      dataRow.appendChild(td);
     });
-    tfoot.appendChild(footerRow);
+    tbody.appendChild(dataRow);
   }
 </script>
 
