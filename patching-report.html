@@ -10,10 +10,13 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 1rem;
+    /* Add any page-specific styles here */
+    .main-content {
+      padding: 1rem;
+      margin-left: 220px; /* leave space for sidebar */
+      min-height: 100vh;
     }
+
     textarea {
       width: 100%;
       height: 150px;
@@ -21,63 +24,95 @@
       margin-bottom: 1rem;
       padding: 0.5rem;
       resize: vertical;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
+
     table {
       border-collapse: collapse;
       width: 100%;
       margin-bottom: 1rem;
     }
+
     th, td {
       border: 1px solid #ddd;
       padding: 8px;
       text-align: center;
     }
+
     th {
       background: #f4f4f4;
     }
+
     tfoot tr {
       background-color: #eee;
       font-weight: bold;
     }
+
     button {
       padding: 8px 15px;
       font-size: 1rem;
       cursor: pointer;
       margin-bottom: 1rem;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background-color: #fff;
+      transition: background-color 0.3s ease;
     }
+
+    button:hover {
+      background-color: #ddd;
+    }
+
+    /* Sidebar styles - copied from your inventory system */
     .menu-sidebar {
-      float: left;
-      width: 200px;
-      background: #222;
-      color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
       height: 100vh;
+      background-color: #222;
+      color: #fff;
       padding: 1rem;
+      box-sizing: border-box;
     }
+
+    .menu-sidebar h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      border-bottom: 1px solid #444;
+      padding-bottom: 0.5rem;
+    }
+
     .menu-sidebar ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
+
     .menu-sidebar ul li {
       margin: 1rem 0;
     }
+
     .menu-sidebar ul li a {
       color: #ccc;
       text-decoration: none;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
     .menu-sidebar ul li.active a {
       color: #fff;
       text-decoration: underline;
-    }
-    .main-content {
-      margin-left: 220px;
-      padding: 1rem;
     }
   </style>
 </head>
 <body>
 
-  <nav class="menu-sidebar">
+  <nav class="menu-sidebar" aria-label="Inventory System Navigation">
     <h3>Inventory Menu</h3>
     <ul>
       <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
@@ -86,11 +121,11 @@
     </ul>
   </nav>
 
-  <main class="main-content">
+  <main class="main-content" role="main" tabindex="-1">
     <h1>Patching Report</h1>
 
     <p>
-      Paste your raw patching data below (tab or comma separated columns) including headers.
+      Paste your raw patching data below (tab or comma separated columns) including headers.<br />
       Then click "Process Data" to generate the table and summary.
     </p>
 
@@ -106,99 +141,94 @@
     </table>
   </main>
 
-<script>
-  // Column headers we expect and want to sum (case-insensitive)
-  const numericColumns = [
-    'ADMIN INSTALLED',
-    'ACAD INSTALLED',
-    'ADMIN SCCM EPP > 4 wks',
-    'ACAD SCCM EPP > 4 wks',
-    'ADMIN NOT CONNECTED',
-    'ACAD NOT CONNECTED',
-    'ADMIN REQUIRED',
-    'ACAD REQUIRED',
-    'ADMIN UNKNOWN',
-    'ACAD UNKNOWN',
-    'E-EXAM',
-    'FAULTY',
-    'Tech Refresh',
-  ];
+  <script>
+    // Same numeric columns list
+    const numericColumns = [
+      'ADMIN INSTALLED',
+      'ACAD INSTALLED',
+      'ADMIN SCCM EPP > 4 wks',
+      'ACAD SCCM EPP > 4 wks',
+      'ADMIN NOT CONNECTED',
+      'ACAD NOT CONNECTED',
+      'ADMIN REQUIRED',
+      'ACAD REQUIRED',
+      'ADMIN UNKNOWN',
+      'ACAD UNKNOWN',
+      'E-EXAM',
+      'FAULTY',
+      'TECH REFRESH',
+    ];
 
-  function processData() {
-    const raw = document.getElementById('rawData').value.trim();
-    if (!raw) {
-      alert('Please paste your raw data first.');
-      return;
-    }
+    function processData() {
+      const raw = document.getElementById('rawData').value.trim();
+      if (!raw) {
+        alert('Please paste your raw data first.');
+        return;
+      }
 
-    // Split into lines
-    const lines = raw.split(/\r?\n/).filter(l => l.trim() !== '');
+      const lines = raw.split(/\r?\n/).filter(l => l.trim() !== '');
 
-    // Parse header line - split by tab or comma
-    const headerLine = lines[0];
-    const delimiter = headerLine.includes('\t') ? '\t' : ',';
-    const headers = headerLine.split(delimiter).map(h => h.trim());
+      const headerLine = lines[0];
+      const delimiter = headerLine.includes('\t') ? '\t' : ',';
+      const headers = headerLine.split(delimiter).map(h => h.trim());
 
-    // Clear previous table
-    const table = document.getElementById('dataTable');
-    const thead = table.querySelector('thead');
-    const tbody = table.querySelector('tbody');
-    const tfoot = table.querySelector('tfoot');
-    thead.innerHTML = '';
-    tbody.innerHTML = '';
-    tfoot.innerHTML = '';
+      const table = document.getElementById('dataTable');
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+      const tfoot = table.querySelector('tfoot');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+      tfoot.innerHTML = '';
 
-    // Create header row
-    const headerRow = document.createElement('tr');
-    headers.forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h;
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
+      // Create header row
+      const headerRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
 
-    // Prepare array to accumulate sums for numeric columns
-    const sums = Array(headers.length).fill(0);
+      // Prepare sums
+      const sums = Array(headers.length).fill(0);
 
-    // Process data rows
-    for (let i = 1; i < lines.length; i++) {
-      const row = document.createElement('tr');
-      const cells = lines[i].split(delimiter);
-      for (let j = 0; j < headers.length; j++) {
-        const cellText = (cells[j] || '').trim();
-        const td = document.createElement('td');
-        td.textContent = cellText;
-        row.appendChild(td);
+      // Add data rows
+      for (let i = 1; i < lines.length; i++) {
+        const row = document.createElement('tr');
+        const cells = lines[i].split(delimiter);
+        for (let j = 0; j < headers.length; j++) {
+          const cellText = (cells[j] || '').trim();
+          const td = document.createElement('td');
+          td.textContent = cellText;
+          row.appendChild(td);
 
-        // If this header is numeric, accumulate sum
-        if (numericColumns.includes(headers[j].toUpperCase())) {
-          const val = parseFloat(cellText.replace(/,/g, ''));
-          if (!isNaN(val)) {
-            sums[j] += val;
+          // Sum if numeric column
+          if (numericColumns.includes(headers[j].toUpperCase())) {
+            const val = parseFloat(cellText.replace(/,/g, ''));
+            if (!isNaN(val)) sums[j] += val;
           }
         }
+        tbody.appendChild(row);
       }
-      tbody.appendChild(row);
-    }
 
-    // Add footer summary row
-    const footerRow = document.createElement('tr');
-    headers.forEach((h, idx) => {
-      const td = document.createElement('td');
-      if (numericColumns.includes(h.toUpperCase())) {
-        td.textContent = sums[idx];
-      } else if (idx === 0) {
-        td.textContent = 'TOTAL';
-        td.style.fontWeight = 'bold';
-        td.style.textAlign = 'left';
-      } else {
-        td.textContent = '';
-      }
-      footerRow.appendChild(td);
-    });
-    tfoot.appendChild(footerRow);
-  }
-</script>
+      // Footer row with totals
+      const footerRow = document.createElement('tr');
+      headers.forEach((h, idx) => {
+        const td = document.createElement('td');
+        if (numericColumns.includes(h.toUpperCase())) {
+          td.textContent = sums[idx];
+        } else if (idx === 0) {
+          td.textContent = 'TOTAL';
+          td.style.fontWeight = 'bold';
+          td.style.textAlign = 'left';
+        } else {
+          td.textContent = '';
+        }
+        footerRow.appendChild(td);
+      });
+      tfoot.appendChild(footerRow);
+    }
+  </script>
 
 </body>
 </html>
