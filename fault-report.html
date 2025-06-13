@@ -9,197 +9,144 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
-  <style>
-    /* Basic form and table styling */
-    .input-form, table {
-      width: 100%;
-      margin-bottom: 1rem;
-      border-collapse: collapse;
-    }
-    .input-form td, table th, table td {
-      border: 1px solid #ddd;
-      padding: 6px;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-    .input-form th {
-      background-color: #f4f4f4;
-    }
-    input[type="text"], input[type="date"], select {
-      width: 100%;
-      padding: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 6px 12px;
-      margin: 5px 0;
-      cursor: pointer;
-    }
-    .actions-btns button {
-      margin: 0 2px;
-    }
-  </style>
 </head>
 <body>
   <div class="menu-wrapper">
-    <nav class="menu-sidebar">
+    <!-- Sidebar -->
+    <nav class="menu-sidebar" aria-label="Inventory System Navigation">
       <h3>Inventory Menu</h3>
       <ul class="menu-list">
         <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
-        <li class="active"><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
+        <li class="active"><a href="#"><i class="fas fa-tools"></i> Fault Report</a></li>
         <li><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
       </ul>
     </nav>
 
-    <main class="main-content">
+    <!-- Main content -->
+    <main class="main-content" role="main" tabindex="-1">
       <h1>Fault Report</h1>
-      <p>Add, update, and track faults for inventory items.</p>
+      <p>
+        Paste your raw fault report data below (tab or comma separated columns) including headers.<br />
+        Then click <strong>Process Data</strong> to generate the table and summary counts.
+      </p>
 
-      <form id="faultForm" class="input-form">
-        <table>
-          <thead>
-            <tr>
-              <th>Date Reported</th>
-              <th>Item</th>
-              <th>Fault Description</th>
-              <th>Status</th>
-              <th>Date Resolved</th>
-              <th>Action Taken</th>
-              <th>Lamphour</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><input type="date" name="dateReported" required></td>
-              <td><input type="text" name="item" required></td>
-              <td><input type="text" name="faultDescription" required></td>
-              <td>
-                <select name="status" required>
-                  <option value="">Select</option>
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </td>
-              <td><input type="date" name="dateResolved"></td>
-              <td><input type="text" name="actionTaken"></td>
-              <td><input type="number" name="lamphour" min="0" value="0"></td>
-              <td><button type="submit">Add Fault</button></td>
-            </tr>
-          </tbody>
+      <section class="action-buttons" style="margin-bottom:1rem;">
+        <textarea
+          id="rawFaultData"
+          placeholder="Paste raw fault report data here..."
+          aria-label="Raw Fault Report Data Input"
+        ></textarea>
+        <button class="button" onclick="processFaultData()">Process Data</button>
+      </section>
+
+      <section id="faultReportSection" style="display:none;">
+        <h2>Parsed Fault Report Data</h2>
+        <table id="faultTable" class="table" aria-label="Fault Report Data Table">
+          <thead></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
         </table>
-      </form>
 
-      <h2>Fault Report List</h2>
-      <table id="faultTable" aria-label="Fault Report Table" border="1" cellspacing="0" cellpadding="5">
-        <thead>
-          <tr>
-            <th>Date Reported</th>
-            <th>Item</th>
-            <th>Fault Description</th>
-            <th>Status</th>
-            <th>Date Resolved</th>
-            <th>Action Taken</th>
-            <th>Lamphour</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="faultTableBody">
-          <!-- Fault entries will appear here -->
-        </tbody>
-      </table>
+        <h2>Summary by Status</h2>
+        <ul id="statusSummary"></ul>
+      </section>
     </main>
   </div>
 
-<script>
-  const faultForm = document.getElementById('faultForm');
-  const faultTableBody = document.getElementById('faultTableBody');
+  <script>
+    // Fault Report Processing code - reuse or enhance from previous version
 
-  // Store fault entries in an array
-  let faultEntries = [];
+    const statusColumnName = 'STATUS';
 
-  // Render fault entries in the table
-  function renderFaultTable() {
-    faultTableBody.innerHTML = '';
-    faultEntries.forEach((entry, index) => {
-      const tr = document.createElement('tr');
+    function processFaultData() {
+      const raw = document.getElementById('rawFaultData').value.trim();
+      if (!raw) {
+        alert('Please paste your raw fault report data first.');
+        return;
+      }
 
-      tr.innerHTML = `
-        <td>${entry.dateReported}</td>
-        <td>${entry.item}</td>
-        <td>${entry.faultDescription}</td>
-        <td>${entry.status}</td>
-        <td>${entry.dateResolved || ''}</td>
-        <td>${entry.actionTaken || ''}</td>
-        <td>${entry.lamphour}</td>
-        <td class="actions-btns">
-          <button onclick="editEntry(${index})">Edit</button>
-          <button onclick="deleteEntry(${index})">Delete</button>
-        </td>
-      `;
+      const lines = raw.split(/\r?\n/).filter((l) => l.trim() !== '');
+      const delimiter = lines[0].includes('\t') ? '\t' : ',';
 
-      faultTableBody.appendChild(tr);
-    });
-  }
+      // Parse headers
+      const headers = lines[0].split(delimiter).map((h) => h.trim());
 
-  // Add new fault entry from form
-  faultForm.addEventListener('submit', function(e) {
-    e.preventDefault();
+      // Get index of STATUS column for summary
+      const statusIdx = headers.findIndex(
+        (h) => h.toUpperCase() === statusColumnName.toUpperCase()
+      );
 
-    const formData = new FormData(faultForm);
-    const newEntry = {
-      dateReported: formData.get('dateReported'),
-      item: formData.get('item').trim(),
-      faultDescription: formData.get('faultDescription').trim(),
-      status: formData.get('status'),
-      dateResolved: formData.get('dateResolved'),
-      actionTaken: formData.get('actionTaken').trim(),
-      lamphour: Number(formData.get('lamphour')) || 0
-    };
+      const table = document.getElementById('faultTable');
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+      const tfoot = table.querySelector('tfoot');
+      const summaryList = document.getElementById('statusSummary');
+      const faultReportSection = document.getElementById('faultReportSection');
 
-    if (faultForm.dataset.editIndex !== undefined) {
-      // Editing existing entry
-      faultEntries[faultForm.dataset.editIndex] = newEntry;
-      delete faultForm.dataset.editIndex;
-      faultForm.querySelector('button[type="submit"]').textContent = 'Add Fault';
-    } else {
-      // Add new entry
-      faultEntries.push(newEntry);
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+      tfoot.innerHTML = '';
+      summaryList.innerHTML = '';
+
+      // Show section
+      faultReportSection.style.display = 'block';
+
+      // Build header row
+      const headerRow = document.createElement('tr');
+      headers.forEach((h) => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+
+      // Collect status counts
+      const statusCounts = {};
+
+      // Build data rows
+      for (let i = 1; i < lines.length; i++) {
+        const row = document.createElement('tr');
+        const cells = lines[i].split(delimiter);
+        cells.forEach((cell, idx) => {
+          const td = document.createElement('td');
+          td.textContent = cell.trim();
+          row.appendChild(td);
+        });
+        tbody.appendChild(row);
+
+        // Count statuses
+        if (statusIdx !== -1) {
+          const statusVal = (cells[statusIdx] || '').trim().toUpperCase();
+          if (statusVal) {
+            statusCounts[statusVal] = (statusCounts[statusVal] || 0) + 1;
+          }
+        }
+      }
+
+      // Footer row: total count of rows
+      const footerRow = document.createElement('tr');
+      headers.forEach((h, idx) => {
+        const td = document.createElement('td');
+        if (idx === 0) {
+          td.textContent = 'TOTAL ROWS';
+          td.style.fontWeight = 'bold';
+          td.style.textAlign = 'left';
+        } else if (idx === 1) {
+          td.textContent = lines.length - 1;
+        } else {
+          td.textContent = '';
+        }
+        footerRow.appendChild(td);
+      });
+      tfoot.appendChild(footerRow);
+
+      // Display summary counts
+      for (const [status, count] of Object.entries(statusCounts)) {
+        const li = document.createElement('li');
+        li.textContent = `${status}: ${count}`;
+        summaryList.appendChild(li);
+      }
     }
-
-    faultForm.reset();
-    renderFaultTable();
-  });
-
-  // Delete entry by index
-  function deleteEntry(index) {
-    if (confirm('Are you sure you want to delete this fault entry?')) {
-      faultEntries.splice(index, 1);
-      renderFaultTable();
-    }
-  }
-
-  // Edit entry by index
-  function editEntry(index) {
-    const entry = faultEntries[index];
-    faultForm.dateReported.value = entry.dateReported;
-    faultForm.item.value = entry.item;
-    faultForm.faultDescription.value = entry.faultDescription;
-    faultForm.status.value = entry.status;
-    faultForm.dateResolved.value = entry.dateResolved || '';
-    faultForm.actionTaken.value = entry.actionTaken || '';
-    faultForm.lamphour.value = entry.lamphour;
-
-    faultForm.dataset.editIndex = index;
-    faultForm.querySelector('button[type="submit"]').textContent = 'Update Fault';
-  }
-
-  // Initialize empty table on load
-  window.onload = () => {
-    renderFaultTable();
-  };
-</script>
+  </script>
 </body>
 </html>
