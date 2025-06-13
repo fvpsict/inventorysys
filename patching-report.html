@@ -9,6 +9,33 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
+  <style>
+    /* Simple form styling */
+    .input-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    .input-table th, .input-table td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .input-table th {
+      background-color: #f4f4f4;
+    }
+    input[type="number"], input[type="date"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px;
+    }
+    button.add-row {
+      margin: 10px 0;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <div class="menu-wrapper">
@@ -23,63 +50,206 @@
 
     <main class="main-content">
       <h1>Patching Report</h1>
-      <p>This page summarizes patching status of devices weekly.</p>
+      <p>Input weekly patching data and view summary below.</p>
 
-      <table class="table" aria-label="Patching Report Table" id="patchingTable">
+      <form id="patchingForm">
+        <table class="input-table" id="inputTable">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>ADMIN INSTALLED</th>
+              <th>ACAD INSTALLED</th>
+              <th>ADMIN SCCM EPP &gt; 4 wks</th>
+              <th>ACAD SCCM EPP &gt; 4 wks</th>
+              <th>ADMIN NOT CONNECTED</th>
+              <th>ACAD NOT CONNECTED</th>
+              <th>ADMIN REQUIRED</th>
+              <th>ACAD REQUIRED</th>
+              <th>ADMIN UNKNOWN</th>
+              <th>ACAD UNKNOWN</th>
+              <th>E-EXAM</th>
+              <th>FAULTY</th>
+              <th>Tech Refresh</th>
+              <th>Percentage</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+          <tbody id="inputBody">
+            <!-- rows go here -->
+          </tbody>
+        </table>
+        <button type="button" class="add-row" onclick="addRow()">Add Row</button>
+        <button type="submit" class="button">Save All</button>
+      </form>
+
+      <h2>Summary</h2>
+      <table class="table" id="summaryTable" aria-label="Patching Summary Table">
         <thead>
           <tr>
-            <th>Device</th>
-            <th>Week 1</th>
-            <th>Week 2</th>
-            <th>Week 3</th>
-            <th>Week 4</th>
-            <th>Status Summary</th>
+            <th>Metric</th>
+            <th>Total</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Patching data rows inserted dynamically here -->
+          <tr><td>ADMIN INSTALLED</td><td id="sumAdminInstalled">0</td></tr>
+          <tr><td>ACAD INSTALLED</td><td id="sumAcadInstalled">0</td></tr>
+          <tr><td>ADMIN SCCM EPP &gt; 4 wks</td><td id="sumAdminSccm">0</td></tr>
+          <tr><td>ACAD SCCM EPP &gt; 4 wks</td><td id="sumAcadSccm">0</td></tr>
+          <tr><td>ADMIN NOT CONNECTED</td><td id="sumAdminNotConnected">0</td></tr>
+          <tr><td>ACAD NOT CONNECTED</td><td id="sumAcadNotConnected">0</td></tr>
+          <tr><td>ADMIN REQUIRED</td><td id="sumAdminRequired">0</td></tr>
+          <tr><td>ACAD REQUIRED</td><td id="sumAcadRequired">0</td></tr>
+          <tr><td>ADMIN UNKNOWN</td><td id="sumAdminUnknown">0</td></tr>
+          <tr><td>ACAD UNKNOWN</td><td id="sumAcadUnknown">0</td></tr>
+          <tr><td>E-EXAM</td><td id="sumEexam">0</td></tr>
+          <tr><td>FAULTY</td><td id="sumFaulty">0</td></tr>
+          <tr><td>Tech Refresh</td><td id="sumTechRefresh">0</td></tr>
+          <tr><td><strong>Overall Percentage</strong></td><td id="overallPercentage">0%</td></tr>
         </tbody>
       </table>
     </main>
   </div>
 
-  <script>
-    // Sample data for patching report
-    const patchingData = [
-      {
-        device: "Macbook MBK-5678",
-        week1: "Installed",
-        week2: "Installed",
-        week3: "Installed",
-        week4: "Not Connected",
-        statusSummary: "Mostly Installed"
-      },
-      {
-        device: "Projector PRJ-1234",
-        week1: "Installed",
-        week2: "Installed",
-        week3: "Not Connected",
-        week4: "Installed",
-        statusSummary: "Mixed Status"
-      }
-    ];
+<script>
+  const inputBody = document.getElementById("inputBody");
 
-    const patchingTableBody = document.querySelector("#patchingTable tbody");
+  // Add new empty row
+  function addRow() {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input type="date" name="date" required /></td>
+      <td><input type="number" name="adminInstalled" min="0" value="0" required /></td>
+      <td><input type="number" name="acadInstalled" min="0" value="0" required /></td>
+      <td><input type="number" name="adminSccm" min="0" value="0" required /></td>
+      <td><input type="number" name="acadSccm" min="0" value="0" required /></td>
+      <td><input type="number" name="adminNotConnected" min="0" value="0" required /></td>
+      <td><input type="number" name="acadNotConnected" min="0" value="0" required /></td>
+      <td><input type="number" name="adminRequired" min="0" value="0" required /></td>
+      <td><input type="number" name="acadRequired" min="0" value="0" required /></td>
+      <td><input type="number" name="adminUnknown" min="0" value="0" required /></td>
+      <td><input type="number" name="acadUnknown" min="0" value="0" required /></td>
+      <td><input type="number" name="eExam" min="0" value="0" required /></td>
+      <td><input type="number" name="faulty" min="0" value="0" required /></td>
+      <td><input type="number" name="techRefresh" min="0" value="0" required /></td>
+      <td><input type="text" readonly /></td>
+      <td><button type="button" onclick="removeRow(this)">X</button></td>
+    `;
+    inputBody.appendChild(row);
+    updatePercentages();
+  }
 
-    function renderPatchingReport() {
-      patchingTableBody.innerHTML = "";
-      patchingData.forEach(entry => {
-        const row = document.createElement("tr");
-        Object.values(entry).forEach(val => {
-          const td = document.createElement("td");
-          td.textContent = val || "-";
-          row.appendChild(td);
-        });
-        patchingTableBody.appendChild(row);
+  function removeRow(button) {
+    const row = button.closest("tr");
+    row.remove();
+    updateSummary();
+  }
+
+  function updatePercentages() {
+    const rows = inputBody.querySelectorAll("tr");
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll("input");
+      // Calculate percentage = (ADMIN INSTALLED + ACAD INSTALLED) / total of all categories except DATE & Percentage
+      const adminInstalled = Number(row.querySelector('input[name="adminInstalled"]').value) || 0;
+      const acadInstalled = Number(row.querySelector('input[name="acadInstalled"]').value) || 0;
+
+      // Sum of all number inputs except percentage and date
+      let sumAll = 0;
+      inputs.forEach(input => {
+        if (
+          input.name !== "date" &&
+          input.readOnly !== true &&
+          input.name !== ""
+        ) {
+          sumAll += Number(input.value) || 0;
+        }
       });
-    }
 
-    document.addEventListener("DOMContentLoaded", renderPatchingReport);
-  </script>
+      const percentage = sumAll === 0 ? 0 : ((adminInstalled + acadInstalled) / sumAll) * 100;
+      row.querySelector('input[readonly]').value = percentage.toFixed(2) + "%";
+    });
+  }
+
+  // Update summary totals and overall percentage
+  function updateSummary() {
+    const rows = inputBody.querySelectorAll("tr");
+    const sums = {
+      adminInstalled: 0,
+      acadInstalled: 0,
+      adminSccm: 0,
+      acadSccm: 0,
+      adminNotConnected: 0,
+      acadNotConnected: 0,
+      adminRequired: 0,
+      acadRequired: 0,
+      adminUnknown: 0,
+      acadUnknown: 0,
+      eExam: 0,
+      faulty: 0,
+      techRefresh: 0
+    };
+
+    rows.forEach(row => {
+      sums.adminInstalled += Number(row.querySelector('input[name="adminInstalled"]').value) || 0;
+      sums.acadInstalled += Number(row.querySelector('input[name="acadInstalled"]').value) || 0;
+      sums.adminSccm += Number(row.querySelector('input[name="adminSccm"]').value) || 0;
+      sums.acadSccm += Number(row.querySelector('input[name="acadSccm"]').value) || 0;
+      sums.adminNotConnected += Number(row.querySelector('input[name="adminNotConnected"]').value) || 0;
+      sums.acadNotConnected += Number(row.querySelector('input[name="acadNotConnected"]').value) || 0;
+      sums.adminRequired += Number(row.querySelector('input[name="adminRequired"]').value) || 0;
+      sums.acadRequired += Number(row.querySelector('input[name="acadRequired"]').value) || 0;
+      sums.adminUnknown += Number(row.querySelector('input[name="adminUnknown"]').value) || 0;
+      sums.acadUnknown += Number(row.querySelector('input[name="acadUnknown"]').value) || 0;
+      sums.eExam += Number(row.querySelector('input[name="eExam"]').value) || 0;
+      sums.faulty += Number(row.querySelector('input[name="faulty"]').value) || 0;
+      sums.techRefresh += Number(row.querySelector('input[name="techRefresh"]').value) || 0;
+    });
+
+    // Update totals in summary table
+    document.getElementById("sumAdminInstalled").textContent = sums.adminInstalled;
+    document.getElementById("sumAcadInstalled").textContent = sums.acadInstalled;
+    document.getElementById("sumAdminSccm").textContent = sums.adminSccm;
+    document.getElementById("sumAcadSccm").textContent = sums.acadSccm;
+    document.getElementById("sumAdminNotConnected").textContent = sums.adminNotConnected;
+    document.getElementById("sumAcadNotConnected").textContent = sums.acadNotConnected;
+    document.getElementById("sumAdminRequired").textContent = sums.adminRequired;
+    document.getElementById("sumAcadRequired").textContent = sums.acadRequired;
+    document.getElementById("sumAdminUnknown").textContent = sums.adminUnknown;
+    document.getElementById("sumAcadUnknown").textContent = sums.acadUnknown;
+    document.getElementById("sumEexam").textContent = sums.eExam;
+    document.getElementById("sumFaulty").textContent = sums.faulty;
+    document.getElementById("sumTechRefresh").textContent = sums.techRefresh;
+
+    // Overall percentage = (Total Installed) / (Sum of all except DATE and percentage)
+    const totalInstalled = sums.adminInstalled + sums.acadInstalled;
+    let grandTotal = 0;
+    for (const key in sums) {
+      grandTotal += sums[key];
+    }
+    grandTotal = grandTotal || 1; // prevent division by zero
+
+    const overallPercent = (totalInstalled / grandTotal) * 100;
+    document.getElementById("overallPercentage").textContent = overallPercent.toFixed(2) + "%";
+  }
+
+  // On form submit, prevent default, recalc summary, alert save (or extend to save)
+  document.getElementById("patchingForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    updatePercentages();
+    updateSummary();
+    alert("Patching data saved (in-memory). You can add CSV/JSON export later.");
+  });
+
+  // Whenever any input changes, update percentages & summary
+  inputBody.addEventListener("input", () => {
+    updatePercentages();
+    updateSummary();
+  });
+
+  // Start with one empty row on load
+  window.onload = () => {
+    addRow();
+    updateSummary();
+  };
+</script>
 </body>
 </html>
