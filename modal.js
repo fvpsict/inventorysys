@@ -1,28 +1,37 @@
-// modal.js
-
-const modal = document.getElementById("itemModal");
-
+// Open the modal and clear form
 function openModal() {
+  const modal = document.getElementById("itemModal");
+  const form = document.getElementById("itemForm");
+
+  form.reset(); // Clear previous entries
   modal.style.display = "block";
-  // Focus first input or modal
-  const firstInput = modal.querySelector("input, button, select, textarea");
-  if (firstInput) firstInput.focus();
 }
 
+// Close the modal
 function closeModal() {
+  const modal = document.getElementById("itemModal");
   modal.style.display = "none";
 }
 
-// Close modal when clicking outside content
-window.addEventListener("click", (event) => {
-  if (event.target === modal) {
-    closeModal();
-  }
-});
+// Handle form submission
+document.getElementById("itemForm").addEventListener("submit", function (e) {
+  e.preventDefault();
 
-// Close modal on ESC key
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && modal.style.display === "block") {
-    closeModal();
+  // Capture form data
+  const formData = new FormData(e.target);
+  const newItem = {};
+
+  for (let [key, value] of formData.entries()) {
+    newItem[key] = value.trim();
   }
+
+  // Basic validation
+  if (!newItem.equipmentType || !newItem.assetNo) {
+    alert("Please fill in at least Equipment Type and Asset No.");
+    return;
+  }
+
+  // Add to table and close modal
+  addInventoryItem(newItem);
+  closeModal();
 });
