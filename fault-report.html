@@ -1,141 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fault Report - Inventory System</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <title>Fault Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f8f9fa;
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+    .menu-wrapper {
+      display: flex;
+      height: 100vh;
+    }
+    nav.menu-sidebar {
+      width: 220px;
+      background-color: #343a40;
+      color: white;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    nav.menu-sidebar h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #f8f9fa;
+    }
+    ul.menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    ul.menu-list li {
+      margin: 0.5rem 0;
+    }
+    ul.menu-list li a {
+      color: #ddd;
+      text-decoration: none;
+      display: block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    ul.menu-list li a:hover {
+      background-color: #495057;
+      color: white;
+      text-decoration: none;
+    }
+    ul.menu-list li.active > a {
+      font-weight: bold;
+      background-color: #007bff;
+      color: white !important;
+    }
+    main.main-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      background: #f8f9fa;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table th,
+    table td {
+      border: 1px solid #dee2e6;
+      padding: 0.5rem;
+    }
+    table th {
+      background-color: #e9ecef;
+      text-align: left;
+    }
+    td[contenteditable="true"] {
+      background-color: #fff8dc;
+      cursor: text;
+    }
+    .form-section {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+      max-width: 700px;
+    }
+    .btn-group {
+      margin-top: 1rem;
+    }
+  </style>
 </head>
 <body>
   <div class="menu-wrapper">
-    <nav class="menu-sidebar">
+    <nav class="menu-sidebar" aria-label="Main Navigation">
       <h3>Inventory Menu</h3>
       <ul class="menu-list">
-        <li><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
-        <li class="active"><a href="#"><i class="fas fa-tools"></i> Fault Report</a></li>
-        <li><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="view-inventory/index.html">View Inventory</a></li>
+        <li class="active"><a href="fault-report.html" aria-current="page">Fault Report</a></li>
+        <li>
+          <a href="patching-report.html">Patching Report</a>
+          <ul class="submenu-list">
+            <li><a href="patching-summary.html">Summary</a></li>
+          </ul>
+        </li>
       </ul>
     </nav>
 
-    <main class="main-content">
-      <h1>Fault Report</h1>
-
-      <section class="action-buttons">
-        <button class="button" onclick="showFaultForm()">Add Fault Report</button>
-        <button class="button secondary" onclick="downloadFaultCSV()">Export CSV</button>
+    <main class="main-content" role="main">
+      <section class="form-section">
+        <h2>Submit Fault Report</h2>
+        <form id="faultForm">
+          <div class="mb-3">
+            <label for="equipmentType" class="form-label">Equipment Type</label>
+            <input type="text" class="form-control" id="equipmentType" required />
+          </div>
+          <div class="mb-3">
+            <label for="faultDescription" class="form-label">Fault Description</label>
+            <textarea class="form-control" id="faultDescription" rows="3" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="reportedBy" class="form-label">Reported By</label>
+            <input type="text" class="form-control" id="reportedBy" />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Fault</button>
+          <button type="button" class="btn btn-danger ms-2" onclick="clearFaults()">Clear All Faults</button>
+        </form>
       </section>
 
-      <table id="faultTable" class="table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Equipment</th>
-            <th>Serial No</th>
-            <th>Room</th>
-            <th>Status</th>
-            <th>Action Taken</th>
-            <th>Date Resolved</th>
-          </tr>
-        </thead>
-        <tbody id="faultBody">
-          <!-- Fault entries go here -->
-        </tbody>
-      </table>
-
-      <!-- Modal for Fault Entry -->
-      <div id="faultModal" class="modal">
-        <div class="modal-content">
-          <h2>Add Fault Report</h2>
-          <form id="faultForm">
-            <div class="form-group">
-              <label for="faultDate">Date</label>
-              <input type="date" id="faultDate" required />
-            </div>
-            <div class="form-group">
-              <label for="faultEquipment">Equipment</label>
-              <input type="text" id="faultEquipment" required />
-            </div>
-            <div class="form-group">
-              <label for="faultSerial">Serial No</label>
-              <input type="text" id="faultSerial" />
-            </div>
-            <div class="form-group">
-              <label for="faultRoom">Room</label>
-              <input type="text" id="faultRoom" />
-            </div>
-            <div class="form-group">
-              <label for="faultStatus">Status</label>
-              <select id="faultStatus">
-                <option value="Pending">Pending</option>
-                <option value="Resolved">Resolved</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="faultAction">Action Taken</label>
-              <textarea id="faultAction"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="faultResolved">Date Resolved</label>
-              <input type="date" id="faultResolved" />
-            </div>
-
-            <div class="button-group">
-              <button type="button" class="button secondary" onclick="closeFaultModal()">Cancel</button>
-              <button type="submit" class="button">Save</button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <section>
+        <h2>Fault Reports</h2>
+        <div id="faultTableContainer"></div>
+      </section>
     </main>
   </div>
 
   <script>
-    const faultModal = document.getElementById('faultModal');
-    const faultForm = document.getElementById('faultForm');
-    const faultBody = document.getElementById('faultBody');
+    const STORAGE_KEY = 'faultReports';
 
-    function showFaultForm() {
-      faultModal.style.display = 'block';
+    function getFaults() {
+      const faults = localStorage.getItem(STORAGE_KEY);
+      return faults ? JSON.parse(faults) : [];
     }
 
-    function closeFaultModal() {
-      faultModal.style.display = 'none';
-      faultForm.reset();
+    function saveFaults(faults) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(faults));
     }
 
-    faultForm.onsubmit = (e) => {
-      e.preventDefault();
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${faultDate.value}</td>
-        <td>${faultEquipment.value}</td>
-        <td>${faultSerial.value}</td>
-        <td>${faultRoom.value}</td>
-        <td>${faultStatus.value}</td>
-        <td>${faultAction.value}</td>
-        <td>${faultResolved.value}</td>
-      `;
-      faultBody.appendChild(row);
-      closeFaultModal();
-    };
+    function renderFaultTable() {
+      const faults = getFaults();
+      if (faults.length === 0) {
+        document.getElementById('faultTableContainer').innerHTML = '<p>No fault reports submitted yet.</p>';
+        return;
+      }
 
-    function downloadFaultCSV() {
-      let csv = "Date,Equipment,Serial No,Room,Status,Action Taken,Date Resolved\n";
-      document.querySelectorAll("#faultBody tr").forEach(row => {
-        const cells = row.querySelectorAll("td");
-        csv += Array.from(cells).map(td => `"${td.textContent}"`).join(",") + "\n";
+      let html = `<table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Equipment Type</th>
+            <th>Fault Description</th>
+            <th>Reported By</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      faults.forEach((fault, index) => {
+        html += `
+          <tr>
+            <td contenteditable="true" oninput="updateFault(${index}, 'equipmentType', this.innerText)">${fault.equipmentType}</td>
+            <td contenteditable="true" oninput="updateFault(${index}, 'faultDescription', this.innerText)">${fault.faultDescription}</td>
+            <td contenteditable="true" oninput="updateFault(${index}, 'reportedBy', this.innerText)">${fault.reportedBy}</td>
+          </tr>`;
       });
-      const blob = new Blob([csv], { type: "text/csv" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "fault-report.csv";
-      a.click();
+
+      html += '</tbody></table>';
+      document.getElementById('faultTableContainer').innerHTML = html;
     }
 
-    window.onclick = function(e) {
-      if (e.target == faultModal) closeFaultModal();
+    function updateFault(index, key, value) {
+      const faults = getFaults();
+      if (faults[index]) {
+        faults[index][key] = value.trim();
+        saveFaults(faults);
+      }
     }
+
+    document.getElementById('faultForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const equipmentType = document.getElementById('equipmentType').value.trim();
+      const faultDescription = document.getElementById('faultDescription').value.trim();
+      const reportedBy = document.getElementById('reportedBy').value.trim();
+
+      if (!equipmentType || !faultDescription) {
+        alert('Please fill in required fields: Equipment Type and Fault Description.');
+        return;
+      }
+
+      const faults = getFaults();
+      faults.push({ equipmentType, faultDescription, reportedBy });
+      saveFaults(faults);
+      renderFaultTable();
+
+      e.target.reset();
+    });
+
+    function clearFaults() {
+      if (confirm('Are you sure you want to clear all fault reports?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderFaultTable();
+      }
+    }
+
+    window.onload = () => {
+      renderFaultTable();
+    };
   </script>
 </body>
 </html>
