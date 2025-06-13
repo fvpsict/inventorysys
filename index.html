@@ -1,101 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventory System</title>
-  <link rel="stylesheet" href="styles.css" /> <!-- Your CSS file -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory System</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Optional: FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
+    <div class="menu-wrapper">
+        <!-- Sidebar -->
+        <nav class="menu-sidebar">
+            <h3>Inventory Menu</h3>
+            <ul class="menu-list">
+                <li class="active"><a href="#"><i class="fas fa-boxes"></i> View Inventory</a></li>
+                <li><a href="#"><i class="fas fa-tools"></i> Fault Report</a></li>
+                <li><a href="#"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+            </ul>
+        </nav>
 
-  <!-- Your HTML content goes here -->
+        <!-- Main content -->
+        <main class="main-content">
+            <section class="action-buttons">
+                <div class="mass-upload">
+                    <label for="csvFile" class="button secondary" style="cursor:pointer;">
+                        <i class="fas fa-upload"></i> Upload CSV
+                    </label>
+                    <input type="file" id="csvFile" accept=".csv" class="d-none" onchange="previewCsv()" />
+                    <button class="button" onclick="handleCsvUpload()">Import CSV</button>
+                    <button class="button secondary" onclick="closePreview()">Cancel Preview</button>
+                </div>
 
-  <!-- Modal -->
-  <div id="itemModal" style="display:none;">
-    <!-- Modal content here -->
-  </div>
+                <div class="export-container">
+                    <button class="button" onclick="exportToCsv()">Export CSV</button>
+                    <select id="exportFormat" title="Choose export format">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <!-- Add more export formats if needed -->
+                    </select>
+                </div>
+            </section>
 
-  <!-- CSV Upload -->
-  <input type="file" id="csvFile" accept=".csv" />
-  <button onclick="previewCsv()">Preview CSV</button>
-  <button onclick="handleCsvUpload()">Import CSV</button>
-  <button onclick="closePreview()">Close Preview</button>
+            <div id="uploadPreview" class="upload-preview">
+                <div class="preview-content"></div>
+            </div>
 
-  <div id="uploadPreview" style="display:none;">
-    <div class="preview-content"></div>
-  </div>
+            <table id="inventoryTable" class="table" aria-label="Inventory Table">
+                <thead>
+                    <tr id="tableHeaders">
+                        <!-- Dynamic headers inserted here -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Dynamic inventory rows inserted here -->
+                </tbody>
+            </table>
+        </main>
+    </div>
 
-  <!-- Inventory Table placeholder -->
-  <table id="inventoryTable">
-    <!-- Table will be dynamically created -->
-  </table>
+    <!-- Modal -->
+    <div id="itemModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+        <div class="modal-content">
+            <h2 id="modalTitle">Inventory Item</h2>
+            <form id="itemForm">
+                <!-- Dynamically generated form fields will go here -->
+                <div class="form-group">
+                    <label for="equipmentType">Equipment Type</label>
+                    <input type="text" id="equipmentType" name="equipmentType" required />
+                </div>
+                <div class="form-group">
+                    <label for="vendor">Vendor</label>
+                    <input type="text" id="vendor" name="vendor" />
+                </div>
+                <div class="form-group">
+                    <label for="brandModel">Brand & Model</label>
+                    <input type="text" id="brandModel" name="brandModel" />
+                </div>
+                <div class="form-group">
+                    <label for="serialNo">Serial No</label>
+                    <input type="text" id="serialNo" name="serialNo" />
+                </div>
+                <div class="form-group">
+                    <label for="assetNo">Asset No</label>
+                    <input type="text" id="assetNo" name="assetNo" />
+                </div>
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" />
+                </div>
+                <!-- Add other form groups as needed -->
 
-  <!-- Your other HTML UI elements -->
+                <div class="button-group">
+                    <button type="button" class="button secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="button">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-  <!-- JavaScript files -->
-  <script src="modal.js"></script>
-  <script src="inventory.js"></script>
-  <script src="formatting.js"></script>
-  <script src="filter.js"></script>
-  <script src="csvParse.js"></script>
-  <script src="csvUpload.js"></script>
-
-  <!-- Initialize inventory and table -->
-  <script>
-    // Make sure to declare the inventory array and functions like saveInventory, createTable globally
-    let inventory = [];
-
-    function saveInventory() {
-      localStorage.setItem('inventory', JSON.stringify(inventory));
-    }
-
-    function loadInventory() {
-      const data = localStorage.getItem('inventory');
-      if (data) inventory = JSON.parse(data);
-    }
-
-    function createTable() {
-      // Implement table creation based on inventory array here
-      const table = document.getElementById('inventoryTable');
-      table.innerHTML = '';
-
-      if(inventory.length === 0) {
-        table.innerHTML = '<tr><td>No items</td></tr>';
-        return;
-      }
-
-      // Create header row dynamically from keys of first item
-      const headers = Object.keys(inventory[0]).filter(k => k !== 'id');
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
-      headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = formatColumnHeader(h);
-        trHead.appendChild(th);
-      });
-      thead.appendChild(trHead);
-      table.appendChild(thead);
-
-      // Create body rows
-      const tbody = document.createElement('tbody');
-      inventory.forEach(item => {
-        const tr = document.createElement('tr');
-        headers.forEach(h => {
-          const td = document.createElement('td');
-          td.textContent = item[h] || '';
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-    }
-
-    // Load inventory and display table on page load
-    window.onload = () => {
-      loadInventory();
-      createTable();
-    };
-  </script>
-
+    <script src="inventory.js"></script>
+    <script src="csv.js"></script>
 </body>
 </html>
