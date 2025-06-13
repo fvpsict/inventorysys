@@ -8,16 +8,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
-  <div class="menu-wrapper">
-    <!-- Sidebar Navigation -->
-    <nav class="menu-sidebar">
-      <h3>Inventory Menu</h3>
-      <ul class="menu-list">
-        <li class="active"><a href="index.html"><i class="fas fa-boxes"></i> View Inventory</a></li>
-        <li><a href="fault-report.html"><i class="fas fa-tools"></i> Fault Report</a></li>
-        <li><a href="patching-report.html"><i class="fas fa-calendar-check"></i> Patching Report</a></li>
+ <nav class="menu-sidebar">
+  <h3>Inventory Menu</h3>
+  <ul class="menu-list">
+    <li><a href="view-inventory/index.html">View Inventory</a></li>
+    <li><a href="fault-report.html">Fault Report</a></li>
+    
+    <li class="active">
+      <a href="patching-report.html">Patching Report</a>
+      <ul class="submenu-list">
+        <li><a href="patching-summary.html">Summary</a></li>
       </ul>
-    </nav>
+    </li>
+
+  </ul>
+</nav>
+
 
     <!-- Main Content -->
     <main class="main-content">
