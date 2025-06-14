@@ -1,48 +1,45 @@
+/* styles.css */
+
 body {
   font-family: Arial, sans-serif;
-  margin: 0;
-  padding-top: 70px; /* height of fixed top navbar */
-  background-color: #f8f9fa;
 }
 
-.navbar {
-  background-color: #343a40;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1030;
-}
-
-.navbar .navbar-brand,
-.navbar-nav .nav-link {
-  color: #fff !important;
-}
-
+/* Navbar overrides */
 .navbar-nav .nav-link.active {
-  background-color: #495057;
-  border-radius: 5px;
+  font-weight: bold;
+  color: #0d6efd !important; /* Bootstrap primary */
 }
 
-.main-content {
-  padding: 20px;
+/* Inline form spacing */
+.inline-form > * {
+  margin-bottom: 10px;
 }
 
-table {
-  background-color: #fff;
-}
-
+/* Table styles */
 .table-responsive {
-  max-height: 70vh;
   overflow-y: auto;
 }
 
-button {
-  margin-right: 5px;
+/* Fixed navbar padding */
+body {
+  padding-top: 70px;
 }
 
-form.inline-form input,
-form.inline-form select {
-  width: auto;
-  display: inline-block;
-  margin-right: 10px;
+/* Editable cell styles (for example) */
+td[contenteditable="true"] {
+  background-color: #fff3cd;
+  cursor: text;
+}
+
+/* Button margin */
+.btn {
+  margin: 0 2px;
+}
+
+/* Responsive form elements */
+@media (max-width: 767px) {
+  .inline-form .col-md-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 }
