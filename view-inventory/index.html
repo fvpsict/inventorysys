@@ -71,19 +71,47 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body row g-3">
-          <div class="col-md-6"><label class="form-label">AssetNo</label><input name="AssetNo" class="form-control" required /></div>
-          <div class="col-md-6"><label class="form-label">EquipmentType</label><input name="EquipmentType" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">Vendor</label><input name="Vendor" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">BrandModel</label><input name="BrandModel" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">SerialNumber</label><input name="SerialNumber" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">Location</label><input name="Location" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">StartDate</label><input type="date" name="StartDate" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">EndDate</label><input type="date" name="EndDate" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">LampHour</label><input type="text" name="LampHour" class="form-control" /></div>
-          <div class="col-md-6"><label class="form-label">Duration in use</label><input type="text" name="DurationInUse" class="form-control" /></div>
+          <div class="col-md-6">
+            <label class="form-label">AssetNo</label>
+            <input name="AssetNo" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">EquipmentType</label>
+            <input name="EquipmentType" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vendor</label>
+            <input name="Vendor" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">BrandModel</label>
+            <input name="BrandModel" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">SerialNumber</label>
+            <input name="SerialNumber" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Location</label>
+            <input name="Location" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">StartDate</label>
+            <input type="date" name="StartDate" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">EndDate</label>
+            <input type="date" name="EndDate" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">LampHour</label>
+            <input name="LampHour" class="form-control" />
+          </div>
         </div>
         <div class="modal-footer">
-          <button id="deleteInvBtn" type="button" class="btn btn-danger me-auto" style="display:none;">Delete</button>
+          <button id="deleteInvBtn" type="button" class="btn btn-danger me-auto" style="display:none;">
+            Delete
+          </button>
           <button type="submit" class="btn btn-primary">Save</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
@@ -132,9 +160,9 @@
         deleteBtn.style.display = 'none';
       }
 
-      function fillForm(item) {
-        Object.keys(item).forEach(k => {
-          if (form.elements[k]) form.elements[k].value = item[k];
+      function fillForm(it) {
+        Object.keys(it).forEach(k => {
+          if (form.elements[k]) form.elements[k].value = it[k];
         });
       }
 
@@ -144,8 +172,7 @@
       });
 
       tbody.addEventListener('click', e => {
-        const btn = e.target;
-        const i = btn.dataset.i;
+        const btn = e.target, i = btn.dataset.i;
         if (btn.classList.contains('edit-btn')) {
           editIdx = i;
           fillForm(data[i]);
@@ -160,7 +187,7 @@
       });
 
       deleteBtn.addEventListener('click', () => {
-        if (editIdx !== null && confirm('Delete this entry?')) {
+        if (editIdx !== null && confirm('Delete this item?')) {
           data.splice(editIdx, 1);
           localStorage.setItem('inventory', JSON.stringify(data));
           render();
@@ -172,9 +199,21 @@
       form.addEventListener('submit', e => {
         e.preventDefault();
         const obj = {};
-        ['AssetNo', 'EquipmentType', 'Vendor', 'BrandModel', 'SerialNumber',
-         'Location', 'StartDate', 'EndDate', 'LampHour', 'DurationInUse']
-         .forEach(k => obj[k] = form.elements[k].value);
+        ['AssetNo', 'EquipmentType', 'Vendor', 'BrandModel', 'SerialNumber', 'Location', 'StartDate', 'EndDate', 'LampHour']
+          .forEach(k => obj[k] = form.elements[k].value);
+
+        const start = new Date(form.elements['StartDate'].value);
+        const endInput = form.elements['EndDate'].value;
+        const end = endInput ? new Date(endInput) : new Date();
+
+        let years = end.getFullYear() - start.getFullYear();
+        let months = end.getMonth() - start.getMonth();
+        if (months < 0) {
+          years--;
+          months += 12;
+        }
+
+        obj.DurationInUse = `${years} year(s) ${months} month(s)`;
         obj.DateUpdated = new Date().toISOString().split('T')[0];
 
         if (editIdx === null) data.push(obj);
