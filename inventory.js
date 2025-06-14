@@ -1,87 +1,62 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('inventoryForm');
-  const tableBody = document.querySelector('#inventoryTable tbody');
+  const inventoryTableBody = document.querySelector('#inventoryTable tbody');
+  const inventoryForm = document.getElementById('inventoryForm');
   const addInventoryModal = new bootstrap.Modal(document.getElementById('addInventoryModal'));
 
-  // Load inventory from localStorage or empty array
   let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 
-  // Render inventory table rows
-  function renderTable() {
-    tableBody.innerHTML = '';
-    inventory.forEach((item, index) => {
+  function renderInventory() {
+    inventoryTableBody.innerHTML = '';
+    inventory.forEach((item, idx) => {
       const tr = document.createElement('tr');
 
-      // For each property in item, create a cell
-      Object.keys(item).forEach((key) => {
+      ['AssetNo', 'EquipmentType', 'Vendor', 'BrandModel', 'SerialNumber', 'Location', 'StartDate', 'EndDate'].forEach((key) => {
         const td = document.createElement('td');
-        td.textContent = item[key];
-        // Make editable except AssetNo (unique ID)
-        td.contentEditable = key !== 'AssetNo';
-        td.dataset.field = key;
-        td.dataset.index = index;
+        td.textContent = item[key] || '';
         tr.appendChild(td);
       });
 
-      // Actions column with Delete button
       const actionTd = document.createElement('td');
+      // Delete button
       const deleteBtn = document.createElement('button');
       deleteBtn.textContent = 'Delete';
-      deleteBtn.className = 'btn btn-sm btn-danger';
-      deleteBtn.onclick = () => {
-        if (confirm('Are you sure you want to delete this item?')) {
-          inventory.splice(index, 1);
-          saveAndRender();
+      deleteBtn.className = 'btn btn-sm btn-danger me-2';
+      deleteBtn.addEventListener('click', () => {
+        if (confirm('Delete this inventory item?')) {
+          inventory.splice(idx, 1);
+          localStorage.setItem('inventory', JSON.stringify(inventory));
+          renderInventory();
         }
-      };
+      });
       actionTd.appendChild(deleteBtn);
+
+      // Edit button (optional - can add editing)
+      // ...
+
       tr.appendChild(actionTd);
 
-      tableBody.appendChild(tr);
+      inventoryTableBody.appendChild(tr);
     });
   }
 
-  // Save to localStorage and re-render table
-  function saveAndRender() {
-    localStorage.setItem('inventory', JSON.stringify(inventory));
-    renderTable();
-  }
-
-  // Handle form submit - add new item
-  form.addEventListener('submit', (e) => {
+  inventoryForm.addEventListener('submit', (e) => {
     e.preventDefault();
-
-    const formData = new FormData(form);
+    const formData = new FormData(inventoryForm);
     const newItem = {};
     for (const [key, value] of formData.entries()) {
       newItem[key] = value.trim();
     }
-
-    // Validate unique AssetNo
-    if (inventory.find(i => i.AssetNo === newItem.AssetNo)) {
-      alert('AssetNo must be unique.');
+    // Check unique AssetNo
+    if (inventory.some(item => item.AssetNo === newItem.AssetNo)) {
+      alert('AssetNo must be unique!');
       return;
     }
-
     inventory.push(newItem);
-    saveAndRender();
-
-    form.reset();
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    renderInventory();
+    inventoryForm.reset();
     addInventoryModal.hide();
   });
 
-  // Handle inline table editing
-  tableBody.addEventListener('input', (e) => {
-    const target = e.target;
-    if (target.tagName.toLowerCase() === 'td' && target.dataset.index !== undefined) {
-      const index = Number(target.dataset.index);
-      const field = target.dataset.field;
-
-      // Update inventory item with new text content
-      inventory[index][field] = target.textContent.trim();
-      localStorage.setItem('inventory', JSON.stringify(inventory));
-    }
-  });
-
-  renderTable();
+  renderInventory();
 });
