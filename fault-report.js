@@ -1,16 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   const faultTableBody = document.querySelector('#faultTable tbody');
   const faultForm = document.getElementById('faultForm');
-  const addFaultModalEl = document.getElementById('addFaultModal');
-  const addFaultModal = new bootstrap.Modal(addFaultModalEl);
+  const addFaultModal = new bootstrap.Modal(document.getElementById('addFaultModal'));
 
-  // Load faults or initialize empty
   let faults = JSON.parse(localStorage.getItem('faults')) || [];
 
-  // Render fault rows
   function renderFaults() {
     faultTableBody.innerHTML = '';
-
     faults.forEach((fault, idx) => {
       const tr = document.createElement('tr');
 
@@ -19,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tdType.textContent = fault.EquipmentType || '';
       tr.appendChild(tdType);
 
-      // Status - inline editable dropdown
+      // Status with inline dropdown
       const tdStatus = document.createElement('td');
       const statusSelect = document.createElement('select');
       ['Open', 'In Progress', 'Resolved', 'Closed'].forEach((status) => {
@@ -45,10 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Actions: Delete button
       const tdActions = document.createElement('td');
       const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-sm btn-danger';
       deleteBtn.textContent = 'Delete';
-      deleteBtn.className = 'btn btn-sm btn-danger delete-btn';
       deleteBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to delete this fault?')) {
+        if (confirm('Delete this fault report?')) {
           faults.splice(idx, 1);
           localStorage.setItem('faults', JSON.stringify(faults));
           renderFaults();
@@ -61,22 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initial render
-  renderFaults();
-
-  // Add fault form submit
   faultForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(faultForm);
-    const newFault = {
-      EquipmentType: formData.get('EquipmentType'),
-      Status: formData.get('Status'),
-      Fault: formData.get('Fault'),
-    };
+    const newFault = {};
+    for (const [key, value] of formData.entries()) {
+      newFault[key] = value.trim();
+    }
     faults.push(newFault);
     localStorage.setItem('faults', JSON.stringify(faults));
     renderFaults();
     faultForm.reset();
     addFaultModal.hide();
   });
+
+  renderFaults();
 });
