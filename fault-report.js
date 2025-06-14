@@ -1,64 +1,82 @@
-// fault-report.js
-
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('faultForm');
-  const tableBody = document.querySelector('#faultTable tbody');
+  const faultTableBody = document.querySelector('#faultTable tbody');
+  const faultForm = document.getElementById('faultForm');
+  const addFaultModalEl = document.getElementById('addFaultModal');
+  const addFaultModal = new bootstrap.Modal(addFaultModalEl);
+
+  // Load faults or initialize empty
   let faults = JSON.parse(localStorage.getItem('faults')) || [];
 
-  function renderTable() {
-    tableBody.innerHTML = '';
-    faults.forEach((fault, index) => {
+  // Render fault rows
+  function renderFaults() {
+    faultTableBody.innerHTML = '';
+
+    faults.forEach((fault, idx) => {
       const tr = document.createElement('tr');
 
-      // Equipment Type
-      const tdEquip = document.createElement('td');
-      tdEquip.textContent = fault.EquipmentType;
-      tr.appendChild(tdEquip);
+      // EquipmentType
+      const tdType = document.createElement('td');
+      tdType.textContent = fault.EquipmentType || '';
+      tr.appendChild(tdType);
 
-      // Fault Description
-      const tdFault = document.createElement('td');
-      tdFault.textContent = fault.Fault;
-      tr.appendChild(tdFault);
-
-      // Status (editable select)
+      // Status - inline editable dropdown
       const tdStatus = document.createElement('td');
-      const select = document.createElement('select');
+      const statusSelect = document.createElement('select');
       ['Open', 'In Progress', 'Resolved', 'Closed'].forEach((status) => {
         const option = document.createElement('option');
         option.value = status;
-        option.text = status;
+        option.textContent = status;
         if (fault.Status === status) option.selected = true;
-        select.appendChild(option);
+        statusSelect.appendChild(option);
       });
-      select.addEventListener('change', () => {
-        faults[index].Status = select.value;
+      statusSelect.className = 'form-select form-select-sm';
+      statusSelect.addEventListener('change', () => {
+        faults[idx].Status = statusSelect.value;
         localStorage.setItem('faults', JSON.stringify(faults));
       });
-      tdStatus.appendChild(select);
+      tdStatus.appendChild(statusSelect);
       tr.appendChild(tdStatus);
 
-      // Actions
+      // Fault Description
+      const tdFault = document.createElement('td');
+      tdFault.textContent = fault.Fault || '';
+      tr.appendChild(tdFault);
+
+      // Actions: Delete button
       const tdActions = document.createElement('td');
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn btn-sm btn-danger';
       deleteBtn.textContent = 'Delete';
-      deleteBtn.onclick = () => {
-        faults.splice(index, 1);
-        saveAndRender();
-      };
+      deleteBtn.className = 'btn btn-sm btn-danger delete-btn';
+      deleteBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to delete this fault?')) {
+          faults.splice(idx, 1);
+          localStorage.setItem('faults', JSON.stringify(faults));
+          renderFaults();
+        }
+      });
       tdActions.appendChild(deleteBtn);
       tr.appendChild(tdActions);
 
-      tableBody.appendChild(tr);
+      faultTableBody.appendChild(tr);
     });
   }
 
-  function saveAndRender() {
-    localStorage.setItem('faults', JSON.stringify(faults));
-    renderTable();
-  }
+  // Initial render
+  renderFaults();
 
-  form.addEventListener('submit', (e) => {
+  // Add fault form submit
+  faultForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const formData = new FormData(form);
-    const newFault =
+    const formData = new FormData(faultForm);
+    const newFault = {
+      EquipmentType: formData.get('EquipmentType'),
+      Status: formData.get('Status'),
+      Fault: formData.get('Fault'),
+    };
+    faults.push(newFault);
+    localStorage.setItem('faults', JSON.stringify(faults));
+    renderFaults();
+    faultForm.reset();
+    addFaultModal.hide();
+  });
+});
