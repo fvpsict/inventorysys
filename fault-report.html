@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fault Report</title>
+  <title>Fault Report - Inventory System</title>
   <link href="styles.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
 </head>
 <body>
   <div class="menu-wrapper">
@@ -15,114 +18,253 @@
         <li><a href="index.html">Home</a></li>
         <li><a href="view-inventory/index.html">View Inventory</a></li>
         <li class="active"><a href="fault-report.html">Fault Report</a></li>
-        <li>
-          <a href="patching/patching-report.html">Patching Report</a>
-          <ul class="submenu-list">
-            <li><a href="patching/patching-summary.html">Summary</a></li>
-          </ul>
-        </li>
+        <li><a href="patching/patching-report.html">Patching Report</a></li>
       </ul>
     </nav>
 
     <main class="main-content">
-      <h2>Submit Fault Report</h2>
-      <form id="faultForm">
-        <input type="text" id="equipmentType" placeholder="Equipment Type" required />
-        <textarea id="faultDescription" placeholder="Fault Description" required></textarea>
-        <input type="text" id="reportedBy" placeholder="Reported By" />
-        <button type="submit" class="btn btn-primary">Add Fault</button>
-      </form>
+      <h1>Fault Report</h1>
+      <button
+        class="btn btn-primary mb-3"
+        data-bs-toggle="modal"
+        data-bs-target="#faultModal"
+        id="addFaultBtn"
+      >
+        Add Fault
+      </button>
 
-      <h2>Fault Reports</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Equipment Type</th>
-            <th>Fault Description</th>
-            <th>Reported By</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="faultTableBody"></tbody>
-      </table>
+      <div class="table-responsive" style="max-height: 60vh; overflow-y:auto;">
+        <table id="faultTable" class="table table-bordered table-striped table-sm">
+          <thead>
+            <tr>
+              <th>EquipmentType</th>
+              <th>Vendor</th>
+              <th>BrandModel</th>
+              <th>AssetNo</th>
+              <th>SerialNumber</th>
+              <th>EndDate</th>
+              <th>StartDate</th>
+              <th>Room</th>
+              <th>Room Number</th>
+              <th>Level</th>
+              <th>Lamphour</th>
+              <th>Fault</th>
+              <th>Status</th>
+              <th>Date resolved</th>
+              <th>Action Taken</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </main>
   </div>
 
+  <!-- Modal for Add/Edit Fault -->
+  <div
+    class="modal fade"
+    id="faultModal"
+    tabindex="-1"
+    aria-labelledby="faultModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="faultForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="faultModalLabel">Add/Edit Fault</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <!-- Inputs for all columns -->
+              <div class="col-md-3">
+                <label for="equipmentType" class="form-label">EquipmentType</label>
+                <input type="text" class="form-control" id="equipmentType" name="EquipmentType" required />
+              </div>
+              <div class="col-md-3">
+                <label for="vendor" class="form-label">Vendor</label>
+                <input type="text" class="form-control" id="vendor" name="Vendor" required />
+              </div>
+              <div class="col-md-3">
+                <label for="brandModel" class="form-label">BrandModel</label>
+                <input type="text" class="form-control" id="brandModel" name="BrandModel" required />
+              </div>
+              <div class="col-md-3">
+                <label for="assetNo" class="form-label">AssetNo</label>
+                <input type="text" class="form-control" id="assetNo" name="AssetNo" required />
+              </div>
+
+              <div class="col-md-3">
+                <label for="serialNumber" class="form-label">SerialNumber</label>
+                <input type="text" class="form-control" id="serialNumber" name="SerialNumber" />
+              </div>
+              <div class="col-md-3">
+                <label for="endDate" class="form-label">EndDate</label>
+                <input type="date" class="form-control" id="endDate" name="EndDate" />
+              </div>
+              <div class="col-md-3">
+                <label for="startDate" class="form-label">StartDate</label>
+                <input type="date" class="form-control" id="startDate" name="StartDate" />
+              </div>
+              <div class="col-md-3">
+                <label for="room" class="form-label">Room</label>
+                <input type="text" class="form-control" id="room" name="Room" />
+              </div>
+
+              <div class="col-md-3">
+                <label for="roomNumber" class="form-label">Room Number</label>
+                <input type="text" class="form-control" id="roomNumber" name="RoomNumber" />
+              </div>
+              <div class="col-md-3">
+                <label for="level" class="form-label">Level</label>
+                <input type="text" class="form-control" id="level" name="Level" />
+              </div>
+              <div class="col-md-3">
+                <label for="lamphour" class="form-label">Lamphour</label>
+                <input type="number" class="form-control" id="lamphour" name="Lamphour" min="0" />
+              </div>
+              <div class="col-md-3">
+                <label for="fault" class="form-label">Fault</label>
+                <input type="text" class="form-control" id="fault" name="Fault" required />
+              </div>
+
+              <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <input type="text" class="form-control" id="status" name="Status" />
+              </div>
+              <div class="col-md-3">
+                <label for="dateResolved" class="form-label">Date resolved</label>
+                <input type="date" class="form-control" id="dateResolved" name="DateResolved" />
+              </div>
+              <div class="col-md-6">
+                <label for="actionTaken" class="form-label">Action Taken</label>
+                <textarea
+                  class="form-control"
+                  id="actionTaken"
+                  name="ActionTaken"
+                  rows="2"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <input type="hidden" id="editIndex" />
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save Fault</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const STORAGE_KEY = 'faultReports';
+    const faultTableBody = document.querySelector('#faultTable tbody');
+    const faultForm = document.getElementById('faultForm');
+    const faultModal = new bootstrap.Modal(document.getElementById('faultModal'));
+    const editIndexInput = document.getElementById('editIndex');
 
-    function getFaults() {
-      const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
-    }
+    // Key for localStorage
+    const STORAGE_KEY = 'faultReportData';
 
-    function saveFaults(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
+    // Load data from localStorage or empty array
+    let faultData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
+    // Render fault table
     function renderFaultTable() {
-      const faults = getFaults();
-      const tbody = document.getElementById('faultTableBody');
-      tbody.innerHTML = '';
-
-      faults.forEach((fault, idx) => {
+      faultTableBody.innerHTML = '';
+      faultData.forEach((fault, index) => {
         const tr = document.createElement('tr');
 
-        ['equipmentType', 'faultDescription', 'reportedBy'].forEach(key => {
+        // For each column per spec
+        [
+          'EquipmentType', 'Vendor', 'BrandModel', 'AssetNo', 'SerialNumber',
+          'EndDate', 'StartDate', 'Room', 'RoomNumber', 'Level', 'Lamphour',
+          'Fault', 'Status', 'DateResolved', 'ActionTaken'
+        ].forEach(field => {
           const td = document.createElement('td');
-          td.contentEditable = true;
-          td.textContent = fault[key];
-          td.addEventListener('input', () => {
-            fault[key] = td.textContent.trim();
-            saveFaults(faults);
-          });
+          td.textContent = fault[field] || '';
           tr.appendChild(td);
         });
 
-        const delTd = document.createElement('td');
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Delete';
-        delBtn.className = 'btn btn-danger btn-sm';
-        delBtn.onclick = () => {
-          if (confirm('Delete this fault report?')) {
-            faults.splice(idx, 1);
-            saveFaults(faults);
-            renderFaultTable();
-          }
-        };
-        delTd.appendChild(delBtn);
-        tr.appendChild(delTd);
+        // Actions column with Edit button
+        const actionTd = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-sm btn-warning';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => openEditModal(index));
+        actionTd.appendChild(editBtn);
+        tr.appendChild(actionTd);
 
-        tbody.appendChild(tr);
+        faultTableBody.appendChild(tr);
       });
     }
 
+    // Open modal for adding new fault
+    document.getElementById('addFaultBtn').addEventListener('click', () => {
+      faultForm.reset();
+      editIndexInput.value = '';
+      document.getElementById('faultModalLabel').textContent = 'Add Fault';
+    });
+
+    // Open modal for editing a fault
+    function openEditModal(index) {
+      const fault = faultData[index];
+      if (!fault) return;
+
+      document.getElementById('faultModalLabel').textContent = 'Edit Fault';
+      editIndexInput.value = index;
+
+      // Fill form fields with data
+      [
+        'equipmentType', 'vendor', 'brandModel', 'assetNo', 'serialNumber',
+        'endDate', 'startDate', 'room', 'roomNumber', 'level', 'lamphour',
+        'fault', 'status', 'dateResolved', 'actionTaken'
+      ].forEach(id => {
+        const input = document.getElementById(id);
+        input.value = fault[input.name] || '';
+      });
+
+      faultModal.show();
+    }
+
+    // Handle form submission for add/edit
+    faultForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(faultForm);
+      const faultEntry = {};
+      for (const [key, value] of formData.entries()) {
+        faultEntry[key] = value;
+      }
+
+      const editIndex = editIndexInput.value;
+      if (editIndex === '') {
+        // Add new fault
+        faultData.push(faultEntry);
+      } else {
+        // Update existing fault
+        faultData[editIndex] = faultEntry;
+      }
+
+      // Save to localStorage and re-render table
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(faultData));
+      renderFaultTable();
+      faultModal.hide();
+    });
+
+    // Initial render
     window.onload = () => {
       renderFaultTable();
-      document.getElementById('faultForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const equipmentType = document.getElementById('equipmentType').value.trim();
-        const faultDescription = document.getElementById('faultDescription').value.trim();
-        const reportedBy = document.getElementById('reportedBy').value.trim();
-
-        if (!equipmentType || !faultDescription) {
-          alert('Fill in Equipment Type and Fault Description');
-          return;
-        }
-
-        const faults = getFaults();
-        faults.push({ equipmentType, faultDescription, reportedBy });
-        saveFaults(faults);
-        renderFaultTable();
-        e.target.reset();
-      });
-
-      // Highlight active menu item
-      document.querySelectorAll('.menu-list li a').forEach(link => {
-        if (link.href === window.location.href) {
-          link.parentElement.classList.add('active');
-        }
-      });
     };
   </script>
 </body>
