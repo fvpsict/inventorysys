@@ -6,7 +6,62 @@
   <title>Patching Report</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
- </head>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .menu-wrapper {
+      display: flex;
+      height: 100vh;
+    }
+    .menu-sidebar {
+      width: 200px;
+      background: #343a40;
+      color: white;
+      padding: 1rem;
+    }
+    .menu-sidebar h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .menu-list {
+      list-style: none;
+      padding: 0;
+    }
+    .menu-list li {
+      margin: 0.5rem 0;
+    }
+    .menu-list li a {
+      color: white;
+      text-decoration: none;
+    }
+    .menu-list li.active a {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      background: #f9f9f9;
+    }
+    textarea {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      font-family: monospace;
+      resize: vertical;
+    }
+    .table th, .table td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+    }
+    .button-group button {
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
 <body>
   <div class="menu-wrapper">
     <nav class="menu-sidebar">
@@ -14,13 +69,8 @@
       <ul class="menu-list">
         <li><a href="view-inventory/index.html">View Inventory</a></li>
         <li><a href="fault-report.html">Fault Report</a></li>
-        
-        <li class="active">
-          <a href="patching-report.html">Patching Report</a>
-          <ul class="submenu-list">
-            <li><a href="patching-summary.html">Summary</a></li>
-          </ul>
-        </li>
+        <li class="active"><a href="patching-report.html">Patching Report</a></li>
+        <li><a href="patching-summary.html">Summary</a></li>
       </ul>
     </nav>
 
