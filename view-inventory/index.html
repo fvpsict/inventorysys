@@ -8,41 +8,123 @@
 <body>
   <div class="menu-wrapper">
     <nav class="menu-sidebar">
-      <!-- same sidebar -->
+      <h3>Inventory Menu</h3>
+      <ul class="menu-list">
+        <li><a href="../index.html">Home</a></li>
+        <li class="active"><a href="index.html">View Inventory</a></li>
+        <li><a href="../fault-report.html">Fault Report</a></li>
+        <li>
+          <a href="../patching/patching-report.html">Patching Report</a>
+          <ul class="submenu-list">
+            <li><a href="../patching/patching-summary.html">Summary</a></li>
+          </ul>
+        </li>
+      </ul>
     </nav>
 
     <main class="main-content">
       <h2>Inventory Management</h2>
+
       <form id="addInventoryForm">
-        <input id="assetNo" placeholder="Asset No" required>
-        <input id="description" placeholder="Description" required>
-        <button type="submit">Add Item</button>
+        <input type="text" id="assetNo" placeholder="Asset No" required />
+        <input type="text" id="description" placeholder="Description" required />
+        <button type="submit">Add Inventory</button>
       </form>
-      <ul id="list"></ul>
+
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>Asset No</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </main>
   </div>
 
   <script>
-    const KEY = 'testInv';
-    function getItems() { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
-    function saveItems(it) { localStorage.setItem(KEY, JSON.stringify(it)); }
-    function render() {
-      document.getElementById('list').innerHTML = getItems().map(x => (`<li>${x.assetNo}: ${x.description}</li>`)).join('');
+    const STORAGE_KEY = 'inventoryData';
+
+    function getInventory() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     }
 
-    document.getElementById('addInventoryForm').addEventListener('submit', e => {
-      e.preventDefault();
-      let items = getItems();
-      items.push({
-        assetNo: document.getElementById('assetNo').value,
-        description: document.getElementById('description').value
-      });
-      saveItems(items);
-      e.target.reset();
-      render();
-    });
+    function saveInventory(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
 
-    render();
+    function renderInventory() {
+      const tbody = document.querySelector('#inventoryTable tbody');
+      const inventory = getInventory();
+      tbody.innerHTML = '';
+      inventory.forEach((item, index) => {
+        const tr = document.createElement('tr');
+
+        // Asset No editable cell
+        const assetNoTd = document.createElement('td');
+        assetNoTd.contentEditable = true;
+        assetNoTd.textContent = item.assetNo;
+        assetNoTd.addEventListener('input', () => {
+          inventory[index].assetNo = assetNoTd.textContent.trim();
+          saveInventory(inventory);
+        });
+
+        // Description editable cell
+        const descTd = document.createElement('td');
+        descTd.contentEditable = true;
+        descTd.textContent = item.description;
+        descTd.addEventListener('input', () => {
+          inventory[index].description = descTd.textContent.trim();
+          saveInventory(inventory);
+        });
+
+        // Actions cell: delete button
+        const actionTd = document.createElement('td');
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.addEventListener('click', () => {
+          inventory.splice(index, 1);
+          saveInventory(inventory);
+          renderInventory();
+        });
+        actionTd.appendChild(deleteBtn);
+
+        tr.appendChild(assetNoTd);
+        tr.appendChild(descTd);
+        tr.appendChild(actionTd);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.onload = () => {
+      renderInventory();
+
+      document.getElementById('addInventoryForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const assetNo = document.getElementById('assetNo').value.trim();
+        const description = document.getElementById('description').value.trim();
+        if (!assetNo || !description) {
+          alert('Please fill in both Asset No and Description');
+          return;
+        }
+        const inventory = getInventory();
+        inventory.push({ assetNo, description });
+        saveInventory(inventory);
+        renderInventory();
+        e.target.reset();
+      });
+
+      // Highlight active menu item
+      document.querySelectorAll('.menu-list li a').forEach(link => {
+        if (window.location.pathname.endsWith(link.getAttribute('href'))) {
+          link.parentElement.classList.add('active');
+        }
+      });
+    };
   </script>
 </body>
 </html>
