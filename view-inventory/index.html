@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>View Inventory</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
+  <link href="../styles.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body { padding-top: 70px; background: #f8f9fa; }
     .table-responsive { max-height: 60vh; overflow-y: auto; }
@@ -61,7 +59,7 @@
     </div>
   </main>
 
-  <!-- Inventory Modal -->
+  <!-- Add/Edit Modal -->
   <div class="modal fade" id="inventoryModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <form id="inventoryForm" class="modal-content">
@@ -104,7 +102,9 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button id="deleteInvBtn" type="button" class="btn btn-danger me-auto" style="display:none;">Delete</button>
+          <button id="deleteInvBtn" type="button" class="btn btn-danger me-auto" style="display:none;">
+            Delete
+          </button>
           <button type="submit" class="btn btn-primary">Save</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
@@ -112,20 +112,20 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('inventoryForm');
-      const tableBody = document.querySelector('#inventoryTable tbody');
-      const modalEl = document.getElementById('inventoryModal');
-      const modal = new bootstrap.Modal(modalEl);
-      const delBtn = document.getElementById('deleteInvBtn');
+      const tbody = document.querySelector('#inventoryTable tbody');
+      const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+      const deleteBtn = document.getElementById('deleteInvBtn');
       let data = JSON.parse(localStorage.getItem('inventory')) || [];
       let editIdx = null;
 
       function render() {
-        tableBody.innerHTML = '';
-        data.forEach((item,i)=>{
+        tbody.innerHTML = '';
+        data.forEach((item,i) => {
           const tr=document.createElement('tr');
           tr.innerHTML=`
             <td>${item.AssetNo||''}</td>
@@ -137,47 +137,44 @@
             <td>${item.StartDate||''}</td>
             <td>${item.EndDate||''}</td>
             <td>
-              <button class="btn btn-sm btn-primary edit-btn" data-idx="${i}">Edit</button>
-              <button class="btn btn-sm btn-danger del-btn" data-idx="${i}">Delete</button>
+              <button class="btn btn-sm btn-primary edit-btn" data-i="${i}">Edit</button>
+              <button class="btn btn-sm btn-danger del-btn" data-i="${i}">Del</button>
             </td>`;
-          tableBody.appendChild(tr);
+          tbody.appendChild(tr);
         });
       }
 
-      function clearForm(){
-        form.reset(); editIdx=null; delBtn.style.display='none';
-      }
-      function fillForm(item){
-        Object.keys(item).forEach(k=> form.elements[k].value=item[k]);
-      }
+      function clearForm() { form.reset(); editIdx=null; deleteBtn.style.display='none'; }
+      function fillForm(it) { Object.keys(it).forEach(k=>form.elements[k].value=it[k]); }
 
-      document.getElementById('addInventoryBtn')?.addEventListener('click', ()=>{
+      document.querySelector('button[data-bs-target="#inventoryModal"]').addEventListener('click', () => {
         clearForm(); modal.show();
       });
 
-      tableBody.addEventListener('click', e=>{
-        const btn=e.target;
-        const i=btn.dataset.idx;
-        if(btn.classList.contains('edit-btn')){
-          editIdx=i; fillForm(data[i]); delBtn.style.display='inline-block'; modal.show();
+      tbody.addEventListener('click', e => {
+        const btn=e.target, i=btn.dataset.i;
+        if(btn.classList.contains('edit-btn')) {
+          editIdx=i; fillForm(data[i]);
+          deleteBtn.style.display='inline-block'; modal.show();
         }
-        if(btn.classList.contains('del-btn') && confirm('Delete?')){
+        if(btn.classList.contains('del-btn') && confirm('Delete?')) {
           data.splice(i,1); localStorage.setItem('inventory',JSON.stringify(data)); render();
         }
       });
 
-      delBtn.addEventListener('click', ()=>{
-        if(editIdx!==null && confirm('Delete?')){
+      deleteBtn.addEventListener('click', () => {
+        if(editIdx!==null && confirm('Delete?')) {
           data.splice(editIdx,1);
           localStorage.setItem('inventory',JSON.stringify(data));
           render(); modal.hide(); clearForm();
         }
       });
 
-      form.addEventListener('submit', e=>{
+      form.addEventListener('submit', e => {
         e.preventDefault();
         const obj={};
-        ['AssetNo','EquipmentType','Vendor','BrandModel','SerialNumber','Location','StartDate','EndDate'].forEach(k=>obj[k]=form.elements[k].value);
+        ['AssetNo','EquipmentType','Vendor','BrandModel','SerialNumber','Location','StartDate','EndDate']
+          .forEach(k=>obj[k]=form.elements[k].value);
         if(editIdx===null) data.push(obj);
         else data[editIdx]=obj;
         localStorage.setItem('inventory',JSON.stringify(data));
