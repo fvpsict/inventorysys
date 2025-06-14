@@ -1,80 +1,88 @@
-const STORAGE_KEY = 'inventoryData';
+document.addEventListener("DOMContentLoaded", () => {
+  const inventoryTable = document.getElementById("inventoryTable").getElementsByTagName("tbody")[0];
+  const form = document.getElementById("inventoryForm");
+  const STORAGE_KEY = "inventoryData";
 
-function getInventory() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
-}
+  let editIndex = -1;
+  let inventoryData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-function saveInventory(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+  const category = document.body.dataset.category || "SSOE";
+  const headers = {
+    SSOE: [
+      "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian",
+      "AssetNo", "SerialNumber", "Location", "EndDate", "StartDate",
+      "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate", "Fault"
+    ],
+    Projector: [
+      "EquipmentType", "Vendor", "BrandModel", "AssetNo", "SerialNumber",
+      "EndDate", "StartDate", "Room", "Room Number", "Level", "Lamphour",
+      "Fault", "Duration in use", "Last Updated"
+    ]
+  };
 
-function renderInventoryTable() {
-  const items = getInventory();
-  const tbody = document.getElementById('inventoryTbody');
-  tbody.innerHTML = '';
-
-  items.forEach((item, idx) => {
-    const tr = document.createElement('tr');
-
-    // Create editable cells for each property
-    Object.keys(item).forEach(key => {
-      const td = document.createElement('td');
-      td.contentEditable = true;
-      td.textContent = item[key];
-      td.addEventListener('input', () => {
-        item[key] = td.textContent.trim();
-        saveInventory(items);
+  function renderTable() {
+    inventoryTable.innerHTML = "";
+    inventoryData.forEach((row, index) => {
+      const tr = document.createElement("tr");
+      headers[category].forEach(h => {
+        const td = document.createElement("td");
+        td.textContent = row[h] || "";
+        tr.appendChild(td);
       });
-      tr.appendChild(td);
+
+      const actionTd = document.createElement("td");
+      actionTd.innerHTML = `
+        <button class="btn btn-sm btn-warning edit-btn" data-index="${index}">Edit</button>
+        <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+      `;
+      tr.appendChild(actionTd);
+      inventoryTable.appendChild(tr);
+    });
+  }
+
+  function populateForm(data = {}) {
+    headers[category].forEach(h => {
+      const input = form.elements[h];
+      if (input) input.value = data[h] || "";
+    });
+  }
+
+  function clearForm() {
+    form.reset();
+    editIndex = -1;
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const formData = {};
+    headers[category].forEach(h => {
+      formData[h] = form.elements[h].value.trim();
     });
 
-    // Delete button cell
-    const delTd = document.createElement('td');
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'Delete';
-    delBtn.className = 'btn btn-danger btn-sm';
-    delBtn.onclick = () => {
-      if (confirm('Delete this item?')) {
-        items.splice(idx, 1);
-        saveInventory(items);
-        renderInventoryTable();
-      }
-    };
-    delTd.appendChild(delBtn);
-    tr.appendChild(delTd);
+    if (editIndex === -1) {
+      inventoryData.push(formData);
+    } else {
+      inventoryData[editIndex] = formData;
+    }
 
-    tbody.appendChild(tr);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
+    renderTable();
+    clearForm();
   });
-}
 
-function addInventoryItem(event) {
-  event.preventDefault();
-
-  const form = event.target;
-  const newItem = {};
-  [...form.elements].forEach(el => {
-    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
-      newItem[el.name] = el.value.trim();
+  inventoryTable.addEventListener("click", e => {
+    const target = e.target;
+    const index = parseInt(target.dataset.index);
+    if (target.classList.contains("edit-btn")) {
+      editIndex = index;
+      populateForm(inventoryData[index]);
+    } else if (target.classList.contains("delete-btn")) {
+      inventoryData.splice(index, 1);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
+      renderTable();
+      clearForm();
     }
   });
 
-  const items = getInventory();
-  items.push(newItem);
-  saveInventory(items);
-  renderInventoryTable();
-  form.reset();
-}
-
-window.onload = () => {
-  renderInventoryTable();
-  const form = document.getElementById('inventoryForm');
-  if (form) form.addEventListener('submit', addInventoryItem);
-
-  // Highlight active menu item
-  document.querySelectorAll('.menu-list li a').forEach(link => {
-    if (link.href === window.location.href) {
-      link.parentElement.classList.add('active');
-    }
-  });
-};
+  renderTable();
+});
