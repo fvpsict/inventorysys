@@ -9,15 +9,27 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
+  <style>
+    /* Push page content down below navbar */
+    body {
+      padding-top: 56px; /* Height of navbar */
+    }
+  </style>
 </head>
 <body data-category="SSOE">
-  <!-- Top Navigation Menu -->
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <!-- Top Fixed Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand" href="../index.html">Inventory System</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-              data-bs-target="#navbarNav" aria-controls="navbarNav"
-              aria-expanded="false" aria-label="Toggle navigation">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
@@ -26,40 +38,88 @@
             <a class="nav-link" href="../index.html">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link active" href="index.html">View Inventory</a>
+            <a class="nav-link active" aria-current="page" href="index.html"
+              >View Inventory</a
+            >
           </li>
           <li class="nav-item">
             <a class="nav-link" href="../fault-report.html">Fault Report</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="../patching/patching-report.html">Patching Report</a>
+            <a class="nav-link" href="../patching/patching-report.html"
+              >Patching Report</a
+            >
           </li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <main class="main-content container-fluid">
-    <h1 class="mb-4 pt-4">View Inventory - SSOE</h1>
+  <main class="container-fluid">
+    <h1 class="mb-4">View Inventory - SSOE</h1>
 
-    <!-- Inline Form -->
+    <!-- Inventory Form -->
     <form id="inventoryForm" class="row g-2 align-items-end inline-form mb-4">
-      <div class="col-md-2"><label class="form-label">EquipmentType</label><input class="form-control" name="EquipmentType" required></div>
-      <div class="col-md-2"><label class="form-label">Vendor</label><input class="form-control" name="Vendor"></div>
-      <div class="col-md-2"><label class="form-label">BrandModel</label><input class="form-control" name="BrandModel"></div>
-      <div class="col-md-2"><label class="form-label">Profile</label><input class="form-control" name="Profile"></div>
-      <div class="col-md-2"><label class="form-label">Custodian</label><input class="form-control" name="Custodian"></div>
-      <div class="col-md-2"><label class="form-label">AssetNo</label><input class="form-control" name="AssetNo" required></div>
-      <div class="col-md-2"><label class="form-label">SerialNumber</label><input class="form-control" name="SerialNumber"></div>
-      <div class="col-md-2"><label class="form-label">Location</label><input class="form-control" name="Location"></div>
-      <div class="col-md-2"><label class="form-label">EndDate</label><input type="date" class="form-control" name="EndDate"></div>
-      <div class="col-md-2"><label class="form-label">StartDate</label><input type="date" class="form-control" name="StartDate"></div>
-      <div class="col-md-2"><label class="form-label">Hostname</label><input class="form-control" name="Hostname"></div>
-      <div class="col-md-2"><label class="form-label">SSOE PO Number</label><input class="form-control" name="SSOE PO Number"></div>
-      <div class="col-md-2"><label class="form-label">Cart No</label><input class="form-control" name="Cart No"></div>
-      <div class="col-md-2"><label class="form-label">SanitiseDate</label><input type="date" class="form-control" name="SanitiseDate"></div>
-      <div class="col-md-2"><label class="form-label">Fault</label><input class="form-control" name="Fault"></div>
+      <div class="col-md-2">
+        <label class="form-label">EquipmentType</label>
+        <input class="form-control" name="EquipmentType" required />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Vendor</label>
+        <input class="form-control" name="Vendor" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">BrandModel</label>
+        <input class="form-control" name="BrandModel" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Profile</label>
+        <input class="form-control" name="Profile" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Custodian</label>
+        <input class="form-control" name="Custodian" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">AssetNo</label>
+        <input class="form-control" name="AssetNo" required />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">SerialNumber</label>
+        <input class="form-control" name="SerialNumber" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Location</label>
+        <input class="form-control" name="Location" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">EndDate</label>
+        <input type="date" class="form-control" name="EndDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">StartDate</label>
+        <input type="date" class="form-control" name="StartDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Hostname</label>
+        <input class="form-control" name="Hostname" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">SSOE PO Number</label>
+        <input class="form-control" name="SSOE PO Number" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Cart No</label>
+        <input class="form-control" name="Cart No" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">SanitiseDate</label>
+        <input type="date" class="form-control" name="SanitiseDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Fault</label>
+        <input class="form-control" name="Fault" />
+      </div>
       <div class="col-md-2">
         <button type="submit" class="btn btn-primary w-100">Save</button>
       </div>
@@ -67,7 +127,10 @@
 
     <!-- Inventory Table -->
     <div class="table-responsive">
-      <table class="table table-bordered table-striped table-sm" id="inventoryTable">
+      <table
+        class="table table-bordered table-striped table-sm"
+        id="inventoryTable"
+      >
         <thead>
           <tr>
             <th>EquipmentType</th>
@@ -93,7 +156,6 @@
     </div>
   </main>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../inventory.js"></script>
 </body>
