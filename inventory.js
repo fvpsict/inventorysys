@@ -1,103 +1,48 @@
-const STORAGE_KEY = 'inventoryData';
-let inventory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View Inventory</title>
+  <link href="../styles.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="menu-wrapper">
+    <nav class="menu-sidebar">
+      <!-- same sidebar -->
+    </nav>
 
-const defaultHeaders = ["AssetNo", "Item", "Brand", "Model", "Serial", "Location"];
-const ssoeHeaders = ["AssetNo", "Room", "ComputerName", "IP", "Monitor", "MonitorSN", "Keyboard", "Mouse"];
+    <main class="main-content">
+      <h2>Inventory Management</h2>
+      <form id="addInventoryForm">
+        <input id="assetNo" placeholder="Asset No" required>
+        <input id="description" placeholder="Description" required>
+        <button type="submit">Add Item</button>
+      </form>
+      <ul id="list"></ul>
+    </main>
+  </div>
 
-function getHeaders(category) {
-  return category === "SSOE" ? ssoeHeaders : defaultHeaders;
-}
+  <script>
+    const KEY = 'testInv';
+    function getItems() { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+    function saveItems(it) { localStorage.setItem(KEY, JSON.stringify(it)); }
+    function render() {
+      document.getElementById('list').innerHTML = getItems().map(x => (`<li>${x.assetNo}: ${x.description}</li>`)).join('');
+    }
 
-function saveInventory() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-}
-
-function renderInventory(category = "All") {
-  const tableContainer = document.getElementById("inventoryTableContainer");
-  if (!tableContainer) return;
-
-  const headers = getHeaders(category !== "All" ? category : "SSOE"); // Use SSOE as default
-
-  let filteredData = category === "All"
-    ? inventory
-    : inventory.filter(item => item.Category === category);
-
-  let table = `<table class="table table-bordered"><thead><tr>`;
-  headers.forEach(h => table += `<th>${h}</th>`);
-  table += `<th>Category</th><th>Actions</th></tr></thead><tbody>`;
-
-  filteredData.forEach((item, index) => {
-    table += `<tr>`;
-    headers.forEach(h => {
-      table += `<td contenteditable="true" onblur="updateItem(${index}, '${h}', this.innerText)">${item[h] || ''}</td>`;
+    document.getElementById('addInventoryForm').addEventListener('submit', e => {
+      e.preventDefault();
+      let items = getItems();
+      items.push({
+        assetNo: document.getElementById('assetNo').value,
+        description: document.getElementById('description').value
+      });
+      saveItems(items);
+      e.target.reset();
+      render();
     });
-    table += `
-      <td contenteditable="true" onblur="updateItem(${index}, 'Category', this.innerText)">${item.Category || ''}</td>
-      <td>
-        <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
-      </td>
-    </tr>`;
-  });
 
-  table += `</tbody></table>`;
-  tableContainer.innerHTML = table;
-}
-
-function updateItem(index, key, value) {
-  inventory[index][key] = value.trim();
-  saveInventory();
-}
-
-function deleteItem(index) {
-  if (confirm("Are you sure you want to delete this item?")) {
-    inventory.splice(index, 1);
-    saveInventory();
-    renderInventory(getSelectedCategory());
-  }
-}
-
-function getSelectedCategory() {
-  const select = document.getElementById("categoryFilter");
-  return select ? select.value : "All";
-}
-
-function addItem(event) {
-  event.preventDefault();
-  const category = document.getElementById("category").value;
-  const headers = getHeaders(category);
-  const newItem = {};
-
-  let isValid = true;
-
-  headers.forEach(h => {
-    const val = document.getElementById(h).value.trim();
-    if (!val && h === "AssetNo") isValid = false;
-    newItem[h] = val;
-  });
-
-  if (!isValid) {
-    alert("AssetNo is required.");
-    return;
-  }
-
-  newItem.Category = category;
-  inventory.push(newItem);
-  saveInventory();
-  renderInventory(getSelectedCategory());
-  document.getElementById("addForm").reset();
-}
-
-function clearForm() {
-  document.getElementById("addForm").reset();
-}
-
-function initInventoryPage() {
-  document.getElementById("addForm").addEventListener("submit", addItem);
-  document.getElementById("categoryFilter").addEventListener("change", () => {
-    renderInventory(getSelectedCategory());
-  });
-
-  renderInventory();
-}
-
-window.onload = initInventoryPage;
+    render();
+  </script>
+</body>
+</html>
