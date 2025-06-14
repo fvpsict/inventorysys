@@ -1,56 +1,114 @@
-let inventoryData = [];
+const STANDARD_HEADERS = [
+  "EquipmentType", "Vendor", "BrandModel", "AssetNo", "SerialNo",
+  "StartDate", "EndDate", "Room", "RoomNo", "Lamphour", "DurationInUse"
+];
 
-document.addEventListener("DOMContentLoaded", () => {
-  renderTable();
-  document.getElementById("itemForm").addEventListener("submit", saveItem);
-});
+const SSOE_HEADERS = [
+  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
+  "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
+  "SSOE PONumber", "CartNo", "SanitiseDate", "Fault"
+];
 
-function renderTable() {
-  const tableHeaders = document.getElementById("tableHeaders");
-  const tableBody = document.getElementById("tableBody");
+let inventoryData = JSON.parse(localStorage.getItem("inventoryData")) || [];
 
-  // Clear existing
-  tableHeaders.innerHTML = "";
-  tableBody.innerHTML = "";
+function getHeadersByCategory(category) {
+  return category === "SSOE" ? SSOE_HEADERS : STANDARD_HEADERS;
+}
 
-  if (inventoryData.length === 0) {
-    tableHeaders.innerHTML = "<th>No Data</th>";
-    return;
-  }
-
-  // Create table headers
-  const headers = Object.keys(inventoryData[0]);
-  headers.forEach((header) => {
-    const th = document.createElement("th");
-    th.textContent = header;
-    tableHeaders.appendChild(th);
+function renderInventory(category) {
+  const headers = getHeadersByCategory(category);
+  const tableContainer = document.getElementById("inventoryTableContainer");
+  const filteredData = inventoryData.filter(item => item.EquipmentType === category);
+  
+  let html = `<table class="table table-bordered"><thead><tr>`;
+  headers.forEach(header => {
+    html += `<th>${header}</th>`;
   });
+  html += `<th>Actions</th></tr></thead><tbody>`;
 
-  // Populate rows
-  inventoryData.forEach((item) => {
-    const row = document.createElement("tr");
-    headers.forEach((key) => {
-      const cell = document.createElement("td");
-      cell.textContent = item[key] || "";
-      row.appendChild(cell);
+  filteredData.forEach((item, index) => {
+    html += `<tr>`;
+    headers.forEach(header => {
+      html += `<td contenteditable="true" oninput="editItem(${index}, '${header}', this.innerText)">${item[header] || ""}</td>`;
     });
-    tableBody.appendChild(row);
-  });
-}
-
-function saveItem(e) {
-  e.preventDefault();
-
-  const form = document.getElementById("itemForm");
-  const formData = new FormData(form);
-  const item = {};
-
-  formData.forEach((value, key) => {
-    item[key] = value.trim();
+    html += `<td><button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button></td>`;
+    html += `</tr>`;
   });
 
-  inventoryData.push(item);
-  renderTable();
-  form.reset();
-  closeModal();
+  html += `</tbody></table>`;
+  tableContainer.innerHTML = html;
 }
+
+function addItem(category) {
+  const headers = getHeadersByCategory(category);
+  const newItem = {};
+  headers.forEach(header => {
+    const input = document.getElementById(`input-${header}`);
+    newItem[header] = input ? input.value.trim() : "";
+  });
+
+  inventoryData.push(newItem);
+  localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
+  renderInventory(category);
+  document.getElementById("addItemForm").reset();
+}
+
+function editItem(index, key, value) {
+  const filteredIndex = getFilteredIndex(index);
+  if (filteredIndex !== -1) {
+    inventoryData[filteredIndex][key] = value.trim();
+    localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
+  }
+}
+
+function deleteItem(index) {
+  const filteredIndex = getFilteredIndex(index);
+  if (filteredIndex !== -1 && confirm("Delete this item?")) {
+    inventoryData.splice(filteredIndex, 1);
+    localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
+    const currentCategory = document.getElementById("categorySelect").value;
+    renderInventory(currentCategory);
+  }
+}
+
+function getFilteredIndex(displayIndex) {
+  const currentCategory = document.getElementById("categorySelect").value;
+  let count = -1;
+  for (let i = 0; i < inventoryData.length; i++) {
+    if (inventoryData[i].EquipmentType === currentCategory) {
+      count++;
+      if (count === displayIndex) return i;
+    }
+  }
+  return -1;
+}
+
+function setupCategorySelector() {
+  const select = document.getElementById("categorySelect");
+  select.addEventListener("change", () => {
+    renderInventory(select.value);
+    buildAddForm(select.value);
+  });
+  renderInventory(select.value);
+  buildAddForm(select.value);
+}
+
+function buildAddForm(category) {
+  const headers = getHeadersByCategory(category);
+  const form = document.getElementById("addItemForm");
+  form.innerHTML = "";
+
+  headers.forEach(header => {
+    form.innerHTML += `
+      <div class="mb-2">
+        <label class="form-label">${header}</label>
+        <input type="text" id="input-${header}" class="form-control" />
+      </div>`;
+  });
+
+  form.innerHTML += `<button type="button" class="btn btn-success mt-2" onclick="addItem('${category}')">Add Item</button>`;
+}
+
+window.onload = () => {
+  setupCategorySelector();
+};
