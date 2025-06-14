@@ -2,53 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>View Inventory</title>
   <link href="../styles.css" rel="stylesheet" />
 </head>
 <body>
   <div class="menu-wrapper">
-    <nav class="menu-sidebar" aria-label="Main Navigation">
-      <h3>Inventory Menu</h3>
-      <ul class="menu-list">
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="index.html">View Inventory</a></li>
-        <li><a href="../fault-report.html">Fault Report</a></li>
-        <li>
-          <a href="../patching/patching-report.html">Patching Report</a>
-          <ul class="submenu-list">
-            <li><a href="../patching/patching-summary.html">Summary</a></li>
-          </ul>
-        </li>
-      </ul>
+    <nav class="menu-sidebar">
+      <!-- same sidebar -->
     </nav>
+
     <main class="main-content">
-      <section class="form-section">
-        <h2>Add Inventory Item</h2>
-        <form id="addItemForm">
-          <!-- form fields... -->
-          <button type="submit" class="btn btn-primary">Add Item</button>
-        </form>
-      </section>
-
-      <section class="mb-3">
-        <!-- CSV import/export + search input -->
-      </section>
-
-      <section>
-        <h2>Inventory Items</h2>
-        <table>
-          <thead> <!-- column setup --> </thead>
-          <tbody id="inventoryTableBody"></tbody>
-        </table>
-      </section>
+      <h2>Inventory Management</h2>
+      <form id="addInventoryForm">
+        <input id="assetNo" placeholder="Asset No" required>
+        <input id="description" placeholder="Description" required>
+        <button type="submit">Add Item</button>
+      </form>
+      <ul id="list"></ul>
     </main>
   </div>
 
   <script>
-    const STORAGE_KEY = 'inventoryItems';
-    // JS functions: getInventory, saveInventory, renderTable, updateItem, deleteItem,
-    // add form submit, CSV import/export, clear inventory, nav highlighting
+    const KEY = 'testInv';
+    function getItems() { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+    function saveItems(it) { localStorage.setItem(KEY, JSON.stringify(it)); }
+    function render() {
+      document.getElementById('list').innerHTML = getItems().map(x => (`<li>${x.assetNo}: ${x.description}</li>`)).join('');
+    }
+
+    document.getElementById('addInventoryForm').addEventListener('submit', e => {
+      e.preventDefault();
+      let items = getItems();
+      items.push({
+        assetNo: document.getElementById('assetNo').value,
+        description: document.getElementById('description').value
+      });
+      saveItems(items);
+      e.target.reset();
+      render();
+    });
+
+    render();
   </script>
 </body>
 </html>
