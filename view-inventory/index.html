@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>View Inventory</title>
-  <link href="../styles.css" rel="stylesheet">
+  <link href="../styles.css" rel="stylesheet" />
 </head>
 <body>
   <div class="menu-wrapper">
@@ -23,15 +23,32 @@
       </ul>
     </nav>
     <main class="main-content">
-      <!-- (Insert full form/table/CSV content from previous snippet) -->
+      <section class="form-section">
+        <h2>Add Inventory Item</h2>
+        <form id="addItemForm">
+          <!-- form fields... -->
+          <button type="submit" class="btn btn-primary">Add Item</button>
+        </form>
+      </section>
+
+      <section class="mb-3">
+        <!-- CSV import/export + search input -->
+      </section>
+
+      <section>
+        <h2>Inventory Items</h2>
+        <table>
+          <thead> <!-- column setup --> </thead>
+          <tbody id="inventoryTableBody"></tbody>
+        </table>
+      </section>
     </main>
   </div>
+
   <script>
-    document.querySelectorAll('.menu-list li a').forEach(link => {
-      if (window.location.href.endsWith(link.getAttribute('href'))) {
-        link.parentElement.classList.add('active');
-      }
-    });
+    const STORAGE_KEY = 'inventoryItems';
+    // JS functions: getInventory, saveInventory, renderTable, updateItem, deleteItem,
+    // add form submit, CSV import/export, clear inventory, nav highlighting
   </script>
 </body>
 </html>
