@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fault Report - Inventory System</title>
+  <title>Fault Report</title>
   <link href="styles.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
   <style>
     body {
-      padding-top: 70px; /* Space for fixed navbar */
+      padding-top: 70px; /* space for fixed navbar */
     }
     .table-responsive {
       max-height: 60vh;
@@ -17,15 +20,24 @@
   </style>
 </head>
 <body>
-  <!-- Fixed Top Navbar -->
+
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Inventory System</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+      <a class="navbar-brand" href="index.html">Inventory System</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#nav"
+        aria-controls="nav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarMenu">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
           <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">View Inventory</a></li>
           <li class="nav-item"><a class="nav-link active" href="fault-report.html">Fault Report</a></li>
@@ -35,29 +47,47 @@
     </div>
   </nav>
 
-  <main class="container-fluid">
-    <h1 class="mb-3">Fault Report</h1>
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#faultModal" id="addFaultBtn">Add Fault</button>
+  <main class="container mt-3">
+    <h1>Fault Report</h1>
 
+    <!-- Fault Report Form -->
+    <form id="faultForm" class="row g-2 align-items-end mb-4">
+      <div class="col-md-3">
+        <label for="equipmentType" class="form-label">Equipment Type</label>
+        <select id="equipmentType" name="EquipmentType" class="form-select" required>
+          <option value="">Select</option>
+          <option value="Projector">Projector</option>
+          <option value="Visualiser">Visualiser</option>
+          <option value="Projector Screen">Projector Screen</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="faultDescription" class="form-label">Fault Description</label>
+        <input type="text" id="faultDescription" name="Fault" class="form-control" required />
+      </div>
+      <div class="col-md-2">
+        <label for="status" class="form-label">Status</label>
+        <select id="status" name="Status" class="form-select" required>
+          <option value="">Select</option>
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Resolved</option>
+          <option>Closed</option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Add</button>
+      </div>
+    </form>
+
+    <!-- Fault Table -->
     <div class="table-responsive">
-      <table id="faultTable" class="table table-bordered table-striped table-sm">
+      <table class="table table-bordered table-striped table-sm" id="faultTable">
         <thead>
           <tr>
-            <th>EquipmentType</th>
-            <th>Vendor</th>
-            <th>BrandModel</th>
-            <th>AssetNo</th>
-            <th>SerialNumber</th>
-            <th>EndDate</th>
-            <th>StartDate</th>
-            <th>Room</th>
-            <th>Room Number</th>
-            <th>Level</th>
-            <th>Lamphour</th>
+            <th>Equipment Type</th>
             <th>Fault</th>
             <th>Status</th>
-            <th>Date resolved</th>
-            <th>Action Taken</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -66,196 +96,7 @@
     </div>
   </main>
 
-  <!-- Modal for Add/Edit -->
-  <div class="modal fade" id="faultModal" tabindex="-1" aria-labelledby="faultModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <form id="faultForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="faultModalLabel">Add/Edit Fault</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <!-- Form fields (same as before) -->
-              <div class="col-md-3">
-                <label class="form-label">EquipmentType</label>
-                <select class="form-select" id="equipmentType" name="EquipmentType" required>
-                  <option value="">Select...</option>
-                  <option>Projector</option>
-                  <option>Visualiser</option>
-                  <option>Projector Screen</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Vendor</label>
-                <input type="text" class="form-control" id="vendor" name="Vendor" required />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">BrandModel</label>
-                <input type="text" class="form-control" id="brandModel" name="BrandModel" required />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">AssetNo</label>
-                <input type="text" class="form-control" id="assetNo" name="AssetNo" required />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">SerialNumber</label>
-                <input type="text" class="form-control" id="serialNumber" name="SerialNumber" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">EndDate</label>
-                <input type="date" class="form-control" id="endDate" name="EndDate" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">StartDate</label>
-                <input type="date" class="form-control" id="startDate" name="StartDate" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Room</label>
-                <input type="text" class="form-control" id="room" name="Room" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Room Number</label>
-                <input type="text" class="form-control" id="roomNumber" name="RoomNumber" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Level</label>
-                <input type="text" class="form-control" id="level" name="Level" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Lamphour</label>
-                <input type="number" class="form-control" id="lamphour" name="Lamphour" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Fault</label>
-                <input type="text" class="form-control" id="fault" name="Fault" required />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Status</label>
-                <select class="form-select" id="status" name="Status">
-                  <option value="">Select...</option>
-                  <option>Open</option>
-                  <option>In Progress</option>
-                  <option>Resolved</option>
-                  <option>Closed</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Date resolved</label>
-                <input type="date" class="form-control" id="dateResolved" name="DateResolved" />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Action Taken</label>
-                <textarea class="form-control" id="actionTaken" name="ActionTaken" rows="2"></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <input type="hidden" id="editIndex" />
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Fault</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    const faultTableBody = document.querySelector('#faultTable tbody');
-    const faultForm = document.getElementById('faultForm');
-    const faultModal = new bootstrap.Modal(document.getElementById('faultModal'));
-    const editIndexInput = document.getElementById('editIndex');
-    const STORAGE_KEY = 'faultReportData';
-    let faultData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-
-    function renderFaultTable() {
-      faultTableBody.innerHTML = '';
-      faultData.forEach((fault, index) => {
-        const tr = document.createElement('tr');
-        const fields = [
-          'EquipmentType', 'Vendor', 'BrandModel', 'AssetNo', 'SerialNumber',
-          'EndDate', 'StartDate', 'Room', 'RoomNumber', 'Level', 'Lamphour',
-          'Fault', 'Status', 'DateResolved', 'ActionTaken'
-        ];
-
-        fields.forEach(field => {
-          const td = document.createElement('td');
-          if (field === 'Status') {
-            const select = document.createElement('select');
-            ['Open', 'In Progress', 'Resolved', 'Closed'].forEach(status => {
-              const option = document.createElement('option');
-              option.value = option.textContent = status;
-              if (status === fault[field]) option.selected = true;
-              select.appendChild(option);
-            });
-            select.className = 'form-select form-select-sm';
-            select.addEventListener('change', () => {
-              faultData[index].Status = select.value;
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(faultData));
-            });
-            td.appendChild(select);
-          } else {
-            td.textContent = fault[field] || '';
-          }
-          tr.appendChild(td);
-        });
-
-        const actionTd = document.createElement('td');
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-sm btn-warning';
-        editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => openEditModal(index));
-        actionTd.appendChild(editBtn);
-        tr.appendChild(actionTd);
-        faultTableBody.appendChild(tr);
-      });
-    }
-
-    function openEditModal(index) {
-      const fault = faultData[index];
-      if (!fault) return;
-      document.getElementById('faultModalLabel').textContent = 'Edit Fault';
-      editIndexInput.value = index;
-      [
-        'equipmentType', 'vendor', 'brandModel', 'assetNo', 'serialNumber',
-        'endDate', 'startDate', 'room', 'roomNumber', 'level', 'lamphour',
-        'fault', 'status', 'dateResolved', 'actionTaken'
-      ].forEach(id => {
-        document.getElementById(id).value = fault[document.getElementById(id).name] || '';
-      });
-      faultModal.show();
-    }
-
-    document.getElementById('addFaultBtn').addEventListener('click', () => {
-      faultForm.reset();
-      editIndexInput.value = '';
-      document.getElementById('faultModalLabel').textContent = 'Add Fault';
-    });
-
-    faultForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const formData = new FormData(faultForm);
-      const faultEntry = {};
-      for (const [key, value] of formData.entries()) {
-        faultEntry[key] = value;
-      }
-
-      const index = editIndexInput.value;
-      if (index === '') {
-        faultData.push(faultEntry);
-      } else {
-        faultData[index] = faultEntry;
-      }
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(faultData));
-      renderFaultTable();
-      faultModal.hide();
-    });
-
-    window.onload = renderFaultTable;
-  </script>
+  <script src="fault-report.js"></script>
 </body>
 </html>
