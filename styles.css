@@ -7,15 +7,15 @@ body {
 /* Layout */
 .menu-wrapper {
   display: flex;
-  min-height: 100vh; /* full viewport height */
+  min-height: 100vh;
 }
 
 .menu-sidebar {
-  width: 220px; /* fixed sidebar width */
+  width: 220px;
   background-color: #343a40;
   color: white;
   padding: 1rem;
-  flex-shrink: 0; /* prevent shrinking */
+  flex-shrink: 0;
 }
 
 .menu-sidebar h3 {
@@ -50,8 +50,7 @@ body {
   color: white;
 }
 
-.menu-list li.active > a,
-.submenu-list li.active > a {
+.menu-list li.active > a {
   background-color: #007bff;
   color: white;
   font-weight: bold;
@@ -110,7 +109,7 @@ table th {
   text-align: left;
 }
 
-/* Buttons */
+/* Buttons and Inputs */
 .btn-group {
   margin-bottom: 1rem;
 }
@@ -124,33 +123,28 @@ button {
   cursor: pointer;
 }
 
-/* Search input */
 input#searchInput {
   max-width: 300px;
   margin-bottom: 1rem;
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
   .menu-wrapper {
     flex-direction: column;
   }
-
   .menu-sidebar {
     width: 100%;
     display: flex;
     overflow-x: auto;
   }
-
   .menu-list {
     display: flex;
     gap: 1rem;
   }
-
   .submenu-list {
     display: none;
   }
-
   .main-content {
     padding: 1rem;
   }
