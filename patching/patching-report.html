@@ -1,38 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Patching Report</title>
-  <link href="../styles.css" rel="stylesheet">
+  <link href="../styles.css" rel="stylesheet" />
 </head>
 <body>
   <div class="menu-wrapper">
     <nav class="menu-sidebar" aria-label="Main Navigation">
-      <h3>Inventory Menu</h3>
-      <ul class="menu-list">
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="../view-inventory/index.html">View Inventory</a></li>
-        <li><a href="../fault-report.html">Fault Report</a></li>
-        <li>
-          <a href="patching-report.html">Patching Report</a>
-          <ul class="submenu-list">
-            <li><a href="patching-summary.html">Summary</a></li>
-          </ul>
-        </li>
-      </ul>
+      <!-- same sidebar -->
     </nav>
     <main class="main-content">
-      <!-- (patching report textarea/table buttons) -->
+      <h2>Patching Report Data Input</h2>
+      <textarea id="patchingInput" rows="12"></textarea>
+      <div class="button-group mb-3">
+        <button class="btn btn-primary" onclick="savePatchingData()">Submit</button>
+        <button class="btn btn-secondary" onclick="clearPatchingData()">Clear</button>
+        <button class="btn btn-success" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div id="patchingTableContainer"></div>
     </main>
   </div>
   <script>
-    // (patching script)
-    document.querySelectorAll('.menu-list li a').forEach(link => {
-      if (window.location.href.endsWith(link.getAttribute('href'))) {
-        link.parentElement.classList.add('active');
-      }
-    });
+    const STORAGE_KEY = 'patchingData';
+    // JS: savePatchingData, renderPatchingTable, updateCell, clearPatchingData,
+    // exportCSV, window.onload, nav highlighting
   </script>
 </body>
 </html>
