@@ -9,26 +9,126 @@
 <body>
   <div class="menu-wrapper">
     <nav class="menu-sidebar" aria-label="Main Navigation">
-      <!-- same sidebar -->
+      <h3>Inventory Menu</h3>
+      <ul class="menu-list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="view-inventory/index.html">View Inventory</a></li>
+        <li><a href="fault-report.html">Fault Report</a></li>
+        <li>
+          <a href="patching/patching-report.html">Patching Report</a>
+          <ul class="submenu-list">
+            <li><a href="patching/patching-summary.html">Summary</a></li>
+          </ul>
+        </li>
+      </ul>
     </nav>
+
     <main class="main-content">
       <section class="form-section">
         <h2>Submit Fault Report</h2>
         <form id="faultForm">
-          <!-- form fields -->
+          <div class="mb-3">
+            <label for="equipmentType">Equipment Type</label>
+            <input type="text" id="equipmentType" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="faultDescription">Fault Description</label>
+            <textarea id="faultDescription" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="reportedBy">Reported By</label>
+            <input type="text" id="reportedBy" class="form-control">
+          </div>
           <button type="submit" class="btn btn-primary">Add Fault</button>
+          <button type="button" class="btn btn-danger" onclick="clearFaults()">Clear All Faults</button>
         </form>
       </section>
+
       <section>
         <h2>Fault Reports</h2>
         <div id="faultTableContainer"></div>
       </section>
     </main>
   </div>
+
   <script>
+    // Sidebar active-item highlighting
+    document.querySelectorAll('.menu-list li a').forEach(link => {
+      if (window.location.href.endsWith(link.getAttribute('href'))) {
+        link.parentElement.classList.add('active');
+      }
+    });
+
+    // Fault-report storage & table handling
     const STORAGE_KEY = 'faultReports';
-    // JS: getFaults, saveFaults, renderFaultTable, updateFault, deleteFault,
-    // form submit, clear faults, nav highlighting
+
+    function getFaults() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+    function saveFaults(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function renderFaultTable() {
+      const faults = getFaults();
+      const container = document.getElementById('faultTableContainer');
+      if (faults.length === 0) {
+        container.innerHTML = '<p>No fault reports yet.</p>';
+        return;
+      }
+
+      let html = `<table><thead><tr>
+        <th>Equipment Type</th><th>Fault Description</th><th>Reported By</th><th>Actions</th>
+      </tr></thead><tbody>`;
+
+      faults.forEach((f, i) => {
+        html += `<tr>
+          <td contenteditable oninput="updateFault(${i}, 'equipmentType', this.innerText)">${f.equipmentType}</td>
+          <td contenteditable oninput="updateFault(${i}, 'faultDescription', this.innerText)">${f.faultDescription}</td>
+          <td contenteditable oninput="updateFault(${i}, 'reportedBy', this.innerText)">${f.reportedBy}</td>
+          <td><button onclick="deleteFault(${i})">Delete</button></td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function updateFault(i, key, value) {
+      let faults = getFaults();
+      faults[i][key] = value.trim();
+      saveFaults(faults);
+    }
+
+    function deleteFault(i) {
+      let faults = getFaults();
+      if (!confirm('Delete this report?')) return;
+      faults.splice(i, 1);
+      saveFaults(faults);
+      renderFaultTable();
+    }
+
+    document.getElementById('faultForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const equipmentType = document.getElementById('equipmentType').value.trim();
+      const faultDescription = document.getElementById('faultDescription').value.trim();
+      const reportedBy = document.getElementById('reportedBy').value.trim();
+      if (!equipmentType || !faultDescription) return alert('Type & description are required.');
+
+      let faults = getFaults();
+      faults.push({ equipmentType, faultDescription, reportedBy });
+      saveFaults(faults);
+      renderFaultTable();
+      e.target.reset();
+    });
+
+    function clearFaults() {
+      if (!confirm('Clear all reports?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      renderFaultTable();
+    }
+
+    window.onload = renderFaultTable;
   </script>
 </body>
 </html>
