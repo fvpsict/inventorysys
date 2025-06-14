@@ -3,39 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Patching Summary</title>
+  <title>Patching Summary - Inventory System</title>
   <link href="../styles.css" rel="stylesheet" />
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
 </head>
 <body>
-  <div class="menu-wrapper">
-    <nav class="menu-sidebar">
-      <h3>Inventory Menu</h3>
-      <ul class="menu-list">
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="../view-inventory/index.html">View Inventory</a></li>
-        <li><a href="../fault-report.html">Fault Report</a></li>
-        <li>
-          <a href="patching-report.html">Patching Report</a>
-          <ul class="submenu-list">
-            <li><a href="patching-summary.html">Summary</a></li>
-          </ul>
-        </li>
-      </ul>
+  <div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <nav
+      class="border-end bg-light"
+      id="sidebar-wrapper"
+      style="min-width: 220px;"
+    >
+      <div class="sidebar-heading px-3 py-2 fw-bold">
+        Inventory System
+      </div>
+      <div class="list-group list-group-flush">
+        <a
+          href="../index.html"
+          class="list-group-item list-group-item-action"
+          >Home</a
+        >
+        <a
+          href="../view-inventory/index.html"
+          class="list-group-item list-group-item-action"
+          >View Inventory</a
+        >
+        <a
+          href="../fault-report.html"
+          class="list-group-item list-group-item-action"
+          >Fault Report</a
+        >
+        <a
+          href="patching-report.html"
+          class="list-group-item list-group-item-action"
+          >Patching Report</a
+        >
+        <a
+          href="patching-summary.html"
+          class="list-group-item list-group-item-action active"
+          aria-current="true"
+          >Patching Summary</a
+        >
+      </div>
     </nav>
+    <!-- /#sidebar-wrapper -->
 
-    <main class="main-content">
-      <h2>Patching Summary</h2>
-      <!-- Your patching summary content here -->
-    </main>
+    <!-- Page content -->
+    <div id="page-content-wrapper" class="flex-grow-1 p-4">
+      <h1 class="mb-4">Patching Summary</h1>
+
+      <div class="table-responsive">
+        <table
+          class="table table-striped table-bordered align-middle"
+          id="summaryTable"
+        >
+          <thead class="table-primary text-center align-middle">
+            <tr>
+              <th>DATE</th>
+              <th>ADMIN INSTALLED</th>
+              <th>ACAD INSTALLED</th>
+              <th>ADMIN SCCM EPP &gt; 4 wks</th>
+              <th>ACAD SCCM EPP &gt; 4 wks</th>
+              <th>ADMIN NOT CONNECTED</th>
+              <th>ACAD NOT CONNECTED</th>
+              <th>ADMIN REQUIRED</th>
+              <th>ACAD REQUIRED</th>
+              <th>ADMIN UNKNOWN</th>
+              <th>ACAD UNKNOWN</th>
+              <th>E-EXAM</th>
+              <th>FAULTY</th>
+              <th>Tech Refresh</th>
+              <th>Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Summary rows will be dynamically added here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Optional: Add a footer or controls here -->
+
+    </div>
+    <!-- /#page-content-wrapper -->
   </div>
 
+  <!-- Bootstrap JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
   <script>
-    // Highlight active menu item based on current URL
-    document.querySelectorAll('.menu-list li a').forEach(link => {
-      if (window.location.pathname.endsWith(link.getAttribute('href'))) {
-        link.parentElement.classList.add('active');
+    // Simple active link highlight for sidebar (if needed)
+    const sidebarLinks = document.querySelectorAll(
+      "#sidebar-wrapper .list-group-item"
+    );
+    sidebarLinks.forEach((link) => {
+      if (link.href === window.location.href) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
       }
     });
+
+    // TODO: You can add JavaScript here to dynamically load summary data
+    // Example placeholder row:
+    const tbody = document.querySelector("#summaryTable tbody");
+    const exampleRow = document.createElement("tr");
+    exampleRow.innerHTML = `
+      <td>2025-06-01</td>
+      <td>120</td>
+      <td>110</td>
+      <td>5</td>
+      <td>3</td>
+      <td>7</td>
+      <td>4</td>
+      <td>10</td>
+      <td>12</td>
+      <td>1</td>
+      <td>2</td>
+      <td>8</td>
+      <td>0</td>
+      <td>15</td>
+      <td>95%</td>
+    `;
+    tbody.appendChild(exampleRow);
   </script>
 </body>
 </html>
