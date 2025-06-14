@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="menu-wrapper">
-    <nav class="menu-sidebar">
+    <nav class="menu-sidebar" aria-label="Main Navigation">
       <h3>Inventory Menu</h3>
       <ul class="menu-list">
         <li><a href="../index.html">Home</a></li>
@@ -26,25 +26,74 @@
 
     <main class="main-content">
       <h2>Patching Report Data Input</h2>
-      <textarea id="patchingInput" rows="12" placeholder="Paste data..."></textarea>
-      <div class="button-group">
+
+      <textarea id="patchingInput" rows="12" placeholder="Paste weekly patching data (tab or comma separated)"></textarea>
+      <div class="button-group mb-3">
         <button class="btn btn-primary" onclick="savePatchingData()">Submit</button>
         <button class="btn btn-secondary" onclick="clearPatchingData()">Clear</button>
         <button class="btn btn-success" onclick="exportCSV()">Export CSV</button>
       </div>
-      <div id="patchingTableContainer"></div>
+
+      <div id="patchingTableContainer" class="table-responsive"></div>
     </main>
   </div>
 
   <script>
     function savePatchingData() {
-      /* Your existing JS logic for save/render... */
+      const input = document.getElementById('patchingInput').value.trim();
+      const lines = input.split('\\n');
+      const parsed = lines.map(line => line.split(/\\t|,/));
+      localStorage.setItem('patchingData', JSON.stringify(parsed));
+      renderPatchingTable(parsed);
     }
-    function clearPatchingData() { /* ... */ }
-    function exportCSV() { /* ... */ }
+
+    function renderPatchingTable(data) {
+      if (!data || data.length === 0) return;
+      let html = '<table class="table table-bordered"><thead><tr>';
+      data[0].forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
+      for (let i = 1; i < data.length; i++) {
+        html += '<tr>' + data[i].map((cell, col) =>
+          `<td contenteditable="true" oninput="updateCell(${i}, ${col}, this.innerText)">${cell}</td>`
+        ).join('') + '</tr>';
+      }
+      html += '</tbody></table>';
+      document.getElementById('patchingTableContainer').innerHTML = html;
+    }
+
+    function updateCell(row, col, value) {
+      const data = JSON.parse(localStorage.getItem('patchingData') || '[]');
+      if (data[row]) {
+        data[row][col] = value;
+        localStorage.setItem('patchingData', JSON.stringify(data));
+      }
+    }
+
+    function clearPatchingData() {
+      localStorage.removeItem('patchingData');
+      document.getElementById('patchingInput').value = '';
+      document.getElementById('patchingTableContainer').innerHTML = '';
+    }
+
+    function exportCSV() {
+      const data = JSON.parse(localStorage.getItem('patchingData') || '[]');
+      if (!data.length) return;
+      const csv = data.map(row => row.map(cell => `"${(cell||'').replace(/"/g,'""')}"`).join(',')).join('\\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'patching.csv';
+      a.click();
+    }
+
     window.onload = () => {
-      /* load on init... */
-    }
+      const stored = localStorage.getItem('patchingData');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        document.getElementById('patchingInput').value = parsed.map(r => r.join(',')).join('\\n');
+        renderPatchingTable(parsed);
+      }
+    };
   </script>
 </body>
 </html>
