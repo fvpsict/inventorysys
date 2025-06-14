@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Patching Report</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="../styles.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body { padding-top:70px; background:#f8f9fa; }
     .table-responsive { max-height:60vh; overflow-y:auto; }
   </style>
 </head>
 <body>
+
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
@@ -34,6 +36,7 @@
       <h1>Patching Report</h1>
       <button id="loadBtn" class="btn btn-primary">Load Weekly Data</button>
     </div>
+
     <div class="table-responsive">
       <table id="patchTable" class="table table-striped table-bordered">
         <thead><tr></tr></thead>
@@ -42,21 +45,22 @@
     </div>
   </main>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8dXgl3cTXv04SMY1T5K0OugNh1veaPjVaCE619s1GPgobbExe6z4sL1J0_xk1oqkNQvEV8qx8gpT4/pub?output=csv";
 
     function parseCSV(txt) {
-      return txt.trim().split('\n').map(r=>r.split(',').map(c=>c.trim()));
+      return txt.trim().split('\\n').map(r=>r.split(',').map(c=>c.trim()));
     }
 
     function render(data) {
       const thead = document.querySelector('#patchTable thead tr');
       const tbody = document.querySelector('#patchTable tbody');
-      thead.innerHTML = ''; tbody.innerHTML = '';
-      if (!data.length) return;
-      data[0].forEach(h=> thead.innerHTML += `<th>${h}</th>`);
-      data.slice(1).forEach(row => {
+      thead.innerHTML=''; tbody.innerHTML='';
+      if(!data.length) return;
+      data[0].forEach(h=> thead.innerHTML+=`<th>${h}</th>`);
+      data.slice(1).forEach(row=>{
         const tr=document.createElement('tr');
         row.forEach(c=> tr.innerHTML+=`<td>${c}</td>`);
         tbody.appendChild(tr);
@@ -64,15 +68,17 @@
     }
 
     document.getElementById('loadBtn').addEventListener('click', ()=>{
-      fetch(CSV_URL).then(r=>r.text()).then(txt=>{
-        const data=parseCSV(txt);
-        localStorage.setItem('patchingData', JSON.stringify(data));
-        render(data);
-        alert('Data loaded!');
-      }).catch(()=>alert('Load failed.'));
+      fetch(CSV_URL)
+        .then(r=>r.text())
+        .then(txt=>{
+          const d=parseCSV(txt);
+          localStorage.setItem('patchingData',JSON.stringify(d));
+          render(d);
+          alert('Loaded!');
+        })
+        .catch(()=>alert('Failed to load data.'));
     });
 
-    // on load, render saved if exists
     window.addEventListener('DOMContentLoaded', ()=>{
       const saved=localStorage.getItem('patchingData');
       if(saved) render(JSON.parse(saved));
