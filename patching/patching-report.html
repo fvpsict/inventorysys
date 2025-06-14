@@ -51,11 +51,44 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8dXgl3cTXv04SMY1T5K0OugNh1veaPjVaCE619s1GPgobbExe6z4sL1J0_xk1oqkNQvEV8qx8gpT4/pub?output=csv";
+    // URL of the published Google Sheet HTML page
+    const HTML_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8dXgl3cTXv04SMY1T5K0OugNh1veaPjVaCE619s1GPgobbExe6z4sL1J0_xk1oqkNQvEV8qx8gpT4/pubhtml";
 
-    function parseCSV(txt) {
-      // Simple CSV parsing (no quotes or commas inside fields supported)
-      return txt.trim().split('\n').map(row => row.split(',').map(cell => cell.trim()));
+    async function fetchAndParseHTML(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Network response not OK');
+        const text = await res.text();
+
+        // Create DOM parser to parse HTML string
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+
+        // Google Sheets published HTML has tables - we grab the first one that contains data
+        const sheetTables = doc.querySelectorAll('table');
+        if (!sheetTables.length) throw new Error('No tables found in HTML');
+
+        // Usually the first table is the data table we want
+        const sheetTable = sheetTables[0];
+        const rows = sheetTable.querySelectorAll('tr');
+
+        // Extract header row and data rows into arrays
+        const data = [];
+        rows.forEach((row, i) => {
+          const cells = row.querySelectorAll(i === 0 ? 'th' : 'td');
+          if (cells.length === 0) return; // skip empty rows
+          const rowData = [];
+          cells.forEach(cell => {
+            rowData.push(cell.textContent.trim());
+          });
+          data.push(rowData);
+        });
+
+        return data;
+      } catch (e) {
+        alert('Error loading or parsing Google Sheet HTML: ' + e.message);
+        return [];
+      }
     }
 
     function calculateSummary(data) {
@@ -66,14 +99,14 @@
       }
 
       const header = data[0];
-      const statusIdx = header.indexOf('Status');
+      const statusIdx = header.findIndex(h => h.toLowerCase() === 'status');
       if (statusIdx === -1) {
         summaryDiv.innerHTML = '<p><em>Status column not found.</em></p>';
         return;
       }
 
       const statusCounts = {};
-      for(let i=1; i<data.length; i++) {
+      for (let i = 1; i < data.length; i++) {
         const status = data[i][statusIdx] || 'Unknown';
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       }
@@ -94,10 +127,7 @@
       tbody.innerHTML = '';
       if (!data.length) return;
 
-      // Headers
       data[0].forEach(h => thead.innerHTML += `<th>${h}</th>`);
-
-      // Rows
       data.slice(1).forEach(row => {
         const tr = document.createElement('tr');
         row.forEach(cell => tr.innerHTML += `<td>${cell}</td>`);
@@ -107,16 +137,13 @@
       calculateSummary(data);
     }
 
-    document.getElementById('loadBtn').addEventListener('click', () => {
-      fetch(CSV_URL)
-        .then(response => response.text())
-        .then(txt => {
-          const parsedData = parseCSV(txt);
-          localStorage.setItem('patchingData', JSON.stringify(parsedData));
-          render(parsedData);
-          alert('Weekly patching data loaded!');
-        })
-        .catch(() => alert('Failed to load patching data.'));
+    document.getElementById('loadBtn').addEventListener('click', async () => {
+      const data = await fetchAndParseHTML(HTML_URL);
+      if (data.length) {
+        localStorage.setItem('patchingData', JSON.stringify(data));
+        render(data);
+        alert('Weekly patching data loaded!');
+      }
     });
 
     window.addEventListener('DOMContentLoaded', () => {
