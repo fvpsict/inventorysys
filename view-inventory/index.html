@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>View Inventory</title>
   <link href="../styles.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
   <div class="menu-wrapper">
@@ -23,108 +25,53 @@
     </nav>
 
     <main class="main-content">
-      <h2>Inventory Management</h2>
+      <h2>Inventory List</h2>
 
-      <form id="addInventoryForm">
-        <input type="text" id="assetNo" placeholder="Asset No" required />
-        <input type="text" id="description" placeholder="Description" required />
-        <button type="submit">Add Inventory</button>
+      <form id="inventoryForm">
+        <!-- Example fields for SSOE inventory, adjust as needed -->
+        <input type="text" name="EquipmentType" placeholder="Equipment Type" required />
+        <input type="text" name="Vendor" placeholder="Vendor" />
+        <input type="text" name="BrandModel" placeholder="BrandModel" />
+        <input type="text" name="Profile" placeholder="Profile" />
+        <input type="text" name="Custodian" placeholder="Custodian" />
+        <input type="text" name="AssetNo" placeholder="Asset No" required />
+        <input type="text" name="SerialNumber" placeholder="Serial Number" />
+        <input type="text" name="Location" placeholder="Location" />
+        <input type="date" name="EndDate" placeholder="End Date" />
+        <input type="date" name="StartDate" placeholder="Start Date" />
+        <input type="text" name="Hostname" placeholder="Hostname" />
+        <input type="text" name="SSOE_PONumber" placeholder="SSOE PO Number" />
+        <input type="text" name="CartNo" placeholder="Cart No" />
+        <input type="date" name="SanitiseDate" placeholder="Sanitise Date" />
+        <input type="text" name="Fault" placeholder="Fault" />
+        <button type="submit" class="btn btn-primary">Add Item</button>
       </form>
 
-      <table id="inventoryTable">
+      <table>
         <thead>
           <tr>
+            <th>Equipment Type</th>
+            <th>Vendor</th>
+            <th>BrandModel</th>
+            <th>Profile</th>
+            <th>Custodian</th>
             <th>Asset No</th>
-            <th>Description</th>
+            <th>Serial Number</th>
+            <th>Location</th>
+            <th>End Date</th>
+            <th>Start Date</th>
+            <th>Hostname</th>
+            <th>SSOE PO Number</th>
+            <th>Cart No</th>
+            <th>Sanitise Date</th>
+            <th>Fault</th>
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="inventoryTbody"></tbody>
       </table>
     </main>
   </div>
-
-  <script>
-    const STORAGE_KEY = 'inventoryData';
-
-    function getInventory() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    }
-
-    function saveInventory(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function renderInventory() {
-      const tbody = document.querySelector('#inventoryTable tbody');
-      const inventory = getInventory();
-      tbody.innerHTML = '';
-      inventory.forEach((item, index) => {
-        const tr = document.createElement('tr');
-
-        // Asset No editable cell
-        const assetNoTd = document.createElement('td');
-        assetNoTd.contentEditable = true;
-        assetNoTd.textContent = item.assetNo;
-        assetNoTd.addEventListener('input', () => {
-          inventory[index].assetNo = assetNoTd.textContent.trim();
-          saveInventory(inventory);
-        });
-
-        // Description editable cell
-        const descTd = document.createElement('td');
-        descTd.contentEditable = true;
-        descTd.textContent = item.description;
-        descTd.addEventListener('input', () => {
-          inventory[index].description = descTd.textContent.trim();
-          saveInventory(inventory);
-        });
-
-        // Actions cell: delete button
-        const actionTd = document.createElement('td');
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.style.cursor = 'pointer';
-        deleteBtn.addEventListener('click', () => {
-          inventory.splice(index, 1);
-          saveInventory(inventory);
-          renderInventory();
-        });
-        actionTd.appendChild(deleteBtn);
-
-        tr.appendChild(assetNoTd);
-        tr.appendChild(descTd);
-        tr.appendChild(actionTd);
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    window.onload = () => {
-      renderInventory();
-
-      document.getElementById('addInventoryForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const assetNo = document.getElementById('assetNo').value.trim();
-        const description = document.getElementById('description').value.trim();
-        if (!assetNo || !description) {
-          alert('Please fill in both Asset No and Description');
-          return;
-        }
-        const inventory = getInventory();
-        inventory.push({ assetNo, description });
-        saveInventory(inventory);
-        renderInventory();
-        e.target.reset();
-      });
-
-      // Highlight active menu item
-      document.querySelectorAll('.menu-list li a').forEach(link => {
-        if (window.location.pathname.endsWith(link.getAttribute('href'))) {
-          link.parentElement.classList.add('active');
-        }
-      });
-    };
-  </script>
+  <script src="../inventory.js"></script>
 </body>
 </html>
