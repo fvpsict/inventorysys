@@ -1,45 +1,63 @@
-/* styles.css */
-
+/* General body padding for fixed navbar */
 body {
+  padding-top: 70px;
   font-family: Arial, sans-serif;
 }
 
-/* Navbar overrides */
-.navbar-nav .nav-link.active {
-  font-weight: bold;
-  color: #0d6efd !important; /* Bootstrap primary */
-}
-
-/* Inline form spacing */
-.inline-form > * {
-  margin-bottom: 10px;
-}
-
-/* Table styles */
+/* Table styling */
 .table-responsive {
+  max-height: 60vh;
   overflow-y: auto;
 }
 
-/* Fixed navbar padding */
-body {
-  padding-top: 70px;
+table#faultTable {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-/* Editable cell styles (for example) */
-td[contenteditable="true"] {
-  background-color: #fff3cd;
-  cursor: text;
+table#faultTable th,
+table#faultTable td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: middle;
 }
 
-/* Button margin */
-.btn {
-  margin: 0 2px;
+table#faultTable th {
+  background-color: #343a40;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-/* Responsive form elements */
-@media (max-width: 767px) {
-  .inline-form .col-md-2 {
-    flex: 0 0 100%;
-    max-width: 100%;
+/* Buttons */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Modal overrides */
+.modal-content {
+  border-radius: 0.3rem;
+}
+
+.modal-header {
+  background-color: #343a40;
+  color: white;
+}
+
+.form-select-sm {
+  min-width: 120px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  table#faultTable th,
+  table#faultTable td {
+    padding: 6px 8px;
+  }
+
+  .form-select-sm {
+    min-width: 100px;
   }
 }
