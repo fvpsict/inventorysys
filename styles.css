@@ -147,3 +147,55 @@ input#searchInput {
     display: none;
   }
 }
+
+.menu-wrapper {
+  display: flex;
+  min-height: 100vh; /* full viewport height */
+}
+
+.menu-sidebar {
+  width: 220px; /* fixed sidebar width */
+  background-color: #343a40;
+  color: white;
+  padding: 1rem;
+  flex-shrink: 0; /* prevent shrinking */
+}
+
+.menu-sidebar h3 {
+  margin-bottom: 1rem;
+}
+
+.menu-list,
+.submenu-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.menu-list li {
+  margin-bottom: 0.5rem;
+}
+
+.menu-list li a {
+  color: #ddd;
+  text-decoration: none;
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+}
+
+.menu-list li a:hover,
+.menu-list li.active > a {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.submenu-list {
+  padding-left: 1rem;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem;
+  background: #f8f9fa;
+}
