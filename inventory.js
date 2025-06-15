@@ -1,7 +1,7 @@
 const headers = [
-  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
-  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate",
-  "Duration in use", "Lamp Hour", "DateUpdated", "Actions"
+  "EquipmentType", "Equipment Vendor", "BrandModel", "LampHour", "Profile", "Custodian", "AssetNo", "SerialNumber",
+  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO No", "Cart No", "SanitiseDate",
+  "DateUpdated", "DurationInUse", "Actions"
 ];
 
 const equipmentTypeColors = {
@@ -25,7 +25,9 @@ function formatDate(dateStr) {
   const date = new Date(dateStr);
   if (isNaN(date)) return dateStr;
   return date.toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric'
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
   }).replace(/ /g, ' ');
 }
 
@@ -39,13 +41,12 @@ function buildTable() {
 
   inventory.forEach((item, index) => {
     const row = document.createElement("tr");
-
-    const color = equipmentTypeColors[item.EquipmentType] || "";
+    const color = equipmentTypeColors[item["EquipmentType"]] || "";
     if (color) row.style.backgroundColor = color;
 
-    headers.forEach((header) => {
+    headers.forEach(header => {
       const cell = document.createElement("td");
-      if (["EndDate", "StartDate", "DateUpdated"].includes(header)) {
+      if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
         cell.textContent = formatDate(item[header]);
       } else if (header === "Actions") {
         cell.innerHTML = `
@@ -63,15 +64,14 @@ function buildTable() {
 }
 
 function openForm(editIndex = null) {
-  const modalTitle = document.getElementById("modal-title");
   const form = document.getElementById("inventory-form");
+  const modalTitle = document.getElementById("inventoryModalLabel");
   form.innerHTML = "";
-
   modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
 
   const values = editIndex !== null ? inventory[editIndex] : {};
 
-  headers.forEach((header) => {
+  headers.forEach(header => {
     if (header === "Actions") return;
 
     const formGroup = document.createElement("div");
@@ -101,6 +101,7 @@ function openForm(editIndex = null) {
         if (values[header] === opt) option.selected = true;
         input.appendChild(option);
       });
+
     } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
       input = document.createElement("input");
       input.type = "date";
@@ -119,11 +120,11 @@ function openForm(editIndex = null) {
     form.appendChild(formGroup);
   });
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "btn btn-success";
-  saveButton.textContent = "Save";
-  form.appendChild(saveButton);
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "submit";
+  saveBtn.className = "btn btn-success";
+  saveBtn.textContent = "Save";
+  form.appendChild(saveBtn);
 
   const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
   modal.show();
@@ -132,8 +133,10 @@ function openForm(editIndex = null) {
     e.preventDefault();
     const formData = new FormData(form);
     const item = {};
-    headers.forEach((header) => {
-      if (header !== "Actions") item[header] = formData.get(header) || "";
+    headers.forEach(header => {
+      if (header !== "Actions") {
+        item[header] = formData.get(header) || "";
+      }
     });
 
     if (editIndex !== null) {
@@ -161,5 +164,4 @@ function deleteItem(index) {
 }
 
 document.getElementById("add-item-btn").addEventListener("click", () => openForm());
-
 document.addEventListener("DOMContentLoaded", buildTable);
