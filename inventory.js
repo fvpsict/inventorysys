@@ -1,7 +1,7 @@
 const headers = [
-  "EquipmentType", "Equipment Vendor", "BrandModel", "LampHour Profile", "Custodian", "AssetNo", "SerialNumber",
-  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO No", "Cart No", "SanitiseDate",
-  "DateUpdated", "DurationInUse", "Actions"
+  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
+  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate",
+  "Duration in use", "Lamp Hour", "DateUpdated", "Actions"
 ];
 
 const equipmentTypeColors = {
@@ -21,27 +21,14 @@ const equipmentTypeColors = {
 let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
 
 function formatDate(dateStr) {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   const date = new Date(dateStr);
   if (isNaN(date)) return dateStr;
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  }).replace(/ /g, ' ');
-}
-
-function calculateDuration(start, end) {
-  if (!start || !end) return "";
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  if (isNaN(startDate) || isNaN(endDate)) return "";
-
-  let years = endDate.getFullYear() - startDate.getFullYear();
-  let months = endDate.getMonth() - startDate.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-  return `${years}y ${months}m`;
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).replace(/ /g, " ");
 }
 
 function saveData() {
@@ -54,16 +41,15 @@ function buildTable() {
 
   inventory.forEach((item, index) => {
     const row = document.createElement("tr");
-    const color = equipmentTypeColors[item["EquipmentType"]] || "";
+
+    const color = equipmentTypeColors[item.EquipmentType] || "";
     if (color) row.style.backgroundColor = color;
 
     headers.forEach((header) => {
       const cell = document.createElement("td");
 
-      if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
+      if (["EndDate", "StartDate", "DateUpdated"].includes(header)) {
         cell.textContent = formatDate(item[header]);
-      } else if (header === "DurationInUse") {
-        cell.textContent = calculateDuration(item["StartDate"], item["EndDate"]);
       } else if (header === "Actions") {
         cell.innerHTML = `
           <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
@@ -72,12 +58,15 @@ function buildTable() {
       } else {
         cell.textContent = item[header] || "";
       }
-
       row.appendChild(cell);
     });
 
     tableBody.appendChild(row);
   });
+
+  // Apply current filter after rebuild
+  const filterSelect = document.getElementById("filter-equipmenttype");
+  if (filterSelect) filterTableByEquipmentType(filterSelect.value);
 }
 
 function openForm(editIndex = null) {
@@ -86,10 +75,11 @@ function openForm(editIndex = null) {
   form.innerHTML = "";
 
   modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
+
   const values = editIndex !== null ? inventory[editIndex] : {};
 
   headers.forEach((header) => {
-    if (header === "Actions" || header === "DurationInUse") return;
+    if (header === "Actions") return;
 
     const formGroup = document.createElement("div");
     formGroup.className = "mb-2";
@@ -105,10 +95,12 @@ function openForm(editIndex = null) {
       input = document.createElement("select");
       input.className = "form-select";
       input.name = header;
+
       const options = [
         "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
         "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
       ];
+
       options.forEach(opt => {
         const option = document.createElement("option");
         option.value = opt;
@@ -147,16 +139,9 @@ function openForm(editIndex = null) {
     e.preventDefault();
     const formData = new FormData(form);
     const item = {};
-
     headers.forEach((header) => {
-      if (header === "Actions" || header === "DurationInUse") return;
-
-      item[header] = formData.get(header) || "";
+      if (header !== "Actions") item[header] = formData.get(header) || "";
     });
-
-    // Auto-calculate duration & date updated
-    item["DurationInUse"] = calculateDuration(item["StartDate"], item["EndDate"]);
-    item["DateUpdated"] = new Date().toISOString().split("T")[0];
 
     if (editIndex !== null) {
       inventory[editIndex] = item;
@@ -182,5 +167,22 @@ function deleteItem(index) {
   }
 }
 
+function filterTableByEquipmentType(type) {
+  const tableBody = document.querySelector("#inventory-table tbody");
+  Array.from(tableBody.rows).forEach(row => {
+    const eqTypeCell = row.cells[0].textContent;
+    if (type === "All" || eqTypeCell === type) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+
 document.getElementById("add-item-btn").addEventListener("click", () => openForm());
+
+document.getElementById("filter-equipmenttype").addEventListener("change", (e) => {
+  filterTableByEquipmentType(e.target.value);
+});
+
 document.addEventListener("DOMContentLoaded", buildTable);
