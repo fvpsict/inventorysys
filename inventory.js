@@ -1,22 +1,7 @@
 const headers = [
-  "EquipmentType",
-  "Vendor",
-  "BrandModel",
-  "LampHour",
-  "Profile",
-  "Custodian",
-  "AssetNo",
-  "SerialNumber",
-  "Location",
-  "EndDate",
-  "StartDate",
-  "Hostname",
-  "SSOE PO No",
-  "Cart No",
-  "SanitiseDate",
-  "DateUpdated",
-  "DurationInUse",
-  "Actions"
+  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
+  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate",
+  "Duration in use", "Lamp Hour", "DateUpdated", "Actions"
 ];
 
 const equipmentTypeColors = {
@@ -35,39 +20,15 @@ const equipmentTypeColors = {
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
 
-// Format date string to 'DD MMM YYYY'
 function formatDate(dateStr) {
   if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr;
-  return d.toLocaleDateString("en-GB", {
+  const date = new Date(dateStr);
+  if (isNaN(date)) return dateStr;
+  return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).replace(/ /g, " ");
-}
-
-// Calculate duration between two dates in years + months
-function calculateDuration(start, end) {
-  if (!start) return "";
-  const startDate = new Date(start);
-  const endDate = end ? new Date(end) : new Date();
-
-  if (isNaN(startDate) || isNaN(endDate)) return "";
-
-  let years = endDate.getFullYear() - startDate.getFullYear();
-  let months = endDate.getMonth() - startDate.getMonth();
-
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-
-  let duration = "";
-  if (years > 0) duration += `${years} yr${years > 1 ? "s" : ""} `;
-  if (months > 0) duration += `${months} mo${months > 1 ? "s" : ""}`;
-
-  return duration.trim() || "0 mo";
 }
 
 function saveData() {
@@ -75,53 +36,37 @@ function saveData() {
 }
 
 function buildTable() {
-  const tbody = document.querySelector("#inventory-table tbody");
-  tbody.innerHTML = "";
+  const tableBody = document.querySelector("#inventory-table tbody");
+  tableBody.innerHTML = "";
 
-  inventory.forEach((item, idx) => {
-    const tr = document.createElement("tr");
+  inventory.forEach((item, index) => {
+    const row = document.createElement("tr");
 
-    // Row background by EquipmentType
     const color = equipmentTypeColors[item.EquipmentType] || "";
-    if (color) tr.style.backgroundColor = color;
+    if (color) row.style.backgroundColor = color;
 
     headers.forEach((header) => {
-      const td = document.createElement("td");
+      const cell = document.createElement("td");
 
-      if (header === "Actions") {
-        td.innerHTML = `
-          <button class="btn btn-sm btn-primary me-1" data-index="${idx}" data-action="edit">Edit</button>
-          <button class="btn btn-sm btn-danger" data-index="${idx}" data-action="delete">Delete</button>
+      if (["EndDate", "StartDate", "DateUpdated"].includes(header)) {
+        cell.textContent = formatDate(item[header]);
+      } else if (header === "Actions") {
+        cell.innerHTML = `
+          <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
         `;
-      } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
-        td.textContent = formatDate(item[header]) || "";
-      } else if (header === "DurationInUse") {
-        td.textContent = calculateDuration(item.StartDate, item.EndDate);
       } else {
-        td.textContent = item[header] || "";
+        cell.textContent = item[header] || "";
       }
-
-      tr.appendChild(td);
+      row.appendChild(cell);
     });
 
-    tbody.appendChild(tr);
+    tableBody.appendChild(row);
   });
 
-  // Attach event listeners for edit/delete buttons after table build
-  tbody.querySelectorAll("button").forEach((btn) => {
-    const idx = btn.getAttribute("data-index");
-    if (btn.getAttribute("data-action") === "edit") {
-      btn.addEventListener("click", () => openForm(Number(idx)));
-    } else if (btn.getAttribute("data-action") === "delete") {
-      btn.addEventListener("click", () => {
-        if (confirm("Are you sure you want to delete this item?")) {
-          inventory.splice(Number(idx), 1);
-          saveData();
-          buildTable();
-        }
-      });
-    }
-  });
+  // Apply current filter after rebuild
+  const filterSelect = document.getElementById("filter-equipmenttype");
+  if (filterSelect) filterTableByEquipmentType(filterSelect.value);
 }
 
 function openForm(editIndex = null) {
@@ -134,15 +79,14 @@ function openForm(editIndex = null) {
   const values = editIndex !== null ? inventory[editIndex] : {};
 
   headers.forEach((header) => {
-    if (header === "Actions" || header === "DurationInUse") return;
+    if (header === "Actions") return;
 
     const formGroup = document.createElement("div");
-    formGroup.className = "mb-3";
+    formGroup.className = "mb-2";
 
     const label = document.createElement("label");
-    label.className = "form-label";
     label.textContent = header;
-    label.htmlFor = `field-${header}`;
+    label.className = "form-label";
     formGroup.appendChild(label);
 
     let input;
@@ -151,45 +95,30 @@ function openForm(editIndex = null) {
       input = document.createElement("select");
       input.className = "form-select";
       input.name = header;
-      input.id = `field-${header}`;
 
       const options = [
-        "",
-        "SSOE",
-        "Projector",
-        "Projector Screen",
-        "Touch Panel",
-        "Visualiser",
-        "SMax",
-        "Macbook",
-        "Portable HDD",
-        "TV",
-        "Monitor",
-        "OMR",
+        "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
+        "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
       ];
 
-      options.forEach((opt) => {
+      options.forEach(opt => {
         const option = document.createElement("option");
         option.value = opt;
         option.textContent = opt || "Select EquipmentType";
         if (values[header] === opt) option.selected = true;
         input.appendChild(option);
       });
-    } else if (
-      ["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)
-    ) {
+    } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
       input = document.createElement("input");
       input.type = "date";
       input.className = "form-control";
       input.name = header;
-      input.id = `field-${header}`;
       input.value = values[header] || "";
     } else {
       input = document.createElement("input");
       input.type = "text";
       input.className = "form-control";
       input.name = header;
-      input.id = `field-${header}`;
       input.value = values[header] || "";
     }
 
@@ -197,33 +126,27 @@ function openForm(editIndex = null) {
     form.appendChild(formGroup);
   });
 
-  // Save button
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "submit";
-  saveBtn.className = "btn btn-success";
-  saveBtn.textContent = "Save";
-  form.appendChild(saveBtn);
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "btn btn-success";
+  saveButton.textContent = "Save";
+  form.appendChild(saveButton);
 
-  const modalEl = document.getElementById("inventoryModal");
-  const modal = new bootstrap.Modal(modalEl);
+  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
   modal.show();
 
-  form.onsubmit = (e) => {
+  form.onsubmit = function (e) {
     e.preventDefault();
     const formData = new FormData(form);
-    const newItem = {};
+    const item = {};
     headers.forEach((header) => {
-      if (header === "Actions" || header === "DurationInUse") return;
-      newItem[header] = formData.get(header) || "";
+      if (header !== "Actions") item[header] = formData.get(header) || "";
     });
 
-    // Update DateUpdated field to today’s date automatically
-    newItem.DateUpdated = new Date().toISOString().slice(0, 10);
-
     if (editIndex !== null) {
-      inventory[editIndex] = newItem;
+      inventory[editIndex] = item;
     } else {
-      inventory.push(newItem);
+      inventory.push(item);
     }
 
     saveData();
@@ -232,8 +155,34 @@ function openForm(editIndex = null) {
   };
 }
 
-// Bind Add Item button
+function editItem(index) {
+  openForm(index);
+}
+
+function deleteItem(index) {
+  if (confirm("Are you sure you want to delete this item?")) {
+    inventory.splice(index, 1);
+    saveData();
+    buildTable();
+  }
+}
+
+function filterTableByEquipmentType(type) {
+  const tableBody = document.querySelector("#inventory-table tbody");
+  Array.from(tableBody.rows).forEach(row => {
+    const eqTypeCell = row.cells[0].textContent;
+    if (type === "All" || eqTypeCell === type) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+
 document.getElementById("add-item-btn").addEventListener("click", () => openForm());
 
-// Build table on DOM load
+document.getElementById("filter-equipmenttype").addEventListener("change", (e) => {
+  filterTableByEquipmentType(e.target.value);
+});
+
 document.addEventListener("DOMContentLoaded", buildTable);
