@@ -1,5 +1,5 @@
 const headers = [
-  "EquipmentType", "Equipment Vendor", "BrandModel", "LampHour", "Profile", "Custodian", "AssetNo", "SerialNumber",
+  "EquipmentType", "Equipment Vendor", "BrandModel", "LampHour Profile", "Custodian", "AssetNo", "SerialNumber",
   "Location", "EndDate", "StartDate", "Hostname", "SSOE PO No", "Cart No", "SanitiseDate",
   "DateUpdated", "DurationInUse", "Actions"
 ];
@@ -25,10 +25,23 @@ function formatDate(dateStr) {
   const date = new Date(dateStr);
   if (isNaN(date)) return dateStr;
   return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+    day: '2-digit', month: 'short', year: 'numeric'
   }).replace(/ /g, ' ');
+}
+
+function calculateDuration(start, end) {
+  if (!start || !end) return "";
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (isNaN(startDate) || isNaN(endDate)) return "";
+
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  return `${years}y ${months}m`;
 }
 
 function saveData() {
@@ -44,10 +57,13 @@ function buildTable() {
     const color = equipmentTypeColors[item["EquipmentType"]] || "";
     if (color) row.style.backgroundColor = color;
 
-    headers.forEach(header => {
+    headers.forEach((header) => {
       const cell = document.createElement("td");
+
       if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
         cell.textContent = formatDate(item[header]);
+      } else if (header === "DurationInUse") {
+        cell.textContent = calculateDuration(item["StartDate"], item["EndDate"]);
       } else if (header === "Actions") {
         cell.innerHTML = `
           <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
@@ -56,6 +72,7 @@ function buildTable() {
       } else {
         cell.textContent = item[header] || "";
       }
+
       row.appendChild(cell);
     });
 
@@ -64,15 +81,15 @@ function buildTable() {
 }
 
 function openForm(editIndex = null) {
-  const form = document.getElementById("inventory-form");
   const modalTitle = document.getElementById("inventoryModalLabel");
+  const form = document.getElementById("inventory-form");
   form.innerHTML = "";
-  modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
 
+  modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
   const values = editIndex !== null ? inventory[editIndex] : {};
 
-  headers.forEach(header => {
-    if (header === "Actions") return;
+  headers.forEach((header) => {
+    if (header === "Actions" || header === "DurationInUse") return;
 
     const formGroup = document.createElement("div");
     formGroup.className = "mb-2";
@@ -88,12 +105,10 @@ function openForm(editIndex = null) {
       input = document.createElement("select");
       input.className = "form-select";
       input.name = header;
-
       const options = [
         "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
         "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
       ];
-
       options.forEach(opt => {
         const option = document.createElement("option");
         option.value = opt;
@@ -101,7 +116,6 @@ function openForm(editIndex = null) {
         if (values[header] === opt) option.selected = true;
         input.appendChild(option);
       });
-
     } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
       input = document.createElement("input");
       input.type = "date";
@@ -120,11 +134,11 @@ function openForm(editIndex = null) {
     form.appendChild(formGroup);
   });
 
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "submit";
-  saveBtn.className = "btn btn-success";
-  saveBtn.textContent = "Save";
-  form.appendChild(saveBtn);
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "btn btn-success";
+  saveButton.textContent = "Save";
+  form.appendChild(saveButton);
 
   const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
   modal.show();
@@ -133,11 +147,16 @@ function openForm(editIndex = null) {
     e.preventDefault();
     const formData = new FormData(form);
     const item = {};
-    headers.forEach(header => {
-      if (header !== "Actions") {
-        item[header] = formData.get(header) || "";
-      }
+
+    headers.forEach((header) => {
+      if (header === "Actions" || header === "DurationInUse") return;
+
+      item[header] = formData.get(header) || "";
     });
+
+    // Auto-calculate duration & date updated
+    item["DurationInUse"] = calculateDuration(item["StartDate"], item["EndDate"]);
+    item["DateUpdated"] = new Date().toISOString().split("T")[0];
 
     if (editIndex !== null) {
       inventory[editIndex] = item;
