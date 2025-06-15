@@ -2,181 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventory System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Inventory</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <style>
-    body { padding-top: 70px; background: #f8f9fa; }
-    .table-responsive { max-height: 60vh; overflow-y: auto; }
-  </style>
+  <link rel="stylesheet" href="../styles.css"/>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Inventory</a>
-  </div>
-</nav>
-
-<main class="container mt-4">
-  <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#inventoryModal">Add Inventory</button>
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped">
-      <thead><tr>
-        <th>EquipmentType</th><th>Vendor</th><th>BrandModel</th><th>Profile</th><th>Custodian</th>
-        <th>AssetNo</th><th>SerialNumber</th><th>Location</th><th>EndDate</th><th>StartDate</th>
-        <th>Hostname</th><th>SSOE PO Number</th><th>Cart No</th><th>SanitiseDate</th>
-        <th>Duration in use</th><th>Lamp Hour</th><th>DateUpdated</th><th>Actions</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</main>
-
-<!-- Modal -->
-<div class="modal fade" id="inventoryModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form class="modal-content" id="inventoryForm">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Inventory Item</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
+      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
+          <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="../patching-report.html">Patching Report</a></li>
+        </ul>
       </div>
-      <div class="modal-body row g-3">
-        <!-- Fields will be added here -->
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-      </div>
-    </form>
+    </div>
+  </nav>
+
+  <div class="container mt-5 pt-4">
+    <h1 class="mb-4">Inventory</h1>
+    <button class="btn btn-success mb-3" id="add-item-btn">Add Item</button>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="inventory-table">
+        <thead>
+          <tr>
+            <th>EquipmentType</th>
+            <th>Equipment Vendor</th>
+            <th>BrandModel</th>
+            <th>LampHour Profile</th>
+            <th>Custodian</th>
+            <th>AssetNo</th>
+            <th>SerialNumber</th>
+            <th>Location</th>
+            <th>EndDate</th>
+            <th>StartDate</th>
+            <th>Hostname</th>
+            <th>SSOE PO No</th>
+            <th>Cart No</th>
+            <th>SanitiseDate</th>
+            <th>DateUpdated</th>
+            <th>DurationInUse</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('inventoryForm');
-  const tbody = document.querySelector('tbody');
-  const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
-  const data = JSON.parse(localStorage.getItem('inventory') || '[]');
-  let editIndex = null;
+  <!-- Modal -->
+  <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="inventory-form"></form>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  const fields = [
-    { name: "EquipmentType", label: "EquipmentType" },
-    { name: "Vendor", label: "Vendor" },
-    { name: "BrandModel", label: "BrandModel" },
-    { name: "Profile", label: "Profile" },
-    { name: "Custodian", label: "Custodian" },
-    { name: "AssetNo", label: "AssetNo" },
-    { name: "SerialNumber", label: "SerialNumber" },
-    { name: "Location", label: "Location" },
-    { name: "EndDate", label: "EndDate", type: "date" },
-    { name: "StartDate", label: "StartDate", type: "date" },
-    { name: "Hostname", label: "Hostname" },
-    { name: "SSOE PO Number", label: "SSOE PO Number" },
-    { name: "Cart No", label: "Cart No" },
-    { name: "SanitiseDate", label: "SanitiseDate", type: "date" },
-    { name: "Lamp Hour", label: "Lamp Hour" }
-  ];
-
-  function calculateDuration(start, end) {
-    if (!start) return '';
-    const s = new Date(start);
-    const e = end ? new Date(end) : new Date();
-    let y = e.getFullYear() - s.getFullYear();
-    let m = e.getMonth() - s.getMonth();
-    if (m < 0) { y--; m += 12; }
-    return `${y} year(s) ${m} month(s)`;
-  }
-
-  function renderTable() {
-    tbody.innerHTML = '';
-    data.forEach((item, idx) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${item["EquipmentType"] || ""}</td>
-        <td>${item["Vendor"] || ""}</td>
-        <td>${item["BrandModel"] || ""}</td>
-        <td>${item["Profile"] || ""}</td>
-        <td>${item["Custodian"] || ""}</td>
-        <td>${item["AssetNo"] || ""}</td>
-        <td>${item["SerialNumber"] || ""}</td>
-        <td>${item["Location"] || ""}</td>
-        <td>${item["EndDate"] || ""}</td>
-        <td>${item["StartDate"] || ""}</td>
-        <td>${item["Hostname"] || ""}</td>
-        <td>${item["SSOE PO Number"] || ""}</td>
-        <td>${item["Cart No"] || ""}</td>
-        <td>${item["SanitiseDate"] || ""}</td>
-        <td>${calculateDuration(item["StartDate"], item["EndDate"])}</td>
-        <td>${item["Lamp Hour"] || ""}</td>
-        <td>${item["DateUpdated"] || ""}</td>
-        <td>
-          <button class='btn btn-sm btn-primary me-2' data-action='edit' data-index='${idx}'>Edit</button>
-          <button class='btn btn-sm btn-danger' data-action='delete' data-index='${idx}'>Delete</button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function buildFormFields(values = {}) {
-    const container = form.querySelector('.modal-body');
-    container.innerHTML = '';
-    fields.forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'col-md-6';
-      const label = document.createElement('label');
-      label.className = 'form-label';
-      label.textContent = f.label;
-      const input = document.createElement('input');
-      input.type = f.type || 'text';
-      input.name = f.name;
-      input.className = 'form-control';
-      input.value = values[f.name] || '';
-      div.appendChild(label);
-      div.appendChild(input);
-      container.appendChild(div);
-    });
-  }
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const obj = {};
-    fields.forEach(f => {
-      obj[f.name] = form.elements[f.name].value.trim();
-    });
-    obj["Duration in use"] = calculateDuration(obj.StartDate, obj.EndDate);
-    obj["DateUpdated"] = new Date().toISOString().split('T')[0];
-
-    if (editIndex !== null) {
-      data[editIndex] = obj;
-    } else {
-      data.push(obj);
-    }
-    localStorage.setItem('inventory', JSON.stringify(data));
-    renderTable();
-    modal.hide();
-    form.reset();
-    editIndex = null;
-  });
-
-  tbody.addEventListener('click', e => {
-    const btn = e.target;
-    const idx = btn.dataset.index;
-    if (btn.dataset.action === 'edit') {
-      buildFormFields(data[idx]);
-      editIndex = idx;
-      modal.show();
-    } else if (btn.dataset.action === 'delete') {
-      if (confirm('Delete this item?')) {
-        data.splice(idx, 1);
-        localStorage.setItem('inventory', JSON.stringify(data));
-        renderTable();
-      }
-    }
-  });
-
-  renderTable();
-});
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../inventory.js"></script>
 </body>
 </html>
