@@ -1,7 +1,22 @@
 const headers = [
-  "EquipmentType", "Vendor", "BrandModel", "LampHour Profile", "Custodian", "AssetNo",
-  "SerialNumber", "Location", "EndDate", "StartDate", "Hostname", "SSOE PO No",
-  "Cart No", "SanitiseDate", "DateUpdated", "DurationInUse", "Actions"
+  "EquipmentType",
+  "Vendor",
+  "BrandModel",
+  "LampHour",
+  "Profile",
+  "Custodian",
+  "AssetNo",
+  "SerialNumber",
+  "Location",
+  "EndDate",
+  "StartDate",
+  "Hostname",
+  "SSOE PO No",
+  "Cart No",
+  "SanitiseDate",
+  "DateUpdated",
+  "DurationInUse",
+  "Actions"
 ];
 
 const equipmentTypeColors = {
@@ -20,29 +35,39 @@ const equipmentTypeColors = {
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
 
+// Format date string to 'DD MMM YYYY'
 function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return isNaN(date) ? dateStr : date.toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  }).replace(/ /g, ' ');
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).replace(/ /g, " ");
 }
 
-function calculateDuration(startDate) {
-  if (!startDate) return "";
-  const start = new Date(startDate);
-  const now = new Date();
-  if (isNaN(start)) return "";
+// Calculate duration between two dates in years + months
+function calculateDuration(start, end) {
+  if (!start) return "";
+  const startDate = new Date(start);
+  const endDate = end ? new Date(end) : new Date();
 
-  let years = now.getFullYear() - start.getFullYear();
-  let months = now.getMonth() - start.getMonth();
+  if (isNaN(startDate) || isNaN(endDate)) return "";
+
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
 
   if (months < 0) {
     years--;
     months += 12;
   }
 
-  return `${years}y ${months}m`;
+  let duration = "";
+  if (years > 0) duration += `${years} yr${years > 1 ? "s" : ""} `;
+  if (months > 0) duration += `${months} mo${months > 1 ? "s" : ""}`;
+
+  return duration.trim() || "0 mo";
 }
 
 function saveData() {
@@ -50,58 +75,75 @@ function saveData() {
 }
 
 function buildTable() {
-  const tableBody = document.querySelector("#inventory-table tbody");
-  const filter = document.getElementById("category-filter").value;
-  tableBody.innerHTML = "";
+  const tbody = document.querySelector("#inventory-table tbody");
+  tbody.innerHTML = "";
 
-  inventory.forEach((item, index) => {
-    if (filter && item.EquipmentType !== filter) return;
+  inventory.forEach((item, idx) => {
+    const tr = document.createElement("tr");
 
-    const row = document.createElement("tr");
+    // Row background by EquipmentType
     const color = equipmentTypeColors[item.EquipmentType] || "";
-    if (color) row.style.backgroundColor = color;
+    if (color) tr.style.backgroundColor = color;
 
-    headers.forEach(header => {
-      const cell = document.createElement("td");
+    headers.forEach((header) => {
+      const td = document.createElement("td");
 
-      if (header === "EndDate" || header === "StartDate" || header === "DateUpdated") {
-        cell.textContent = formatDate(item[header]);
-      } else if (header === "DurationInUse") {
-        cell.textContent = calculateDuration(item["StartDate"]);
-      } else if (header === "Actions") {
-        cell.innerHTML = `
-          <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
+      if (header === "Actions") {
+        td.innerHTML = `
+          <button class="btn btn-sm btn-primary me-1" data-index="${idx}" data-action="edit">Edit</button>
+          <button class="btn btn-sm btn-danger" data-index="${idx}" data-action="delete">Delete</button>
         `;
+      } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
+        td.textContent = formatDate(item[header]) || "";
+      } else if (header === "DurationInUse") {
+        td.textContent = calculateDuration(item.StartDate, item.EndDate);
       } else {
-        cell.textContent = item[header] || "";
+        td.textContent = item[header] || "";
       }
 
-      row.appendChild(cell);
+      tr.appendChild(td);
     });
 
-    tableBody.appendChild(row);
+    tbody.appendChild(tr);
+  });
+
+  // Attach event listeners for edit/delete buttons after table build
+  tbody.querySelectorAll("button").forEach((btn) => {
+    const idx = btn.getAttribute("data-index");
+    if (btn.getAttribute("data-action") === "edit") {
+      btn.addEventListener("click", () => openForm(Number(idx)));
+    } else if (btn.getAttribute("data-action") === "delete") {
+      btn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete this item?")) {
+          inventory.splice(Number(idx), 1);
+          saveData();
+          buildTable();
+        }
+      });
+    }
   });
 }
 
 function openForm(editIndex = null) {
-  const modalTitle = document.getElementById("modal-title");
+  const modalTitle = document.getElementById("inventoryModalLabel");
   const form = document.getElementById("inventory-form");
   form.innerHTML = "";
+
   modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
 
   const values = editIndex !== null ? inventory[editIndex] : {};
 
   headers.forEach((header) => {
-    if (header === "Actions") return;
+    if (header === "Actions" || header === "DurationInUse") return;
 
-    const div = document.createElement("div");
-    div.className = "mb-2";
+    const formGroup = document.createElement("div");
+    formGroup.className = "mb-3";
 
     const label = document.createElement("label");
     label.className = "form-label";
     label.textContent = header;
-    div.appendChild(label);
+    label.htmlFor = `field-${header}`;
+    formGroup.appendChild(label);
 
     let input;
 
@@ -109,57 +151,79 @@ function openForm(editIndex = null) {
       input = document.createElement("select");
       input.className = "form-select";
       input.name = header;
+      input.id = `field-${header}`;
+
       const options = [
-        "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
-        "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
+        "",
+        "SSOE",
+        "Projector",
+        "Projector Screen",
+        "Touch Panel",
+        "Visualiser",
+        "SMax",
+        "Macbook",
+        "Portable HDD",
+        "TV",
+        "Monitor",
+        "OMR",
       ];
-      options.forEach(opt => {
-        const optEl = document.createElement("option");
-        optEl.value = opt;
-        optEl.textContent = opt || "Select EquipmentType";
-        if (values[header] === opt) optEl.selected = true;
-        input.appendChild(optEl);
+
+      options.forEach((opt) => {
+        const option = document.createElement("option");
+        option.value = opt;
+        option.textContent = opt || "Select EquipmentType";
+        if (values[header] === opt) option.selected = true;
+        input.appendChild(option);
       });
-    } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
+    } else if (
+      ["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)
+    ) {
       input = document.createElement("input");
       input.type = "date";
       input.className = "form-control";
       input.name = header;
+      input.id = `field-${header}`;
       input.value = values[header] || "";
     } else {
       input = document.createElement("input");
       input.type = "text";
       input.className = "form-control";
       input.name = header;
+      input.id = `field-${header}`;
       input.value = values[header] || "";
     }
 
-    div.appendChild(input);
-    form.appendChild(div);
+    formGroup.appendChild(input);
+    form.appendChild(formGroup);
   });
 
+  // Save button
   const saveBtn = document.createElement("button");
+  saveBtn.type = "submit";
   saveBtn.className = "btn btn-success";
   saveBtn.textContent = "Save";
-  saveBtn.type = "submit";
   form.appendChild(saveBtn);
 
-  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const modalEl = document.getElementById("inventoryModal");
+  const modal = new bootstrap.Modal(modalEl);
   modal.show();
 
   form.onsubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(form);
-    const item = {};
-    headers.forEach(h => {
-      if (h !== "Actions") item[h] = formData.get(h) || "";
+    const newItem = {};
+    headers.forEach((header) => {
+      if (header === "Actions" || header === "DurationInUse") return;
+      newItem[header] = formData.get(header) || "";
     });
-    item["DurationInUse"] = calculateDuration(item["StartDate"]);
+
+    // Update DateUpdated field to today’s date automatically
+    newItem.DateUpdated = new Date().toISOString().slice(0, 10);
 
     if (editIndex !== null) {
-      inventory[editIndex] = item;
+      inventory[editIndex] = newItem;
     } else {
-      inventory.push(item);
+      inventory.push(newItem);
     }
 
     saveData();
@@ -168,50 +232,8 @@ function openForm(editIndex = null) {
   };
 }
 
-function editItem(index) {
-  openForm(index);
-}
-
-function deleteItem(index) {
-  if (confirm("Delete this item?")) {
-    inventory.splice(index, 1);
-    saveData();
-    buildTable();
-  }
-}
-
-function parseCSV(csvText) {
-  const rows = csvText.trim().split("\n");
-  const keys = headers.filter(h => h !== "Actions");
-  const data = [];
-
-  for (let i = 1; i < rows.length; i++) {
-    const cells = rows[i].split(",");
-    const item = {};
-    keys.forEach((k, j) => item[k] = cells[j]?.trim() || "");
-    item["DurationInUse"] = calculateDuration(item["StartDate"]);
-    data.push(item);
-  }
-
-  return data;
-}
-
+// Bind Add Item button
 document.getElementById("add-item-btn").addEventListener("click", () => openForm());
-document.getElementById("category-filter").addEventListener("change", buildTable);
+
+// Build table on DOM load
 document.addEventListener("DOMContentLoaded", buildTable);
-
-document.getElementById("csv-upload").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const csvText = event.target.result;
-    const parsed = parseCSV(csvText);
-    inventory = [...inventory, ...parsed];
-    saveData();
-    buildTable();
-    e.target.value = "";
-  };
-  reader.readAsText(file);
-});
