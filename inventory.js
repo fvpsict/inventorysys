@@ -1,43 +1,8 @@
 const headers = [
-  "EquipmentType",
-  "Vendor",
-  "BrandModel",
-  "LampHour",
-  "Profile",
-  "Custodian",
-  "AssetNo",
-  "SerialNumber",
-  "Location",
-  "EndDate",
-  "StartDate",
-  "Hostname",
-  "SSOE PO Number",
-  "Cart No",
-  "SanitiseDate",
-  "DateUpdated",
-  "DurationInUse",
-  "Actions",
+  "EquipmentType", "Vendor", "BrandModel", "LampHour Profile", "Custodian", "AssetNo",
+  "SerialNumber", "Location", "EndDate", "StartDate", "Hostname", "SSOE PO No",
+  "Cart No", "SanitiseDate", "DateUpdated", "DurationInUse", "Actions"
 ];
-
-// Mapping to actual keys in data because DurationInUse and Actions aren't stored
-const keyMap = {
-  EquipmentType: "EquipmentType",
-  Vendor: "Vendor",
-  BrandModel: "BrandModel",
-  LampHour: "Lamp Hour",
-  Profile: "Profile",
-  Custodian: "Custodian",
-  AssetNo: "AssetNo",
-  SerialNumber: "SerialNumber",
-  Location: "Location",
-  EndDate: "EndDate",
-  StartDate: "StartDate",
-  Hostname: "Hostname",
-  "SSOE PO Number": "SSOE PO Number",
-  "Cart No": "Cart No",
-  SanitiseDate: "SanitiseDate",
-  DateUpdated: "DateUpdated",
-};
 
 const equipmentTypeColors = {
   SSOE: "#e8f0fe",
@@ -50,94 +15,66 @@ const equipmentTypeColors = {
   "Portable HDD": "#cce5ff",
   TV: "#f5c6cb",
   Monitor: "#c3e6cb",
-  OMR: "#f8d7da",
+  OMR: "#f8d7da"
 };
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
 
 function formatDate(dateStr) {
-  if (!dateStr) return "";
+  if (!dateStr) return '';
   const date = new Date(dateStr);
-  if (isNaN(date)) return dateStr;
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).replace(/ /g, " ");
+  return isNaN(date) ? dateStr : date.toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric'
+  }).replace(/ /g, ' ');
 }
 
-function calculateDuration(startStr, endStr) {
-  if (!startStr) return "";
-  const startDate = new Date(startStr);
-  const endDate = endStr ? new Date(endStr) : new Date();
-  if (isNaN(startDate) || isNaN(endDate)) return "";
+function calculateDuration(startDate) {
+  if (!startDate) return "";
+  const start = new Date(startDate);
+  const now = new Date();
+  if (isNaN(start)) return "";
 
-  let years = endDate.getFullYear() - startDate.getFullYear();
-  let months = endDate.getMonth() - startDate.getMonth();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
 
   if (months < 0) {
     years--;
     months += 12;
   }
 
-  let durationStr = "";
-  if (years > 0) durationStr += years + " yr" + (years > 1 ? "s" : "");
-  if (months > 0) durationStr += (durationStr ? " " : "") + months + " mo" + (months > 1 ? "s" : "");
-
-  return durationStr || "<1 mo";
+  return `${years}y ${months}m`;
 }
 
 function saveData() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
 
-function buildFilterOptions() {
-  const filterSelect = document.getElementById("filterEquipmentType");
-  filterSelect.innerHTML = '<option value="">All</option>';
-
-  // Get unique equipment types from inventory
-  const types = [...new Set(inventory.map((item) => item.EquipmentType).filter(Boolean))].sort();
-
-  types.forEach((type) => {
-    const option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    filterSelect.appendChild(option);
-  });
-}
-
 function buildTable() {
   const tableBody = document.querySelector("#inventory-table tbody");
+  const filter = document.getElementById("category-filter").value;
   tableBody.innerHTML = "";
 
-  const filterValue = document.getElementById("filterEquipmentType").value;
-
   inventory.forEach((item, index) => {
-    if (filterValue && item.EquipmentType !== filterValue) return;
+    if (filter && item.EquipmentType !== filter) return;
 
     const row = document.createElement("tr");
-
     const color = equipmentTypeColors[item.EquipmentType] || "";
     if (color) row.style.backgroundColor = color;
 
-    headers.forEach((header) => {
+    headers.forEach(header => {
       const cell = document.createElement("td");
 
-      if (header === "Actions") {
+      if (header === "EndDate" || header === "StartDate" || header === "DateUpdated") {
+        cell.textContent = formatDate(item[header]);
+      } else if (header === "DurationInUse") {
+        cell.textContent = calculateDuration(item["StartDate"]);
+      } else if (header === "Actions") {
         cell.innerHTML = `
           <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
         `;
-      } else if (header === "DurationInUse") {
-        // Calculate duration between StartDate and EndDate (or today)
-        const startStr = item["StartDate"];
-        const endStr = item["EndDate"];
-        const duration = calculateDuration(startStr, endStr);
-        cell.textContent = duration;
-      } else if (["EndDate", "StartDate", "DateUpdated", "SanitiseDate"].includes(header)) {
-        cell.textContent = formatDate(item[keyMap[header]] || "");
       } else {
-        cell.textContent = item[keyMap[header]] || "";
+        cell.textContent = item[header] || "";
       }
 
       row.appendChild(cell);
@@ -148,24 +85,23 @@ function buildTable() {
 }
 
 function openForm(editIndex = null) {
-  const modalTitle = document.getElementById("inventoryModalLabel");
+  const modalTitle = document.getElementById("modal-title");
   const form = document.getElementById("inventory-form");
   form.innerHTML = "";
-
   modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
 
   const values = editIndex !== null ? inventory[editIndex] : {};
 
   headers.forEach((header) => {
-    if (header === "Actions" || header === "DurationInUse") return;
+    if (header === "Actions") return;
 
-    const formGroup = document.createElement("div");
-    formGroup.className = "mb-3";
+    const div = document.createElement("div");
+    div.className = "mb-2";
 
     const label = document.createElement("label");
-    label.textContent = header;
     label.className = "form-label";
-    formGroup.appendChild(label);
+    label.textContent = header;
+    div.appendChild(label);
 
     let input;
 
@@ -173,64 +109,109 @@ function openForm(editIndex = null) {
       input = document.createElement("select");
       input.className = "form-select";
       input.name = header;
-
       const options = [
-        "",
-        "SSOE",
-        "Projector",
-        "Projector Screen",
-        "Touch Panel",
-        "Visualiser",
-        "SMax",
-        "Macbook",
-        "Portable HDD",
-        "TV",
-        "Monitor",
-        "OMR",
+        "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
+        "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
       ];
-
-      options.forEach((opt) => {
-        const option = document.createElement("option");
-        option.value = opt;
-        option.textContent = opt || "Select EquipmentType";
-        if (values[header] === opt) option.selected = true;
-        input.appendChild(option);
+      options.forEach(opt => {
+        const optEl = document.createElement("option");
+        optEl.value = opt;
+        optEl.textContent = opt || "Select EquipmentType";
+        if (values[header] === opt) optEl.selected = true;
+        input.appendChild(optEl);
       });
     } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
       input = document.createElement("input");
       input.type = "date";
       input.className = "form-control";
       input.name = header;
-      input.value = values[keyMap[header]] || "";
+      input.value = values[header] || "";
     } else {
       input = document.createElement("input");
       input.type = "text";
       input.className = "form-control";
       input.name = header;
-      input.value = values[keyMap[header]] || "";
+      input.value = values[header] || "";
     }
 
-    formGroup.appendChild(input);
-    form.appendChild(formGroup);
+    div.appendChild(input);
+    form.appendChild(div);
   });
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "btn btn-success";
-  saveButton.textContent = "Save";
-  form.appendChild(saveButton);
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "btn btn-success";
+  saveBtn.textContent = "Save";
+  saveBtn.type = "submit";
+  form.appendChild(saveBtn);
 
   const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
   modal.show();
 
-  form.onsubmit = function (e) {
+  form.onsubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(form);
     const item = {};
-    headers.forEach((header) => {
-      if (header === "Actions" || header === "DurationInUse") return;
-      item[header === "LampHour" ? "Lamp Hour" : header] = formData.get(header) || "";
+    headers.forEach(h => {
+      if (h !== "Actions") item[h] = formData.get(h) || "";
     });
+    item["DurationInUse"] = calculateDuration(item["StartDate"]);
 
-    // Date fields fix: Store in yyyy-mm-dd for consistency
-    ["EndDate", "StartDate", "SanitiseDate", "Date]()
+    if (editIndex !== null) {
+      inventory[editIndex] = item;
+    } else {
+      inventory.push(item);
+    }
+
+    saveData();
+    buildTable();
+    modal.hide();
+  };
+}
+
+function editItem(index) {
+  openForm(index);
+}
+
+function deleteItem(index) {
+  if (confirm("Delete this item?")) {
+    inventory.splice(index, 1);
+    saveData();
+    buildTable();
+  }
+}
+
+function parseCSV(csvText) {
+  const rows = csvText.trim().split("\n");
+  const keys = headers.filter(h => h !== "Actions");
+  const data = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const cells = rows[i].split(",");
+    const item = {};
+    keys.forEach((k, j) => item[k] = cells[j]?.trim() || "");
+    item["DurationInUse"] = calculateDuration(item["StartDate"]);
+    data.push(item);
+  }
+
+  return data;
+}
+
+document.getElementById("add-item-btn").addEventListener("click", () => openForm());
+document.getElementById("category-filter").addEventListener("change", buildTable);
+document.addEventListener("DOMContentLoaded", buildTable);
+
+document.getElementById("csv-upload").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const csvText = event.target.result;
+    const parsed = parseCSV(csvText);
+    inventory = [...inventory, ...parsed];
+    saveData();
+    buildTable();
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+});
