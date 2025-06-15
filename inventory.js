@@ -207,3 +207,15 @@ document.getElementById("filter-equipmenttype").addEventListener("change", funct
 document.addEventListener("DOMContentLoaded", () => {
   buildTable();
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("add-item-btn").addEventListener("click", () => {
+    const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+    modal.show();
+
+    // Optional: Clear form if needed
+    const form = document.getElementById("inventory-form");
+    form.innerHTML = '<p>Form content goes here.</p>'; // Replace with dynamic form if required
+  });
+});
+
