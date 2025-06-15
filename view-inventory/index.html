@@ -4,61 +4,121 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Inventory Management</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../styles.css" />
 </head>
-<body class="p-4">
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
+      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="../view-inventory/index.html">View Inventory</a></li>
+          <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="../patching-report.html">Patching Report</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4">Inventory Management</h1>
-    <button id="add-item-btn" class="btn btn-success">Add Item</button>
+  <!-- Main Content -->
+  <div class="container mt-5 pt-4">
+    <h1 class="mb-4">Inventory</h1>
+    <button class="btn btn-success mb-3" id="add-item-btn">Add Item</button>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="inventory-table">
+        <thead>
+          <tr>
+            <th>EquipmentType</th>
+            <th>Equipment Vendor</th>
+            <th>BrandModel</th>
+            <th>LampHour</th>
+            <th>Profile</th>
+            <th>Custodian</th>
+            <th>AssetNo</th>
+            <th>SerialNumber</th>
+            <th>Location</th>
+            <th>EndDate</th>
+            <th>StartDate</th>
+            <th>Hostname</th>
+            <th>SSOE PO No</th>
+            <th>Cart No</th>
+            <th>SanitiseDate</th>
+            <th>DateUpdated</th>
+            <th>DurationInUse</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table id="inventory-table" class="table table-bordered table-hover align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th>EquipmentType</th>
-          <th>Vendor</th>
-          <th>BrandModel</th>
-          <th>Profile</th>
-          <th>Custodian</th>
-          <th>AssetNo</th>
-          <th>SerialNumber</th>
-          <th>Location</th>
-          <th>EndDate</th>
-          <th>StartDate</th>
-          <th>Hostname</th>
-          <th>SSOE PO Number</th>
-          <th>Cart No</th>
-          <th>SanitiseDate</th>
-          <th>Duration in use</th>
-          <th>Lamp Hour</th>
-          <th>DateUpdated</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows populated by JS -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Bootstrap Modal for Add/Edit Form -->
-  <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+  <!-- Modal -->
+  <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="modal-title">Inventory Form</h5>
+          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Item</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form id="inventory-form"></form>
+          <form id="inventory-form" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">EquipmentType</label>
+              <select class="form-select" name="EquipmentType" required>
+                <option value="">Select Type</option>
+                <option>SSOE</option>
+                <option>Projector</option>
+                <option>Projector Screen</option>
+                <option>Touch Panel</option>
+                <option>Visualiser</option>
+                <option>SMax</option>
+                <option>Macbook</option>
+                <option>Portable HDD</option>
+                <option>TV</option>
+                <option>Monitor</option>
+                <option>OMR</option>
+              </select>
+            </div>
+            <div class="col-md-6"><label class="form-label">Equipment Vendor</label><input class="form-control" name="Equipment Vendor" /></div>
+            <div class="col-md-6"><label class="form-label">BrandModel</label><input class="form-control" name="BrandModel" /></div>
+            <div class="col-md-6"><label class="form-label">LampHour</label><input class="form-control" name="LampHour" /></div>
+            <div class="col-md-6"><label class="form-label">Profile</label><input class="form-control" name="Profile" /></div>
+            <div class="col-md-6"><label class="form-label">Custodian</label><input class="form-control" name="Custodian" /></div>
+            <div class="col-md-6"><label class="form-label">AssetNo</label><input class="form-control" name="AssetNo" required /></div>
+            <div class="col-md-6"><label class="form-label">SerialNumber</label><input class="form-control" name="SerialNumber" /></div>
+            <div class="col-md-6"><label class="form-label">Location</label><input class="form-control" name="Location" /></div>
+            <div class="col-md-6"><label class="form-label">EndDate</label><input type="date" class="form-control" name="EndDate" /></div>
+            <div class="col-md-6"><label class="form-label">StartDate</label><input type="date" class="form-control" name="StartDate" /></div>
+            <div class="col-md-6"><label class="form-label">Hostname</label><input class="form-control" name="Hostname" /></div>
+            <div class="col-md-6"><label class="form-label">SSOE PO No</label><input class="form-control" name="SSOE PO No" /></div>
+            <div class="col-md-6"><label class="form-label">Cart No</label><input class="form-control" name="Cart No" /></div>
+            <div class="col-md-6"><label class="form-label">SanitiseDate</label><input type="date" class="form-control" name="SanitiseDate" /></div>
+            <div class="col-md-6"><label class="form-label">DateUpdated</label><input type="date" class="form-control" name="DateUpdated" /></div>
+            <div class="col-md-12 text-end">
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="inventory.js"></script>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../inventory.js"></script>
+  <script>
+    document.querySelectorAll('.nav-link').forEach(link => {
+      if (link.getAttribute('href')?.includes('view-inventory')) {
+        link.classList.add('active');
+      }
+    });
+  </script>
 </body>
 </html>
