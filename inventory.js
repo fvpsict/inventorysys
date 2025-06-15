@@ -4,7 +4,7 @@ const headers = [
   "DateUpdated", "DurationInUse", "Actions"
 ];
 
-// Mapping header display names to inventory object keys:
+// Map displayed headers to data keys in inventory objects
 const keyMap = {
   "EquipmentType": "EquipmentType",
   "Vendor": "Vendor",
@@ -45,9 +45,7 @@ function formatDate(dateStr) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   if (isNaN(date)) return dateStr;
-  // Format as DD MMM YYYY (e.g., 15 Jun 2025)
-  const options = { day: "2-digit", month: "short", year: "numeric" };
-  return date.toLocaleDateString("en-GB", options).replace(/ /g, " ");
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, " ");
 }
 
 function saveData() {
@@ -59,13 +57,17 @@ function buildTable(filterEquipmentType = "All") {
   tbody.innerHTML = "";
 
   inventory.forEach((item, index) => {
-    if (filterEquipmentType !== "All" && item.EquipmentType !== filterEquipmentType) {
-      return; // Skip rows not matching filter
+    // Filter rows by EquipmentType, ignoring case and trimming
+    if (
+      filterEquipmentType !== "All" &&
+      (!item.EquipmentType || item.EquipmentType.trim().toLowerCase() !== filterEquipmentType.trim().toLowerCase())
+    ) {
+      return;
     }
 
     const row = document.createElement("tr");
 
-    // Row background color by EquipmentType
+    // Background color by EquipmentType
     const bgColor = equipmentTypeColors[item.EquipmentType] || "";
     if (bgColor) row.style.backgroundColor = bgColor;
 
@@ -78,7 +80,6 @@ function buildTable(filterEquipmentType = "All") {
           <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
         `;
       } else if (["EndDate", "StartDate", "DateUpdated", "SanitiseDate"].includes(header)) {
-        // Format date fields
         const key = keyMap[header];
         cell.textContent = formatDate(item[key]);
       } else {
@@ -195,15 +196,12 @@ function deleteItem(index) {
   }
 }
 
-// Add Item button listener
 document.getElementById("add-item-btn").addEventListener("click", () => openForm());
 
-// Filter dropdown listener
 document.getElementById("filter-equipmenttype").addEventListener("change", function () {
   buildTable(this.value);
 });
 
-// Build table on page load with no filter (all)
 document.addEventListener("DOMContentLoaded", () => {
   buildTable();
 });
