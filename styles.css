@@ -1,86 +1,93 @@
-/* Reset some default styles */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-/* Fixed navbar offset */
+/* General Body Styling */
 body {
-  padding-top: 56px;
-  display: flex;
-  flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
 }
 
-/* Container stretches to fill remaining height */
-.container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/* Navbar */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.navbar-brand {
+  font-weight: bold;
+}
+.navbar .nav-link.active {
+  font-weight: bold;
+  color: #fff !important;
+  background-color: #0d6efd;
+  border-radius: 0.25rem;
 }
 
-/* Scrollable table area */
-.table-responsive {
-  flex: 1;
-  overflow-y: auto;
-}
-
-/* Table styling */
-table {
-  width: 100%;
-  min-width: 1200px;
-}
-
-th, td {
-  white-space: nowrap;
-  vertical-align: middle;
-  text-align: center;
-}
-
-thead th {
-  position: sticky;
-  top: 0;
-  background-color: #343a40;
-  color: white;
-  z-index: 1;
-}
-
-/* Modal label spacing */
-form .form-label {
+/* Headings */
+h1, h2, h3 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   font-weight: 600;
 }
 
-/* Equipment type row highlighting */
-tr[data-equipment-type="SSOE"] {
-  background-color: #e8f0fe;
+/* Tables */
+.table thead th {
+  vertical-align: middle;
+  text-align: center;
 }
-tr[data-equipment-type="Projector"] {
-  background-color: #fff3cd;
+.table td, .table th {
+  vertical-align: middle;
+  padding: 0.75rem;
 }
-tr[data-equipment-type="Projector Screen"] {
-  background-color: #f8d7da;
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
 }
-tr[data-equipment-type="Touch Panel"] {
-  background-color: #d1ecf1;
+.table td:last-child {
+  text-align: center;
 }
-tr[data-equipment-type="Visualiser"] {
-  background-color: #e2e3e5;
+
+/* Buttons */
+.btn {
+  min-width: 80px;
 }
-tr[data-equipment-type="SMax"] {
-  background-color: #fefefe;
+.btn-sm {
+  padding: 0.25rem 0.5rem;
 }
-tr[data-equipment-type="Macbook"] {
-  background-color: #d4edda;
+
+/* Modal */
+.modal .modal-title {
+  font-weight: 600;
 }
-tr[data-equipment-type="Portable HDD"] {
-  background-color: #cce5ff;
+.modal-body label {
+  font-weight: 500;
 }
-tr[data-equipment-type="TV"] {
-  background-color: #f5c6cb;
+
+/* Forms */
+.form-label {
+  margin-bottom: 0.3rem;
 }
-tr[data-equipment-type="Monitor"] {
-  background-color: #c3e6cb;
+input[type="text"], input[type="date"], select, textarea {
+  font-size: 0.95rem;
 }
-tr[data-equipment-type="OMR"] {
-  background-color: #f8d7da;
+
+/* Responsive Table Container */
+.table-responsive {
+  margin-top: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  background-color: white;
+  padding: 0.5rem;
+}
+
+/* Add/Edit Inventory button */
+button[data-bs-target="#inventoryModal"] {
+  font-weight: 500;
+}
+
+/* Spacing for main container */
+main.container-fluid {
+  padding: 1rem 2rem;
+}
+
+/* Sticky header fix on mobile */
+@media (max-width: 768px) {
+  body {
+    padding-top: 60px;
+  }
 }
