@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventory</title>
+  <title>View Inventory</title>
   <link href="../styles.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body { padding-top: 70px; background: #f8f9fa; }
-    .table-responsive { max-height: 70vh; overflow-y: auto; }
-    td, th { vertical-align: middle !important; }
+    .table-responsive { max-height: 60vh; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -23,6 +22,7 @@
       </button>
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
           <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
           <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
           <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
@@ -32,148 +32,337 @@
   </nav>
 
   <main class="container-fluid mt-3">
-    <h1>Inventory</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1>Inventory</h1>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+        Add Inventory
+      </button>
+    </div>
 
+    <!-- EquipmentType Filter -->
     <div class="mb-3">
-      <label for="filterEquipmentType" class="form-label">Filter by Equipment Type:</label>
-      <select id="filterEquipmentType" class="form-select w-auto">
+      <label for="equipmentFilter" class="form-label">Filter by EquipmentType:</label>
+      <select id="equipmentFilter" class="form-select w-auto d-inline-block">
         <option value="">All</option>
-        <option>SSOE</option>
-        <option>Projector</option>
-        <option>Visualiser</option>
-        <option>Projector Screen</option>
-        <option>Apple TV</option>
-        <option>SMax</option>
-        <option>Portable HDD</option>
-        <option>Macbook</option>
-        <option>TV</option>
-        <option>OMR</option>
-        <option>Hansvision</option>
       </select>
     </div>
 
     <div class="table-responsive">
       <table id="inventoryTable" class="table table-striped table-bordered">
-        <thead>
-          <tr>
-            <th>EquipmentType</th>
-            <th>Vendor</th>
-            <th>BrandModel</th>
-            <th>Profile</th>
-            <th>Custodian</th>
-            <th>AssetNo</th>
-            <th>SerialNumber</th>
-            <th>Location</th>
-            <th>EndDate</th>
-            <th>StartDate</th>
-            <th>Hostname</th>
-            <th>PO Number</th>
-            <th>Cart No</th>
-            <th>SanitiseDate</th>
-            <th>Duration in use</th>
-            <th>Last Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+        <thead></thead>
         <tbody></tbody>
       </table>
     </div>
-
-    <button id="addRowBtn" class="btn btn-success mt-3">Add New Item</button>
   </main>
 
+  <!-- Modal -->
+  <div class="modal fade" id="inventoryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <form id="inventoryForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add / Edit Inventory</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <!-- Dynamic form fields injected here -->
+        </div>
+        <div class="modal-footer">
+          <button id="deleteInvBtn" type="button" class="btn btn-danger me-auto" style="display:none;">Delete</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const tableBody = document.querySelector('#inventoryTable tbody');
-    const filterSelect = document.getElementById('filterEquipmentType');
-    const addRowBtn = document.getElementById('addRowBtn');
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('inventoryForm');
+      const tbody = document.querySelector('#inventoryTable tbody');
+      const thead = document.querySelector('#inventoryTable thead');
+      const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+      const deleteBtn = document.getElementById('deleteInvBtn');
+      const equipmentFilter = document.getElementById('equipmentFilter');
+      let data = JSON.parse(localStorage.getItem('inventory')) || [];
+      let editIdx = null;
 
-    let data = JSON.parse(localStorage.getItem('inventoryData')) || [];
+      // Default headers for normal equipment types
+      const defaultHeaders = [
+        "AssetNo", "EquipmentType", "Vendor", "BrandModel", "SerialNumber", 
+        "Location", "StartDate", "EndDate", "LampHour", "DateUpdated", "DurationInUse", "Actions"
+      ];
 
-    // Calculate duration from StartDate to now
-    function calcDuration(startStr) {
-      if (!startStr) return '';
-      const s = new Date(startStr), now = new Date();
-      let years = now.getFullYear() - s.getFullYear();
-      let months = now.getMonth() - s.getMonth();
-      if (months < 0) { years--; months += 12; }
-      return `${years}y ${months}m`;
-    }
+      // Headers for SSOE equipment type
+      const ssoeHeaders = [
+        "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
+        "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate", "Fault", "Actions"
+      ];
 
-    const columns = [
-      'EquipmentType', 'Vendor', 'BrandModel', 'Profile', 'Custodian',
-      'AssetNo', 'SerialNumber', 'Location', 'EndDate', 'StartDate',
-      'Hostname', 'PO Number', 'Cart No', 'SanitiseDate', 
-      'Duration in use', 'Last Updated'
-    ];
+      // Fields for default form
+      const defaultFormFields = [
+        {name: "AssetNo", label: "AssetNo", type: "text", required:true},
+        {name: "EquipmentType", label: "EquipmentType", type: "text"},
+        {name: "Vendor", label: "Vendor", type: "text"},
+        {name: "BrandModel", label: "BrandModel", type: "text"},
+        {name: "SerialNumber", label: "SerialNumber", type: "text"},
+        {name: "Location", label: "Location", type: "text"},
+        {name: "StartDate", label: "StartDate", type: "date"},
+        {name: "EndDate", label: "EndDate", type: "date"},
+        {name: "LampHour", label: "LampHour", type: "text"}
+      ];
 
-    function saveData() {
-      localStorage.setItem('inventoryData', JSON.stringify(data));
-    }
+      // Fields for SSOE form
+      const ssoeFormFields = [
+        {name: "EquipmentType", label: "EquipmentType", type: "text", readonly:true},
+        {name: "Vendor", label: "Vendor", type: "text"},
+        {name: "BrandModel", label: "BrandModel", type: "text"},
+        {name: "Profile", label: "Profile", type: "text"},
+        {name: "Custodian", label: "Custodian", type: "text"},
+        {name: "AssetNo", label: "AssetNo", type: "text", required:true},
+        {name: "SerialNumber", label: "SerialNumber", type: "text"},
+        {name: "Location", label: "Location", type: "text"},
+        {name: "EndDate", label: "EndDate", type: "date"},
+        {name: "StartDate", label: "StartDate", type: "date"},
+        {name: "Hostname", label: "Hostname", type: "text"},
+        {name: "SSOE PO Number", label: "SSOE PO Number", type: "text"},
+        {name: "Cart No", label: "Cart No", type: "text"},
+        {name: "SanitiseDate", label: "SanitiseDate", type: "date"},
+        {name: "Fault", label: "Fault", type: "text"}
+      ];
 
-    function render(filter = '') {
-      tableBody.innerHTML = '';
-      data.forEach((item, idx) => {
-        if (filter && item.EquipmentType !== filter) return;
+      // Helper: Calculate duration in use string
+      function calculateDuration(startInput, endInput) {
+        if (!startInput) return '';
+        const start = new Date(startInput);
+        const end = endInput ? new Date(endInput) : new Date();
+        let years = end.getFullYear() - start.getFullYear();
+        let months = end.getMonth() - start.getMonth();
+        if (months < 0) {
+          years--;
+          months += 12;
+        }
+        if (years < 0) return ''; // invalid
+        return `${years} year(s) ${months} month(s)`;
+      }
+
+      // Render table headers based on current filter selection or all
+      function renderHeaders(equipmentType) {
+        let headers = equipmentType === "SSOE" ? ssoeHeaders : defaultHeaders;
+        thead.innerHTML = '';
         const tr = document.createElement('tr');
+        headers.forEach(hdr => {
+          const th = document.createElement('th');
+          th.textContent = hdr === "Actions" ? "Actions" : hdr;
+          tr.appendChild(th);
+        });
+        thead.appendChild(tr);
+      }
 
-        columns.forEach(col => {
-          const td = document.createElement('td');
-          if (col === 'Duration in use') {
-            td.textContent = calcDuration(item['StartDate']);
-          } else if (col === 'Last Updated') {
-            td.textContent = item['Last Updated'] || '';
-          } else {
-            const input = document.createElement('input');
-            input.type = col.includes('Date') ? 'date' : 'text';
-            input.className = 'form-control form-control-sm';
-            input.value = item[col] || '';
-            input.addEventListener('change', () => {
-              item[col] = input.value;
-              item['Last Updated'] = new Date().toISOString().split('T')[0];
-              saveData();
-              render(filter);
+      // Render rows dynamically with correct columns for each row
+      function renderRows(filteredData, equipmentTypeFilter) {
+        tbody.innerHTML = '';
+        filteredData.forEach((item, i) => {
+          const tr = document.createElement('tr');
+
+          if (item.EquipmentType === "SSOE") {
+            ssoeHeaders.forEach(hdr => {
+              if (hdr === "Actions") {
+                const td = document.createElement('td');
+                td.innerHTML = `
+                  <button class="btn btn-sm btn-primary edit-btn" data-i="${i}">Edit</button>
+                  <button class="btn btn-sm btn-danger del-btn" data-i="${i}">Del</button>`;
+                tr.appendChild(td);
+              } else {
+                const td = document.createElement('td');
+                td.textContent = item[hdr] || '';
+                tr.appendChild(td);
+              }
             });
-            td.appendChild(input);
+          } else {
+            // Default equipment row
+            defaultHeaders.forEach(hdr => {
+              if (hdr === "Actions") {
+                const td = document.createElement('td');
+                td.innerHTML = `
+                  <button class="btn btn-sm btn-primary edit-btn" data-i="${i}">Edit</button>
+                  <button class="btn btn-sm btn-danger del-btn" data-i="${i}">Del</button>`;
+                tr.appendChild(td);
+              } else if (hdr === "DurationInUse") {
+                const td = document.createElement('td');
+                td.textContent = item.DurationInUse || calculateDuration(item.StartDate, item.EndDate);
+                tr.appendChild(td);
+              } else {
+                const td = document.createElement('td');
+                td.textContent = item[hdr] || '';
+                tr.appendChild(td);
+              }
+            });
           }
-          tr.appendChild(td);
+          tbody.appendChild(tr);
         });
+      }
 
-        // Actions cell
-        const actionTd = document.createElement('td');
-        actionTd.innerHTML = `<button class="btn btn-danger btn-sm">Delete</button>`;
-        actionTd.querySelector('button').addEventListener('click', () => {
-          if (confirm('Delete this item?')) {
-            data.splice(idx, 1);
-            saveData();
-            render(filter);
+      // Render entire table and filter dropdown
+      function render() {
+        const filterVal = equipmentFilter.value;
+        let filtered = filterVal ? data.filter(d => d.EquipmentType === filterVal) : data;
+
+        // Pick headers based on filter
+        if (filterVal === "SSOE") {
+          renderHeaders("SSOE");
+        } else {
+          renderHeaders(null);
+        }
+
+        renderRows(filtered, filterVal);
+
+        // Update filter dropdown with unique equipment types from data
+        const types = Array.from(new Set(data.map(d => d.EquipmentType).filter(Boolean)));
+        equipmentFilter.innerHTML = `<option value="">All</option>` +
+          types.map(t => `<option value="${t}" ${t === filterVal ? "selected" : ""}>${t}</option>`).join('');
+      }
+
+      // Dynamically build the modal form inputs based on equipment type
+      function buildFormFields(equipmentType, values = {}) {
+        const container = form.querySelector('.modal-body');
+        container.innerHTML = ''; // clear current fields
+
+        const fields = equipmentType === "SSOE" ? ssoeFormFields : defaultFormFields;
+
+        fields.forEach(f => {
+          const col = document.createElement('div');
+          col.className = 'col-md-6';
+
+          const label = document.createElement('label');
+          label.className = 'form-label';
+          label.textContent = f.label;
+          label.setAttribute('for', f.name);
+
+          let input;
+          if(f.type === "date"){
+            input = document.createElement('input');
+            input.type = 'date';
+            input.className = 'form-control';
+            input.name = f.name;
+            if (f.readonly) input.readOnly = true;
+            if (f.required) input.required = true;
+            input.value = values[f.name] || '';
+          } else {
+            input = document.createElement('input');
+            input.type = f.type || 'text';
+            input.className = 'form-control';
+            input.name = f.name;
+            if (f.readonly) input.readOnly = true;
+            if (f.required) input.required = true;
+            input.value = values[f.name] || '';
           }
-        });
-        tr.appendChild(actionTd);
 
-        tableBody.appendChild(tr);
+          col.appendChild(label);
+          col.appendChild(input);
+          container.appendChild(col);
+        });
+      }
+
+      function clearForm() {
+        form.reset();
+        editIdx = null;
+        deleteBtn.style.display = 'none';
+        // default to defaultFormFields
+        buildFormFields('', {});
+      }
+
+      // Fill form fields with data object and rebuild form fields dynamically for SSOE or default
+      function fillForm(it) {
+        const eqType = it.EquipmentType || '';
+        buildFormFields(eqType, it);
+      }
+
+      // Open modal for new entry
+      document.querySelector('button[data-bs-target="#inventoryModal"]').addEventListener('click', () => {
+        clearForm();
+        modal.show();
       });
 
-      // Refresh filter options
-      const types = Array.from(new Set(data.map(d => d.EquipmentType).filter(Boolean)));
-      filterSelect.innerHTML = `<option value="">All</option>` +
-        types.map(t => `<option${t === filter ? ' selected' : ''}>${t}</option>`).join('');
-    }
+      // On form input change, if EquipmentType changed, rebuild form fields accordingly
+      form.addEventListener('input', e => {
+        if (e.target.name === 'EquipmentType') {
+          const eqType = e.target.value.trim();
+          // preserve currently entered AssetNo if any (or blank)
+          const currentValues = {};
+          for (const el of form.elements) {
+            if (el.name && el.type !== 'submit' && el.name !== 'EquipmentType') {
+              currentValues[el.name] = el.value;
+            }
+          }
+          buildFormFields(eqType, currentValues);
+          // re-set EquipmentType since buildFormFields resets inputs
+          form.elements['EquipmentType'].value = eqType;
+        }
+      });
 
-    filterSelect.addEventListener('change', () => render(filterSelect.value));
+      tbody.addEventListener('click', e => {
+        const btn = e.target;
+        const i = btn.dataset.i;
+        if (btn.classList.contains('edit-btn')) {
+          editIdx = i;
+          fillForm(data[i]);
+          deleteBtn.style.display = 'inline-block';
+          modal.show();
+        }
+        if (btn.classList.contains('del-btn') && confirm('Delete this record?')) {
+          data.splice(i, 1);
+          localStorage.setItem('inventory', JSON.stringify(data));
+          render();
+        }
+      });
 
-    addRowBtn.addEventListener('click', () => {
-      const newItem = columns.reduce((o, c) => {
-        o[c] = '';
-        return o;
-      }, {});
-      data.push(newItem);
-      saveData();
-      render(filterSelect.value);
+      deleteBtn.addEventListener('click', () => {
+        if (editIdx !== null && confirm('Are you sure you want to delete this item?')) {
+          data.splice(editIdx, 1);
+          localStorage.setItem('inventory', JSON.stringify(data));
+          render();
+          modal.hide();
+          clearForm();
+        }
+      });
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        // Gather form data into an object
+        const obj = {};
+        for (const el of form.elements) {
+          if (el.name && el.type !== 'submit' && el.type !== 'button') {
+            obj[el.name] = el.value.trim();
+          }
+        }
+        // Calculate DurationInUse only for default equipment types (not SSOE)
+        if (obj.EquipmentType !== "SSOE") {
+          obj.DurationInUse = calculateDuration(obj.StartDate, obj.EndDate);
+          obj.DateUpdated = new Date().toISOString().split('T')[0];
+        } else {
+          obj.DurationInUse = "";
+          obj.DateUpdated = ""; // or set something else if needed
+        }
+
+        if (editIdx === null) {
+          data.push(obj);
+        } else {
+          data[editIdx] = obj;
+        }
+
+        localStorage.setItem('inventory', JSON.stringify(data));
+        render();
+        modal.hide();
+        clearForm();
+      });
+
+      equipmentFilter.addEventListener('change', render);
+
+      // Initial render
+      render();
     });
-
-    // Initial render
-    render(filterSelect.value);
   </script>
 </body>
 </html>
