@@ -1,140 +1,165 @@
-// inventory.js
-
-const equipmentTypes = [
-  'SSOE', 'Projector', 'Projector Screen', 'Touch Panel', 'Visualiser', 'SMax',
-  'Macbook', 'Portable HDD', 'TV', 'Monitor', 'OMR'
-];
-
 const headers = [
-  'EquipmentType', 'Vendor', 'BrandModel', 'Profile', 'Custodian', 'AssetNo',
-  'SerialNumber', 'Location', 'EndDate', 'StartDate', 'Hostname',
-  'SSOE PO Number', 'Cart No', 'SanitiseDate', 'Duration in use',
-  'Lamp Hour', 'DateUpdated', 'Actions'
+  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
+  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate",
+  "Duration in use", "Lamp Hour", "DateUpdated", "Actions"
 ];
 
-let inventory = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+const equipmentTypeColors = {
+  SSOE: "#e8f0fe",
+  Projector: "#fff3cd",
+  "Projector Screen": "#f8d7da",
+  "Touch Panel": "#d1ecf1",
+  Visualiser: "#e2e3e5",
+  SMax: "#fefefe",
+  Macbook: "#d4edda",
+  "Portable HDD": "#cce5ff",
+  TV: "#f5c6cb",
+  Monitor: "#c3e6cb",
+  OMR: "#f8d7da"
+};
 
-const formatDate = (dateStr) => {
+let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
+
+function formatDate(dateStr) {
   if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-};
-
-const calculateDuration = (startDate) => {
-  if (!startDate) return '';
-  const start = new Date(startDate);
-  const now = new Date();
-  let years = now.getFullYear() - start.getFullYear();
-  let months = now.getMonth() - start.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-  return `${years}y ${months}m`;
-};
-
-function saveData() {
-  localStorage.setItem('inventoryData', JSON.stringify(inventory));
+  const date = new Date(dateStr);
+  if (isNaN(date)) return dateStr;
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric'
+  }).replace(/ /g, ' ');
 }
 
-function renderTable() {
-  const tbody = document.querySelector('#inventory-table tbody');
-  tbody.innerHTML = '';
-  inventory.forEach((item, index) => {
-    const row = document.createElement('tr');
-    row.classList.add('category-' + item.EquipmentType.replace(/\s+/g, '-').toLowerCase());
+function saveData() {
+  localStorage.setItem("inventoryData", JSON.stringify(inventory));
+}
 
-    headers.forEach(header => {
-      const td = document.createElement('td');
-      if (header === 'Duration in use') {
-        td.textContent = calculateDuration(item['StartDate']);
-      } else if (['EndDate', 'StartDate', 'DateUpdated'].includes(header)) {
-        td.textContent = formatDate(item[header]);
-      } else if (header === 'Actions') {
-        td.innerHTML = `
-          <button class="btn btn-sm btn-primary" onclick="editItem(${index})">Edit</button>
+function buildTable() {
+  const tableBody = document.querySelector("#inventory-table tbody");
+  tableBody.innerHTML = "";
+
+  inventory.forEach((item, index) => {
+    const row = document.createElement("tr");
+
+    const color = equipmentTypeColors[item.EquipmentType] || "";
+    if (color) row.style.backgroundColor = color;
+
+    headers.forEach((header) => {
+      const cell = document.createElement("td");
+      if (["EndDate", "StartDate", "DateUpdated"].includes(header)) {
+        cell.textContent = formatDate(item[header]);
+      } else if (header === "Actions") {
+        cell.innerHTML = `
+          <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
         `;
       } else {
-        td.textContent = item[header] || '';
+        cell.textContent = item[header] || "";
       }
-      row.appendChild(td);
+      row.appendChild(cell);
     });
-    tbody.appendChild(row);
+
+    tableBody.appendChild(row);
   });
 }
 
-function openForm(item = {}, index = null) {
-  const form = document.getElementById('inventory-form');
-  form.innerHTML = '';
+function openForm(editIndex = null) {
+  const modalTitle = document.getElementById("modal-title");
+  const form = document.getElementById("inventory-form");
+  form.innerHTML = "";
 
-  headers.forEach(header => {
-    if (header === 'Actions' || header === 'Duration in use') return;
-    const div = document.createElement('div');
-    div.className = 'mb-3';
-    const label = document.createElement('label');
-    label.className = 'form-label';
+  modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
+
+  const values = editIndex !== null ? inventory[editIndex] : {};
+
+  headers.forEach((header) => {
+    if (header === "Actions") return;
+
+    const formGroup = document.createElement("div");
+    formGroup.className = "mb-2";
+
+    const label = document.createElement("label");
     label.textContent = header;
-    const input = document.createElement(
-      header === 'EquipmentType' ? 'select' : 'input'
-    );
-    input.name = header;
-    input.className = 'form-control';
-    input.value = item[header] || '';
-    if (header === 'EquipmentType') {
-      equipmentTypes.forEach(type => {
-        const opt = document.createElement('option');
-        opt.value = type;
-        opt.textContent = type;
-        if (opt.value === item[header]) opt.selected = true;
-        input.appendChild(opt);
+    label.className = "form-label";
+    formGroup.appendChild(label);
+
+    let input;
+
+    if (header === "EquipmentType") {
+      input = document.createElement("select");
+      input.className = "form-select";
+      input.name = header;
+
+      const options = [
+        "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
+        "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
+      ];
+
+      options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt;
+        option.textContent = opt || "Select EquipmentType";
+        if (values[header] === opt) option.selected = true;
+        input.appendChild(option);
       });
-    } else if (header.toLowerCase().includes('date')) {
-      input.type = 'date';
-      if (item[header]) input.value = new Date(item[header]).toISOString().split('T')[0];
+    } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
+      input = document.createElement("input");
+      input.type = "date";
+      input.className = "form-control";
+      input.name = header;
+      input.value = values[header] || "";
     } else {
-      input.type = 'text';
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-control";
+      input.name = header;
+      input.value = values[header] || "";
     }
-    div.appendChild(label);
-    div.appendChild(input);
-    form.appendChild(div);
+
+    formGroup.appendChild(input);
+    form.appendChild(formGroup);
   });
 
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'btn btn-success';
-  saveBtn.textContent = 'Save';
-  saveBtn.onclick = (e) => {
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "btn btn-success";
+  saveButton.textContent = "Save";
+  form.appendChild(saveButton);
+
+  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  modal.show();
+
+  form.onsubmit = function (e) {
     e.preventDefault();
     const formData = new FormData(form);
-    const newItem = {};
-    headers.forEach(h => {
-      if (h !== 'Actions' && h !== 'Duration in use') {
-        newItem[h] = formData.get(h);
-      }
+    const item = {};
+    headers.forEach((header) => {
+      if (header !== "Actions") item[header] = formData.get(header) || "";
     });
-    newItem['DateUpdated'] = new Date().toISOString();
-    if (index !== null) inventory[index] = newItem;
-    else inventory.push(newItem);
-    saveData();
-    renderTable();
-    bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
-  };
 
-  form.appendChild(saveBtn);
-  new bootstrap.Modal(document.getElementById('inventoryModal')).show();
+    if (editIndex !== null) {
+      inventory[editIndex] = item;
+    } else {
+      inventory.push(item);
+    }
+
+    saveData();
+    buildTable();
+    modal.hide();
+  };
 }
 
 function editItem(index) {
-  openForm(inventory[index], index);
+  openForm(index);
 }
 
 function deleteItem(index) {
-  if (confirm('Are you sure you want to delete this item?')) {
+  if (confirm("Are you sure you want to delete this item?")) {
     inventory.splice(index, 1);
     saveData();
-    renderTable();
+    buildTable();
   }
 }
 
-document.getElementById('add-item-btn').addEventListener('click', () => openForm());
-document.addEventListener('DOMContentLoaded', renderTable);
+document.getElementById("add-item-btn").addEventListener("click", () => openForm());
+
+document.addEventListener("DOMContentLoaded", buildTable);
