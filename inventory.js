@@ -1,125 +1,165 @@
-// inventory.js
-
 const headers = [
-  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
-  "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
-  "SSOE PO Number", "Cart No", "SanitiseDate", "Duration in use",
-  "Lamp Hour", "DateUpdated", "Actions"
+  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
+  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate",
+  "Duration in use", "Lamp Hour", "DateUpdated", "Actions"
 ];
 
-const table = document.getElementById("inventory-table");
-const tbody = table.querySelector("tbody");
-const addForm = document.getElementById("add-form");
+const equipmentTypeColors = {
+  SSOE: "#e8f0fe",
+  Projector: "#fff3cd",
+  "Projector Screen": "#f8d7da",
+  "Touch Panel": "#d1ecf1",
+  Visualiser: "#e2e3e5",
+  SMax: "#fefefe",
+  Macbook: "#d4edda",
+  "Portable HDD": "#cce5ff",
+  TV: "#f5c6cb",
+  Monitor: "#c3e6cb",
+  OMR: "#f8d7da"
+};
 
-function saveToLocalStorage() {
-  const rows = Array.from(tbody.querySelectorAll("tr"));
-  const data = rows.map(row => {
-    const cells = row.querySelectorAll("td");
-    const item = {};
-    headers.forEach((header, index) => {
-      if (header !== "Actions") {
-        item[header] = cells[index].textContent;
+let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date)) return dateStr;
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric'
+  }).replace(/ /g, ' ');
+}
+
+function saveData() {
+  localStorage.setItem("inventoryData", JSON.stringify(inventory));
+}
+
+function buildTable() {
+  const tableBody = document.querySelector("#inventory-table tbody");
+  tableBody.innerHTML = "";
+
+  inventory.forEach((item, index) => {
+    const row = document.createElement("tr");
+
+    const color = equipmentTypeColors[item.EquipmentType] || "";
+    if (color) row.style.backgroundColor = color;
+
+    headers.forEach((header) => {
+      const cell = document.createElement("td");
+      if (["EndDate", "StartDate", "DateUpdated"].includes(header)) {
+        cell.textContent = formatDate(item[header]);
+      } else if (header === "Actions") {
+        cell.innerHTML = `
+          <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
+        `;
+      } else {
+        cell.textContent = item[header] || "";
       }
+      row.appendChild(cell);
     });
-    return item;
+
+    tableBody.appendChild(row);
   });
-  localStorage.setItem("inventoryData", JSON.stringify(data));
 }
 
-function loadFromLocalStorage() {
-  const data = JSON.parse(localStorage.getItem("inventoryData")) || [];
-  data.forEach(item => addRow(item));
-}
+function openForm(editIndex = null) {
+  const modalTitle = document.getElementById("modal-title");
+  const form = document.getElementById("inventory-form");
+  form.innerHTML = "";
 
-function addRow(item) {
-  const row = document.createElement("tr");
-  const equipmentType = (item["EquipmentType"] || "default").toLowerCase().replace(/\s+/g, "-");
-  row.classList.add(`equipment-${equipmentType}`);
+  modalTitle.textContent = editIndex === null ? "Add Inventory Item" : "Edit Inventory Item";
 
-  headers.forEach(header => {
-    const cell = document.createElement("td");
-    if (header === "Actions") {
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "Edit";
-      editBtn.className = "btn btn-sm btn-primary me-1";
-      editBtn.onclick = () => editRow(row);
+  const values = editIndex !== null ? inventory[editIndex] : {};
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "Delete";
-      deleteBtn.className = "btn btn-sm btn-danger";
-      deleteBtn.onclick = () => deleteRow(row);
+  headers.forEach((header) => {
+    if (header === "Actions") return;
 
-      cell.appendChild(editBtn);
-      cell.appendChild(deleteBtn);
+    const formGroup = document.createElement("div");
+    formGroup.className = "mb-2";
+
+    const label = document.createElement("label");
+    label.textContent = header;
+    label.className = "form-label";
+    formGroup.appendChild(label);
+
+    let input;
+
+    if (header === "EquipmentType") {
+      input = document.createElement("select");
+      input.className = "form-select";
+      input.name = header;
+
+      const options = [
+        "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
+        "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
+      ];
+
+      options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt;
+        option.textContent = opt || "Select EquipmentType";
+        if (values[header] === opt) option.selected = true;
+        input.appendChild(option);
+      });
+    } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
+      input = document.createElement("input");
+      input.type = "date";
+      input.className = "form-control";
+      input.name = header;
+      input.value = values[header] || "";
     } else {
-      cell.textContent = item[header] || "";
-      cell.contentEditable = true;
-      cell.oninput = () => {
-        updateDurationInUse(row);
-        updateDateUpdated(row);
-        saveToLocalStorage();
-      };
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-control";
+      input.name = header;
+      input.value = values[header] || "";
     }
-    row.appendChild(cell);
+
+    formGroup.appendChild(input);
+    form.appendChild(formGroup);
   });
 
-  tbody.appendChild(row);
-  saveToLocalStorage();
-}
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "btn btn-success";
+  saveButton.textContent = "Save";
+  form.appendChild(saveButton);
 
-function editRow(row) {
-  row.querySelectorAll("td").forEach(cell => {
-    if (!cell.querySelector("button")) cell.contentEditable = true;
-  });
-}
+  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  modal.show();
 
-function deleteRow(row) {
-  row.remove();
-  saveToLocalStorage();
-}
+  form.onsubmit = function (e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const item = {};
+    headers.forEach((header) => {
+      if (header !== "Actions") item[header] = formData.get(header) || "";
+    });
 
-addForm.addEventListener("submit", function (e) {
-  e.preventDefault();
-  const formData = new FormData(addForm);
-  const newItem = {};
-  headers.forEach(header => {
-    if (header !== "Actions") {
-      newItem[header] = formData.get(header) || "";
+    if (editIndex !== null) {
+      inventory[editIndex] = item;
+    } else {
+      inventory.push(item);
     }
-  });
-  updateCalculatedFields(newItem);
-  addRow(newItem);
-  addForm.reset();
-});
 
-function updateCalculatedFields(item) {
-  item["Duration in use"] = calculateDuration(item["StartDate"]);
-  item["DateUpdated"] = new Date().toISOString().split("T")[0];
+    saveData();
+    buildTable();
+    modal.hide();
+  };
 }
 
-function updateDurationInUse(row) {
-  const cells = row.querySelectorAll("td");
-  const startDateIndex = headers.indexOf("StartDate");
-  const durationIndex = headers.indexOf("Duration in use");
-  const startDate = cells[startDateIndex].textContent;
-  cells[durationIndex].textContent = calculateDuration(startDate);
+function editItem(index) {
+  openForm(index);
 }
 
-function updateDateUpdated(row) {
-  const dateUpdatedIndex = headers.indexOf("DateUpdated");
-  row.querySelectorAll("td")[dateUpdatedIndex].textContent = new Date().toISOString().split("T")[0];
+function deleteItem(index) {
+  if (confirm("Are you sure you want to delete this item?")) {
+    inventory.splice(index, 1);
+    saveData();
+    buildTable();
+  }
 }
 
-function calculateDuration(startDate) {
-  if (!startDate) return "";
-  const start = new Date(startDate);
-  const now = new Date();
-  const diffYears = now.getFullYear() - start.getFullYear();
-  const diffMonths = now.getMonth() - start.getMonth();
-  const totalMonths = diffYears * 12 + diffMonths;
-  const years = Math.floor(totalMonths / 12);
-  const months = totalMonths % 12;
-  return `${years}y ${months}m`;
-}
+document.getElementById("add-item-btn").addEventListener("click", () => openForm());
 
-document.addEventListener("DOMContentLoaded", loadFromLocalStorage);
+document.addEventListener("DOMContentLoaded", buildTable);
