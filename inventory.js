@@ -43,8 +43,8 @@ function calculateDuration(startDateStr) {
 }
 
 function getTodayDate() {
-  const today = new Date();
-  return today.toISOString().split("T")[0];
+  const now = new Date();
+  return now.toISOString().slice(0, 10);
 }
 
 function saveData() {
@@ -124,19 +124,15 @@ function openForm(editIndex = null) {
         if (values[header] === opt) option.selected = true;
         input.appendChild(option);
       });
-    } else if (["EndDate", "StartDate", "SanitiseDate"].includes(header)) {
+    } else if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
       input = document.createElement("input");
       input.type = "date";
       input.className = "form-control";
       input.name = header;
       input.value = values[header] || "";
-    } else if (header === "DateUpdated") {
-      input = document.createElement("input");
-      input.type = "date";
-      input.className = "form-control";
-      input.name = header;
-      input.value = getTodayDate(); // Always auto-set today's date
-      input.disabled = true;
+      if(header === "DateUpdated") {
+        input.disabled = true;  // disable editing DateUpdated
+      }
     } else {
       input = document.createElement("input");
       input.type = "text";
@@ -159,17 +155,12 @@ function openForm(editIndex = null) {
     e.preventDefault();
     const formData = new FormData(form);
     const item = {};
-
     headers.forEach((header) => {
-      if (header === "Actions") return;
-      if (header === "DateUpdated") {
-        item[header] = getTodayDate();
-      } else {
-        item[header] = formData.get(header) || "";
-      }
+      if (header !== "Actions") item[header] = formData.get(header) || "";
     });
 
-    item["Duration in use"] = calculateDuration(item["StartDate"]);
+    // Auto update DateUpdated to today on save
+    item["DateUpdated"] = getTodayDate();
 
     if (editIndex !== null) {
       inventory[editIndex] = item;
