@@ -23,7 +23,7 @@
 
 /* Table header with black background and white text */
 .inventory-table thead th {
-  background-color: black;
+  background-color: blue;
   color: white;
   border: 1px solid black !important;
 }
