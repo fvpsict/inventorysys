@@ -42,6 +42,11 @@ function calculateDuration(startDateStr) {
   return `${years}y ${months}m`;
 }
 
+function getTodayDate() {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
+
 function saveData() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
@@ -80,11 +85,6 @@ function buildTable() {
 
     tableBody.appendChild(row);
   });
-}
-
-function getTodayDate() {
-  const today = new Date();
-  return today.toISOString().split("T")[0]; // YYYY-MM-DD for date input
 }
 
 function openForm(editIndex = null) {
@@ -130,9 +130,8 @@ function openForm(editIndex = null) {
       input.className = "form-control";
       input.name = header;
       input.value = values[header] || "";
-      if (header === "DateUpdated" && editIndex === null) {
-        // For new item, auto set DateUpdated to today
-        input.value = getTodayDate();
+      if (header === "DateUpdated") {
+        input.readOnly = true;  // DateUpdated is auto set
       }
     } else {
       input = document.createElement("input");
@@ -146,12 +145,6 @@ function openForm(editIndex = null) {
     form.appendChild(formGroup);
   });
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "btn btn-success";
-  saveButton.textContent = "Save";
-  form.appendChild(saveButton);
-
   form.onsubmit = function (e) {
     e.preventDefault();
     const formData = new FormData(form);
@@ -160,7 +153,7 @@ function openForm(editIndex = null) {
       if (header !== "Actions") item[header] = formData.get(header) || "";
     });
 
-    // Always update DateUpdated to today on save
+    // Auto update DateUpdated
     item["DateUpdated"] = getTodayDate();
 
     if (editIndex !== null) {
