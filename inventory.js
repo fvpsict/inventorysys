@@ -13,15 +13,18 @@ const inventoryForm = document.getElementById("inventory-modal-form");
 let inventoryData = [];
 let editingIndex = null; // null means adding new
 
+// Load data from localStorage
 function loadInventory() {
   const storedData = localStorage.getItem(STORAGE_KEY);
   inventoryData = storedData ? JSON.parse(storedData) : [];
 }
 
+// Save data to localStorage
 function saveInventory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
 }
 
+// Calculate duration between dates in years and months
 function calculateDuration(startDateStr, endDateStr = null) {
   if (!startDateStr) return "";
 
@@ -45,6 +48,7 @@ function calculateDuration(startDateStr, endDateStr = null) {
   return result.trim();
 }
 
+// Render the inventory table rows based on current filter and search
 function renderInventory() {
   const filterType = filterEquipmentType.value.toLowerCase();
   const searchText = searchInventory.value.trim().toLowerCase();
@@ -89,6 +93,7 @@ function renderInventory() {
     inventoryTableBody.appendChild(tr);
   });
 
+  // Attach event listeners for edit/delete buttons
   document.querySelectorAll(".edit-btn").forEach(btn =>
     btn.addEventListener("click", onEditItem)
   );
@@ -97,13 +102,26 @@ function renderInventory() {
   );
 }
 
+// Clear and reset modal form fields
 function resetForm() {
   inventoryForm.reset();
-  inventoryForm["DateUpdated"].value = "";
   editingIndex = null;
   document.getElementById("inventoryModalLabel").textContent = "Add Inventory Item";
+  // Set DateUpdated to today for new items
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  inventoryForm["DateUpdated"].value = `${yyyy}-${mm}-${dd}`;
 }
 
+// Handle Add Item button click
+addItemBtn.addEventListener("click", () => {
+  resetForm();
+  inventoryModal.show();
+});
+
+// Fill form fields with data for editing
 function fillForm(item) {
   Object.keys(item).forEach(key => {
     if (inventoryForm.elements[key]) {
@@ -113,24 +131,16 @@ function fillForm(item) {
   document.getElementById("inventoryModalLabel").textContent = "Edit Inventory Item";
 }
 
-// Add Item button handler
-addItemBtn.addEventListener("click", () => {
-  resetForm();
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  inventoryForm["DateUpdated"].value = `${yyyy}-${mm}-${dd}`;
-  inventoryModal.show();
-});
-
+// Handle Edit button click
 function onEditItem(e) {
   const index = +e.target.dataset.index;
   editingIndex = index;
-  fillForm(inventoryData[index]);
+  const item = inventoryData[index];
+  fillForm(item);
   inventoryModal.show();
 }
 
+// Handle Delete button click
 function onDeleteItem(e) {
   const index = +e.target.dataset.index;
   if (confirm("Are you sure you want to delete this item?")) {
@@ -140,6 +150,7 @@ function onDeleteItem(e) {
   }
 }
 
+// Handle form submission for add/edit
 inventoryForm.addEventListener("submit", e => {
   e.preventDefault();
 
@@ -149,7 +160,7 @@ inventoryForm.addEventListener("submit", e => {
     item[key] = value.trim();
   }
 
-  // Auto-set DateUpdated to today
+  // Update DateUpdated to current date in YYYY-MM-DD format on save
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, "0");
@@ -157,8 +168,10 @@ inventoryForm.addEventListener("submit", e => {
   item.DateUpdated = `${yyyy}-${mm}-${dd}`;
 
   if (editingIndex !== null) {
+    // Editing existing item
     inventoryData[editingIndex] = item;
   } else {
+    // Adding new item
     inventoryData.push(item);
   }
 
@@ -167,8 +180,10 @@ inventoryForm.addEventListener("submit", e => {
   inventoryModal.hide();
 });
 
+// Filter and Search handlers
 filterEquipmentType.addEventListener("change", renderInventory);
 searchInventory.addEventListener("input", renderInventory);
 
+// Initialize
 loadInventory();
 renderInventory();
