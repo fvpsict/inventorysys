@@ -1,235 +1,170 @@
- // fault-report.js
+document.addEventListener("DOMContentLoaded", () => {
+  const faultForm = document.getElementById("faultForm");
+  const faultModalEl = document.getElementById("faultModal");
+  const faultModal = new bootstrap.Modal(faultModalEl);
+  const faultTableBody = document.querySelector("#faultTable tbody");
+  const deleteFaultBtn = document.getElementById("deleteFaultBtn");
+  const addFaultBtn = document.getElementById("addFaultBtn");
 
-const STORAGE_KEY_FAULT = "fault_report_data";
-const EQUIPMENT_TYPES = ["Projector", "Visualiser", "Projector Screen"];
-const STATUS_OPTIONS = ["Open", "In Progress", "Resolved", "Closed"];
+  // Dropdown options (you can also define these in your HTML)
+  const equipmentTypeOptions = ["Projector", "Projector Screen", "Visualiser"];
+  const statusOptions = ["Pending Vendor", "Resolved", "InProgress"];
 
-let faultData = [];
-let filteredEquipmentType = "All";
+  let faults = JSON.parse(localStorage.getItem("faults")) || [];
+  let editIndex = null; // Index of fault being edited; null if adding new
 
-function loadFaultData() {
-  const stored = localStorage.getItem(STORAGE_KEY_FAULT);
-  faultData = stored ? JSON.parse(stored) : [];
-}
+  // Populate dropdowns in the form (if you want dynamic)
+  function populateDropdowns() {
+    const equipSelect = faultForm.EquipmentType;
+    const statusSelect = faultForm.Status;
 
-function saveFaultData() {
-  localStorage.setItem(STORAGE_KEY_FAULT, JSON.stringify(faultData));
-}
+    equipSelect.innerHTML = equipmentTypeOptions
+      .map(opt => `<option value="${opt}">${opt}</option>`)
+      .join("");
 
-function renderEquipmentTypeFilter() {
-  const select = document.getElementById("filter-equipmenttype");
-  if (!select) return;
+    statusSelect.innerHTML = statusOptions
+      .map(opt => `<option value="${opt}">${opt}</option>`)
+      .join("");
+  }
 
-  select.innerHTML = `<option value="All">All Equipment Types</option>` +
-    EQUIPMENT_TYPES.map(type => `<option value="${type}">${type}</option>`).join("");
-  select.value = filteredEquipmentType;
+  populateDropdowns();
 
-  select.onchange = () => {
-    filteredEquipmentType = select.value;
-    renderTableRows();
-  };
-}
-
-function renderTableRows() {
-  const tbody = document.querySelector("#fault-table tbody");
-  if (!tbody) return;
-
-  tbody.innerHTML = "";
-
-  let filtered = filteredEquipmentType === "All"
-    ? faultData
-    : faultData.filter(f => f.EquipmentType === filteredEquipmentType);
-
-  filtered.forEach((item, idx) => {
-    const tr = document.createElement("tr");
-
-    // Columns: EquipmentType, Vendor, BrandModel, AssetNo, SerialNumber, EndDate, StartDate, Room, Fault, Status, Actions
-
-    ["EquipmentType", "Vendor", "BrandModel", "AssetNo", "SerialNumber", "EndDate", "StartDate", "Room"].forEach(key => {
-      const td = document.createElement("td");
-      td.textContent = item[key] || "";
-      tr.appendChild(td);
+  // Render fault table rows
+  function renderTable() {
+    faultTableBody.innerHTML = "";
+    faults.forEach((fault, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${fault.EquipmentType || ""}</td>
+        <td>${fault.Vendor || ""}</td>
+        <td>${fault.BrandModel || ""}</td>
+        <td>${fault.AssetNo || ""}</td>
+        <td>${fault.SerialNumber || ""}</td>
+        <td>${fault.EndDate || ""}</td>
+        <td>${fault.StartDate || ""}</td>
+        <td>${fault.Room || ""}</td>
+        <td>${fault.RoomNumber || ""}</td>
+        <td>${fault.Level || ""}</td>
+        <td>${fault.Lamphour || ""}</td>
+        <td>${fault.Fault || ""}</td>
+        <td>${fault.Status || ""}</td>
+        <td>${fault.DateResolved || ""}</td>
+        <td>${fault.ActionTaken || ""}</td>
+        <td>
+          <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
+        </td>
+      `;
+      faultTableBody.appendChild(tr);
     });
+  }
 
-    // Fault editable input
-    let tdFault = document.createElement("td");
-    let inputFault = document.createElement("input");
-    inputFault.type = "text";
-    inputFault.value = item.Fault || "";
-    inputFault.className = "form-control form-control-sm";
-    inputFault.onchange = e => {
-      faultData[idx].Fault = e.target.value.trim();
-      saveFaultData();
-    };
-    tdFault.appendChild(inputFault);
-    tr.appendChild(tdFault);
+  // Clear and reset the form for adding new
+  function clearForm() {
+    faultForm.reset();
+    editIndex = null;
+    deleteFaultBtn.style.display = "none";
+  }
 
-    // Status dropdown inline editable
-    let tdStatus = document.createElement("td");
-    let selectStatus = document.createElement("select");
-    selectStatus.className = "form-select form-select-sm";
-    STATUS_OPTIONS.forEach(status => {
-      let option = document.createElement("option");
-      option.value = status;
-      option.textContent = status;
-      if (item.Status === status) option.selected = true;
-      selectStatus.appendChild(option);
-    });
-    selectStatus.onchange = e => {
-      faultData[idx].Status = e.target.value;
-      saveFaultData();
-      renderTableRows();
-    };
-    tdStatus.appendChild(selectStatus);
-    tr.appendChild(tdStatus);
+  // Fill form fields with existing fault data for editing
+  function fillForm(fault) {
+    faultForm.EquipmentType.value = fault.EquipmentType || "";
+    faultForm.Vendor.value = fault.Vendor || "";
+    faultForm.BrandModel.value = fault.BrandModel || "";
+    faultForm.AssetNo.value = fault.AssetNo || "";
+    faultForm.SerialNumber.value = fault.SerialNumber || "";
+    faultForm.EndDate.value = fault.EndDate || "";
+    faultForm.StartDate.value = fault.StartDate || "";
+    faultForm.Room.value = fault.Room || "";
+    faultForm.RoomNumber.value = fault.RoomNumber || "";
+    faultForm.Level.value = fault.Level || "";
+    faultForm.Lamphour.value = fault.Lamphour || "";
+    faultForm.Fault.value = fault.Fault || "";
+    faultForm.Status.value = fault.Status || "";
+    faultForm.DateResolved.value = fault.DateResolved || "";
+    faultForm.ActionTaken.value = fault.ActionTaken || "";
+  }
 
-    // Actions - Delete button
-    let tdActions = document.createElement("td");
-    let btnDel = document.createElement("button");
-    btnDel.textContent = "Delete";
-    btnDel.className = "btn btn-sm btn-danger";
-    btnDel.onclick = () => {
-      if (confirm("Delete this fault report?")) {
-        faultData.splice(idx, 1);
-        saveFaultData();
-        renderTableRows();
+  // Save faults array to localStorage
+  function saveFaults() {
+    localStorage.setItem("faults", JSON.stringify(faults));
+  }
+
+  // Open modal for adding new fault
+  addFaultBtn.addEventListener("click", () => {
+    clearForm();
+    faultModal.show();
+  });
+
+  // Table event delegation for Edit and Delete buttons
+  faultTableBody.addEventListener("click", (e) => {
+    const target = e.target;
+    const idx = target.getAttribute("data-index");
+    if (!idx) return;
+
+    if (target.classList.contains("edit-btn")) {
+      editIndex = parseInt(idx);
+      fillForm(faults[editIndex]);
+      deleteFaultBtn.style.display = "inline-block";
+      faultModal.show();
+    }
+
+    if (target.classList.contains("delete-btn")) {
+      if (confirm("Are you sure you want to delete this fault?")) {
+        faults.splice(parseInt(idx), 1);
+        saveFaults();
+        renderTable();
       }
+    }
+  });
+
+  // Delete button inside modal
+  deleteFaultBtn.addEventListener("click", () => {
+    if (editIndex !== null) {
+      if (confirm("Delete this fault?")) {
+        faults.splice(editIndex, 1);
+        saveFaults();
+        renderTable();
+        faultModal.hide();
+        clearForm();
+      }
+    }
+  });
+
+  // Handle form submit (Add or Edit)
+  faultForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const newFault = {
+      EquipmentType: faultForm.EquipmentType.value,
+      Vendor: faultForm.Vendor.value.trim(),
+      BrandModel: faultForm.BrandModel.value.trim(),
+      AssetNo: faultForm.AssetNo.value.trim(),
+      SerialNumber: faultForm.SerialNumber.value.trim(),
+      EndDate: faultForm.EndDate.value,
+      StartDate: faultForm.StartDate.value,
+      Room: faultForm.Room.value.trim(),
+      RoomNumber: faultForm.RoomNumber.value.trim(),
+      Level: faultForm.Level.value.trim(),
+      Lamphour: faultForm.Lamphour.value.trim(),
+      Fault: faultForm.Fault.value.trim(),
+      Status: faultForm.Status.value,
+      DateResolved: faultForm.DateResolved.value,
+      ActionTaken: faultForm.ActionTaken.value.trim(),
     };
-    tdActions.appendChild(btnDel);
-    tr.appendChild(tdActions);
 
-    tbody.appendChild(tr);
+    if (editIndex === null) {
+      faults.push(newFault);
+    } else {
+      faults[editIndex] = newFault;
+    }
+
+    saveFaults();
+    renderTable();
+    faultModal.hide();
+    clearForm();
   });
-}
 
-function showAddFaultModal() {
-  const modalEl = document.getElementById("faultModal");
-  if (!modalEl) return;
-  const modalBody = modalEl.querySelector(".modal-body");
-  modalBody.innerHTML = "";
-
-  // Build inputs dynamically (you can customize)
-  function createLabel(text) {
-    const label = document.createElement("label");
-    label.className = "form-label mt-2";
-    label.textContent = text;
-    return label;
-  }
-  function createInput(type = "text") {
-    const input = document.createElement("input");
-    input.type = type;
-    input.className = "form-control";
-    return input;
-  }
-  function createSelect(options, defaultVal = null) {
-    const select = document.createElement("select");
-    select.className = "form-select";
-    options.forEach(opt => {
-      const option = document.createElement("option");
-      option.value = opt;
-      option.textContent = opt;
-      if (defaultVal && opt === defaultVal) option.selected = true;
-      select.appendChild(option);
-    });
-    return select;
-  }
-
-  // EquipmentType
-  modalBody.appendChild(createLabel("Equipment Type"));
-  const equipmentTypeSelect = createSelect(EQUIPMENT_TYPES, EQUIPMENT_TYPES[0]);
-  modalBody.appendChild(equipmentTypeSelect);
-
-  // Vendor
-  modalBody.appendChild(createLabel("Vendor"));
-  const vendorInput = createInput();
-
-  modalBody.appendChild(vendorInput);
-
-  // BrandModel
-  modalBody.appendChild(createLabel("Brand/Model"));
-  const brandInput = createInput();
-  modalBody.appendChild(brandInput);
-
-  // AssetNo
-  modalBody.appendChild(createLabel("Asset No"));
-  const assetInput = createInput();
-  modalBody.appendChild(assetInput);
-
-  // SerialNumber
-  modalBody.appendChild(createLabel("Serial Number"));
-  const serialInput = createInput();
-  modalBody.appendChild(serialInput);
-
-  // EndDate
-  modalBody.appendChild(createLabel("End Date"));
-  const endDateInput = createInput("date");
-  modalBody.appendChild(endDateInput);
-
-  // StartDate
-  modalBody.appendChild(createLabel("Start Date"));
-  const startDateInput = createInput("date");
-  modalBody.appendChild(startDateInput);
-
-  // Room
-  modalBody.appendChild(createLabel("Room"));
-  const roomInput = createInput();
-  modalBody.appendChild(roomInput);
-
-  // Fault description
-  modalBody.appendChild(createLabel("Fault Description"));
-  const faultInput = document.createElement("textarea");
-  faultInput.className = "form-control";
-  faultInput.rows = 3;
-  modalBody.appendChild(faultInput);
-
-  // Status select
-  modalBody.appendChild(createLabel("Status"));
-  const statusSelect = createSelect(STATUS_OPTIONS, "Open");
-  modalBody.appendChild(statusSelect);
-
-  // Show modal via Bootstrap
-  const modal = new bootstrap.Modal(modalEl);
-  modal.show();
-
-  // Save button handler
-  const saveBtn = modalEl.querySelector("#saveFaultBtn");
-  saveBtn.onclick = () => {
-    faultData.push({
-      EquipmentType: equipmentTypeSelect.value,
-      Vendor: vendorInput.value.trim(),
-      BrandModel: brandInput.value.trim(),
-      AssetNo: assetInput.value.trim(),
-      SerialNumber: serialInput.value.trim(),
-      EndDate: endDateInput.value,
-      StartDate: startDateInput.value,
-      Room: roomInput.value.trim(),
-      Fault: faultInput.value.trim(),
-      Status: statusSelect.value
-    });
-    saveFaultData();
-    renderTableRows();
-    modal.hide();
-  };
-}
-
-function searchFaultReports() {
-  const filter = (document.getElementById("searchInput")?.value || "").toLowerCase();
-  const tbody = document.querySelector("#fault-table tbody");
-  if (!tbody) return;
-
-  Array.from(tbody.rows).forEach(row => {
-    const rowText = row.textContent.toLowerCase();
-    row.style.display = rowText.includes(filter) ? "" : "none";
-  });
-}
-
-function initFaultReport() {
-  loadFaultData();
-  renderEquipmentTypeFilter();
-  renderTableRows();
-
-  document.getElementById("addFaultBtn")?.addEventListener("click", showAddFaultModal);
-  document.getElementById("searchInput")?.addEventListener("input", searchFaultReports);
-}
-
-document.addEventListener("DOMContentLoaded", initFaultReport);
+  // Initial rendering of table
+  renderTable();
+});
