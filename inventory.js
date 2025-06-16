@@ -1,289 +1,308 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const inventoryTableBody = document.querySelector("#inventory-table tbody");
-  const filterSelect = document.getElementById("filter-equipmenttype");
-  const searchInput = document.getElementById("search-inventory");
-  const addItemBtn = document.getElementById("add-item-btn");
-  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const inventoryForm = document.getElementById("inventory-form");
-  const modalTitle = document.getElementById("inventoryModalLabel");
+// inventory.js
 
-  // Columns in order
-  const equipmentHeaders = [
-    "EquipmentType",
-    "Vendor",
-    "BrandModel",
-    "Profile",
-    "Custodian",
-    "AssetNo",
-    "SerialNumber",
-    "Location",
-    "EndDate",
-    "StartDate",
-    "Hostname",
-    "SSOE PO Number",
-    "Cart No",
-    "SanitiseDate",
-    "Duration in use",
-    "Lamp Hour",
-    "DateUpdated",
-  ];
+// Equipment types for dropdown
+const equipmentTypes = [
+  "SSOE",
+  "Projector",
+  "Projector Screen",
+  "Patch Panel",
+  "Macbook",
+  "Speaker",
+  "Apple TV",
+  "SMax",
+  "Portable HDD",
+  "TV",
+  "OMR",
+  "Hansvision",
+];
 
-  // Load inventory data from localStorage or start with empty array
-  let inventoryData = JSON.parse(localStorage.getItem("inventoryData")) || [];
+// Columns to display in the table, in order
+const columns = [
+  "EquipmentType",
+  "Vendor",
+  "BrandModel",
+  "Profile",
+  "Custodian",
+  "AssetNo",
+  "SerialNumber",
+  "Location",
+  "EndDate",
+  "StartDate",
+  "Hostname",
+  "SSOE PO Number",
+  "Cart No",
+  "SanitiseDate",
+  "Duration in use", // calculated, not stored
+  "Lamp Hour",
+  "DateUpdated",
+];
 
-  // Helper: Calculate Duration in use (years + months)
-  function calculateDuration(startDateStr, endDateStr) {
-    if (!startDateStr) return "";
-    let startDate = new Date(startDateStr);
-    let endDate = endDateStr ? new Date(endDateStr) : new Date();
-    if (isNaN(startDate) || isNaN(endDate)) return "";
+// Globals
+let inventory = [];
+let editingIndex = null; // null = adding new
 
-    let years = endDate.getFullYear() - startDate.getFullYear();
-    let months = endDate.getMonth() - startDate.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    if (years < 0) return "";
-    return `${years} yrs ${months} mos`;
+// DOM Elements
+const inventoryTableBody = document.querySelector("#inventory-table tbody");
+const filterSelect = document.getElementById("filter-equipmenttype");
+const searchInput = document.getElementById("search-inventory");
+const addItemBtn = document.getElementById("add-item-btn");
+const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+const modalForm = document.getElementById("inventory-form");
+const modalBody = modalForm.querySelector(".modal-body");
+const modalFooter = modalForm.querySelector(".modal-footer");
+
+// Load data from localStorage or empty array
+function loadInventory() {
+  const data = localStorage.getItem("inventoryData");
+  inventory = data ? JSON.parse(data) : [];
+}
+
+// Save data to localStorage
+function saveInventory() {
+  localStorage.setItem("inventoryData", JSON.stringify(inventory));
+}
+
+// Calculate Duration in use (years and months) between startDate and today
+function calcDurationInUse(startDateStr) {
+  if (!startDateStr) return "";
+  const startDate = new Date(startDateStr);
+  if (isNaN(startDate)) return "";
+
+  const today = new Date();
+  let years = today.getFullYear() - startDate.getFullYear();
+  let months = today.getMonth() - startDate.getMonth();
+
+  if (months < 0) {
+    years--;
+    months += 12;
   }
+  if (years < 0) return "";
 
-  // Render table rows based on data array
-  function renderTable(data) {
-    inventoryTableBody.innerHTML = "";
-    if (data.length === 0) {
-      const tr = document.createElement("tr");
+  let result = "";
+  if (years > 0) result += years + (years === 1 ? " yr " : " yrs ");
+  if (months > 0) result += months + (months === 1 ? " mo" : " mos");
+  return result.trim();
+}
+
+// Render the inventory table rows filtered by category and search text
+function renderTable() {
+  const filterValue = filterSelect.value;
+  const searchTerm = searchInput.value.toLowerCase();
+
+  inventoryTableBody.innerHTML = "";
+
+  inventory.forEach((item, index) => {
+    if (filterValue !== "All" && item.EquipmentType !== filterValue) return;
+
+    // Check if any field contains the search term
+    const matchesSearch = columns.some((col) => {
+      if (col === "Duration in use") {
+        return calcDurationInUse(item["StartDate"])
+          .toLowerCase()
+          .includes(searchTerm);
+      }
+      return (item[col] || "").toString().toLowerCase().includes(searchTerm);
+    });
+    if (!matchesSearch) return;
+
+    // Create row
+    const tr = document.createElement("tr");
+
+    columns.forEach((col) => {
       const td = document.createElement("td");
-      td.colSpan = equipmentHeaders.length + 1;
-      td.classList.add("text-center", "text-muted");
-      td.textContent = "No items found.";
+      if (col === "Duration in use") {
+        td.textContent = calcDurationInUse(item["StartDate"]);
+      } else {
+        td.textContent = item[col] || "";
+      }
       tr.appendChild(td);
-      inventoryTableBody.appendChild(tr);
-      return;
-    }
-
-    data.forEach((item, index) => {
-      const tr = document.createElement("tr");
-
-      equipmentHeaders.forEach((key) => {
-        const td = document.createElement("td");
-
-        if (key === "Duration in use") {
-          td.textContent = calculateDuration(item.StartDate, item.EndDate);
-        } else {
-          td.textContent = item[key] || "";
-        }
-
-        tr.appendChild(td);
-      });
-
-      // Actions column
-      const actionsTd = document.createElement("td");
-      actionsTd.classList.add("text-center");
-
-      // Edit button
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn btn-sm btn-primary me-2";
-      editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => openModalForEdit(index));
-      actionsTd.appendChild(editBtn);
-
-      // Delete button
-      const delBtn = document.createElement("button");
-      delBtn.className = "btn btn-sm btn-danger";
-      delBtn.textContent = "Delete";
-      delBtn.addEventListener("click", () => deleteItem(index));
-      actionsTd.appendChild(delBtn);
-
-      tr.appendChild(actionsTd);
-      inventoryTableBody.appendChild(tr);
     });
-  }
 
-  // Filter and search combined function
-  function filterAndSearch() {
-    const selectedType = filterSelect.value;
-    const searchTerm = searchInput.value.trim().toLowerCase();
+    // Actions: Edit and Delete buttons
+    const actionsTd = document.createElement("td");
+    actionsTd.classList.add("text-center");
 
-    let filteredData = inventoryData;
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-sm btn-primary me-2";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", () => openModalForEdit(index));
 
-    if (selectedType !== "All") {
-      filteredData = filteredData.filter(
-        (item) => item.EquipmentType === selectedType
-      );
-    }
-
-    if (searchTerm !== "") {
-      filteredData = filteredData.filter((item) =>
-        equipmentHeaders.some(
-          (key) =>
-            item[key] &&
-            item[key].toString().toLowerCase().includes(searchTerm)
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn btn-sm btn-danger";
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener("click", () => {
+      if (
+        confirm(
+          `Are you sure you want to delete the item with AssetNo "${item.AssetNo}"?`
         )
-      );
-    }
-
-    renderTable(filteredData);
-  }
-
-  // Open modal for add new item
-  function openModalForAdd() {
-    modalTitle.textContent = "Add Item";
-    inventoryForm.innerHTML = "";
-
-    equipmentHeaders.forEach((key) => {
-      const formGroup = document.createElement("div");
-      formGroup.className = "mb-3";
-
-      const label = document.createElement("label");
-      label.className = "form-label";
-      label.setAttribute("for", `input-${key}`);
-      label.textContent = key;
-
-      let input;
-      // For dates, use date input type
-      if (key.toLowerCase().includes("date") || key === "EndDate" || key === "StartDate") {
-        input = document.createElement("input");
-        input.type = "date";
-      } else {
-        input = document.createElement("input");
-        input.type = "text";
+      ) {
+        inventory.splice(index, 1);
+        saveInventory();
+        renderTable();
       }
+    });
 
-      input.className = "form-control";
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(deleteBtn);
+    tr.appendChild(actionsTd);
+
+    inventoryTableBody.appendChild(tr);
+  });
+}
+
+// Open modal to add a new item
+function openModalForAdd() {
+  editingIndex = null;
+  modalForm.reset();
+  buildModalForm(null);
+  modal.show();
+  setModalTitle("Add Inventory Item");
+}
+
+// Open modal to edit existing item
+function openModalForEdit(index) {
+  editingIndex = index;
+  modalForm.reset();
+  buildModalForm(inventory[index]);
+  modal.show();
+  setModalTitle("Edit Inventory Item");
+}
+
+// Set modal title
+function setModalTitle(title) {
+  document.getElementById("inventoryModalLabel").textContent = title;
+}
+
+// Build modal form fields dynamically based on columns and optional item data
+function buildModalForm(item) {
+  modalBody.innerHTML = "";
+  modalFooter.innerHTML = "";
+
+  columns.forEach((key) => {
+    // Skip Duration in use (calculated)
+    if (key === "Duration in use") return;
+
+    const div = document.createElement("div");
+    div.className = "mb-3";
+
+    const label = document.createElement("label");
+    label.htmlFor = `input-${key}`;
+    label.className = "form-label fw-semibold";
+    label.textContent = key.replace(/([A-Z])/g, " $1").trim();
+
+    let input;
+
+    if (key === "EquipmentType") {
+      input = document.createElement("select");
+      input.className = "form-select";
       input.id = `input-${key}`;
       input.name = key;
 
-      formGroup.appendChild(label);
-      formGroup.appendChild(input);
-      inventoryForm.appendChild(formGroup);
-    });
-
-    // Add Save and Cancel buttons
-    const btnGroup = document.createElement("div");
-    btnGroup.className = "d-flex justify-content-end gap-2";
-
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "submit";
-    saveBtn.className = "btn btn-success";
-    saveBtn.textContent = "Save";
-
-    const cancelBtn = document.createElement("button");
-    cancelBtn.type = "button";
-    cancelBtn.className = "btn btn-secondary";
-    cancelBtn.textContent = "Cancel";
-    cancelBtn.addEventListener("click", () => inventoryModal.hide());
-
-    btnGroup.appendChild(cancelBtn);
-    btnGroup.appendChild(saveBtn);
-    inventoryForm.appendChild(btnGroup);
-
-    // Submit handler
-    inventoryForm.onsubmit = function (e) {
-      e.preventDefault();
-      const formData = new FormData(inventoryForm);
-      const newItem = {};
-      equipmentHeaders.forEach((key) => {
-        newItem[key] = formData.get(key) || "";
+      equipmentTypes.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        if (item && item[key] === type) option.selected = true;
+        input.appendChild(option);
       });
-      newItem["DateUpdated"] = new Date().toISOString().slice(0, 10);
-
-      inventoryData.push(newItem);
-      saveAndRefresh();
-      inventoryModal.hide();
-    };
-
-    inventoryModal.show();
-  }
-
-  // Open modal for editing an existing item
-  function openModalForEdit(index) {
-    modalTitle.textContent = "Edit Item";
-    inventoryForm.innerHTML = "";
-
-    const item = inventoryData[index];
-
-    equipmentHeaders.forEach((key) => {
-      const formGroup = document.createElement("div");
-      formGroup.className = "mb-3";
-
-      const label = document.createElement("label");
-      label.className = "form-label";
-      label.setAttribute("for", `input-${key}`);
-      label.textContent = key;
-
-      let input;
-      if (key.toLowerCase().includes("date") || key === "EndDate" || key === "StartDate") {
-        input = document.createElement("input");
-        input.type = "date";
-      } else {
-        input = document.createElement("input");
-        input.type = "text";
-      }
-
+    } else if (key === "DateUpdated") {
+      input = document.createElement("input");
+      input.type = "text";
       input.className = "form-control";
       input.id = `input-${key}`;
       input.name = key;
-      input.value = item[key] || "";
-
-      formGroup.appendChild(label);
-      formGroup.appendChild(input);
-      inventoryForm.appendChild(formGroup);
-    });
-
-    // Save and Cancel buttons
-    const btnGroup = document.createElement("div");
-    btnGroup.className = "d-flex justify-content-end gap-2";
-
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "submit";
-    saveBtn.className = "btn btn-success";
-    saveBtn.textContent = "Save";
-
-    const cancelBtn = document.createElement("button");
-    cancelBtn.type = "button";
-    cancelBtn.className = "btn btn-secondary";
-    cancelBtn.textContent = "Cancel";
-    cancelBtn.addEventListener("click", () => inventoryModal.hide());
-
-    btnGroup.appendChild(cancelBtn);
-    btnGroup.appendChild(saveBtn);
-    inventoryForm.appendChild(btnGroup);
-
-    inventoryForm.onsubmit = function (e) {
-      e.preventDefault();
-      const formData = new FormData(inventoryForm);
-      equipmentHeaders.forEach((key) => {
-        item[key] = formData.get(key) || "";
-      });
-      item["DateUpdated"] = new Date().toISOString().slice(0, 10);
-
-      saveAndRefresh();
-      inventoryModal.hide();
-    };
-
-    inventoryModal.show();
-  }
-
-  // Delete an item by index
-  function deleteItem(index) {
-    if (confirm("Are you sure you want to delete this item?")) {
-      inventoryData.splice(index, 1);
-      saveAndRefresh();
+      // auto-fill with today, disabled
+      input.value = new Date().toISOString().slice(0, 10);
+      input.disabled = true;
+      if (item && item[key]) input.value = item[key];
+    } else if (
+      key.toLowerCase().includes("date") ||
+      key === "EndDate" ||
+      key === "StartDate" ||
+      key === "SanitiseDate"
+    ) {
+      input = document.createElement("input");
+      input.type = "date";
+      input.className = "form-control";
+      input.id = `input-${key}`;
+      input.name = key;
+      input.value = item ? item[key] || "" : "";
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-control";
+      input.id = `input-${key}`;
+      input.name = key;
+      input.value = item ? item[key] || "" : "";
     }
+
+    div.appendChild(label);
+    div.appendChild(input);
+    modalBody.appendChild(div);
+  });
+
+  // Add buttons to modal footer
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "submit";
+  saveBtn.className = "btn btn-success";
+  saveBtn.textContent = "Save";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn btn-secondary";
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.setAttribute("data-bs-dismiss", "modal");
+
+  modalFooter.appendChild(saveBtn);
+  modalFooter.appendChild(cancelBtn);
+}
+
+// Handle form submit to add or update item
+modalForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(modalForm);
+  let newItem = {};
+
+  columns.forEach((col) => {
+    if (col === "Duration in use") return; // skip calc field
+
+    if (col === "DateUpdated") {
+      // Use current date string from form input (should be today)
+      newItem[col] = document.getElementById(`input-${col}`).value;
+    } else {
+      newItem[col] = formData.get(col) ? formData.get(col).trim() : "";
+    }
+  });
+
+  // Validate AssetNo uniqueness when adding
+  if (
+    !newItem.AssetNo ||
+    (editingIndex === null &&
+      inventory.some((i) => i.AssetNo.toLowerCase() === newItem.AssetNo.toLowerCase()))
+  ) {
+    alert(
+      "AssetNo is required and must be unique. Please check your input."
+    );
+    return;
   }
 
-  // Save data to localStorage and refresh table
-  function saveAndRefresh() {
-    localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
-    filterAndSearch();
+  if (editingIndex === null) {
+    inventory.push(newItem);
+  } else {
+    inventory[editingIndex] = newItem;
   }
 
-  // Initial render
-  renderTable(inventoryData);
-
-  // Event listeners
-  filterSelect.addEventListener("change", filterAndSearch);
-  searchInput.addEventListener("input", filterAndSearch);
-  addItemBtn.addEventListener("click", openModalForAdd);
+  saveInventory();
+  renderTable();
+  modal.hide();
 });
+
+// Attach event listeners for filters and buttons
+filterSelect.addEventListener("change", renderTable);
+searchInput.addEventListener("input", renderTable);
+addItemBtn.addEventListener("click", openModalForAdd);
+
+// Initialization
+loadInventory();
+renderTable();
