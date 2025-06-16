@@ -4,60 +4,124 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Patching Report</title>
+
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Your custom styles -->
+  <link href="styles.css" rel="stylesheet" />
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Inventory System</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">Inventory</a></li>
-          <li class="nav-item"><a class="nav-link" href="fault-report.html">Fault Report</a></li>
-          <li class="nav-item"><a class="nav-link active" href="patching-report.html">Patching Report</a></li>
-        </ul>
-      </div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Patching Report</a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarContent"
+      aria-controls="navbarContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <form class="d-flex ms-auto" role="search">
+        <input
+          class="form-control me-2"
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+          id="searchInput"
+        />
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="addPatchingBtn"
+          data-bs-toggle="modal"
+          data-bs-target="#patchingModal"
+        >
+          Add New Record
+        </button>
+      </form>
     </div>
-  </nav>
+  </div>
+</nav>
 
-  <main class="container report-container">
-    <h1>Patching Report</h1>
+<div class="container-fluid my-3">
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered" id="patching-table">
+      <thead class="table-dark">
+        <tr>
+          <th>Asset Tag</th>
+          <th>Serial Number</th>
+          <th>School</th>
+          <th>Hostname</th>
+          <th>Device Type</th>
+          <th>Brand/Model</th>
+          <th>Profile</th>
+          <th>Custodian Name</th>
+          <th>CSM</th>
+          <th>SSOE Location</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows populated by patching-report.js -->
+      </tbody>
+    </table>
+  </div>
+</div>
 
-    <div class="table-responsive">
-      <table id="patching-table" class="report-table table">
-        <thead>
-          <tr>
-            <th>Asset Tag</th>
-            <th>Serial Number</th>
-            <th>School</th>
-            <th>Hostname</th>
-            <th>Device Type</th>
-            <th>BrandModel</th>
-            <th>Profile</th>
-            <th>CustodianName</th>
-            <th>CSM</th>
-            <th>SSOE Location</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="patching-tbody"></tbody>
-      </table>
+<!-- Add New Patching Record Modal -->
+<div
+  class="modal fade"
+  id="patchingModal"
+  tabindex="-1"
+  aria-labelledby="patchingModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form id="patchingForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="patchingModalLabel">Add New Patching Record</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <!-- Form inputs generated dynamically by JS -->
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="savePatchingBtn">
+            Save Record
+          </button>
+        </div>
+      </form>
     </div>
-  </main>
+  </div>
+</div>
 
-  <script src="fault-report.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS Bundle (Popper + Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Your patching report script -->
+<script src="patching-report.js"></script>
 </body>
 </html>
