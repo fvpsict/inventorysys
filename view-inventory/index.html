@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventory Management</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
+  <title>View Inventory</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
@@ -21,7 +18,7 @@
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-          <li class="nav-item"><a class="nav-link active" href="../view-inventory/index.html">View Inventory</a></li>
+          <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
           <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
           <li class="nav-item"><a class="nav-link" href="../patching-report.html">Patching Report</a></li>
         </ul>
@@ -30,47 +27,60 @@
   </nav>
 
   <!-- Main Content -->
- <div class="container inventory-container mt-3">
-  <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+  <div class="container mt-5 pt-4">
+    <!-- Filter and Search -->
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-4">
+      <div>
+        <label for="filter-equipmenttype" class="form-label">Filter by Equipment Type</label>
+        <select id="filter-equipmenttype" class="form-select">
+          <option>All</option>
+          <option>SSOE</option>
+          <option>Projector</option>
+          <option>Projector Screen</option>
+          <option>Touch Panel</option>
+          <option>Visualiser</option>
+          <option>SMax</option>
+          <option>Macbook</option>
+          <option>Portable HDD</option>
+          <option>TV</option>
+          <option>Monitor</option>
+          <option>OMR</option>
+        </select>
+      </div>
 
-    <!-- Equipment Type Filter -->
-    <div>
-      <label for="filter-equipmenttype" class="form-label">Filter by Equipment Type</label>
-      <select id="filter-equipmenttype" class="form-select">
-        <option>All</option>
-        <option>SSOE</option>
-        <option>Projector</option>
-        <option>Projector Screen</option>
-        <option>Touch Panel</option>
-        <option>Visualiser</option>
-        <option>SMax</option>
-        <option>Macbook</option>
-        <option>Portable HDD</option>
-        <option>TV</option>
-        <option>Monitor</option>
-        <option>OMR</option>
-      </select>
+      <div>
+        <label for="search-inventory" class="form-label">Search</label>
+        <input type="text" id="search-inventory" class="form-control" placeholder="Search inventory..." />
+      </div>
     </div>
 
-    <!-- Search Input -->
-    <div>
-      <label for="search-inventory" class="form-label">Search</label>
-      <input
-        type="text"
-        id="search-inventory"
-        class="form-control"
-        placeholder="Search inventory..."
-      />
-    </div>
-
-
-    <!-- Add Item Button -->
-    <button class="btn btn-success mb-3" id="add-item-btn">Add Item</button>
+    <!-- Inline Add/Edit Form (Horizontal) -->
+    <form id="inventory-inline-form" class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-2 g-3 mb-4 align-items-end">
+      <div class="col"><label class="form-label">Equipment Type</label><select class="form-select" name="EquipmentType" required><option value="">Select</option><option>SSOE</option><option>Projector</option><option>Visualiser</option></select></div>
+      <div class="col"><label class="form-label">Vendor</label><input type="text" class="form-control" name="Vendor" /></div>
+      <div class="col"><label class="form-label">BrandModel</label><input type="text" class="form-control" name="BrandModel" /></div>
+      <div class="col"><label class="form-label">Profile</label><input type="text" class="form-control" name="Profile" /></div>
+      <div class="col"><label class="form-label">Custodian</label><input type="text" class="form-control" name="Custodian" /></div>
+      <div class="col"><label class="form-label">Asset No</label><input type="text" class="form-control" name="AssetNo" required /></div>
+      <div class="col"><label class="form-label">Serial Number</label><input type="text" class="form-control" name="SerialNumber" /></div>
+      <div class="col"><label class="form-label">Location</label><input type="text" class="form-control" name="Location" /></div>
+      <div class="col"><label class="form-label">End Date</label><input type="date" class="form-control" name="EndDate" /></div>
+      <div class="col"><label class="form-label">Start Date</label><input type="date" class="form-control" name="StartDate" /></div>
+      <div class="col"><label class="form-label">Hostname</label><input type="text" class="form-control" name="Hostname" /></div>
+      <div class="col"><label class="form-label">SSOE PO Number</label><input type="text" class="form-control" name="SSOE PO Number" /></div>
+      <div class="col"><label class="form-label">Cart No</label><input type="text" class="form-control" name="Cart No" /></div>
+      <div class="col"><label class="form-label">Sanitise Date</label><input type="date" class="form-control" name="SanitiseDate" /></div>
+      <div class="col"><label class="form-label">Lamp Hour</label><input type="number" class="form-control" name="Lamp Hour" /></div>
+      <div class="col"><label class="form-label">Date Updated</label><input type="text" class="form-control" name="DateUpdated" readonly /></div>
+      <div class="col-12 text-end mt-2">
+        <button type="submit" class="btn btn-primary">Save Item</button>
+      </div>
+    </form>
 
     <!-- Inventory Table -->
     <div class="table-responsive">
       <table class="table table-bordered table-striped inventory-table" id="inventory-table">
-        <thead>
+        <thead class="table-primary">
           <tr>
             <th>EquipmentType</th>
             <th>Vendor</th>
@@ -94,21 +104,6 @@
         </thead>
         <tbody></tbody>
       </table>
-    </div>
-  </div>
-
-  <!-- Inventory Modal -->
-  <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="inventory-form" class="row g-3"></form>
-        </div>
-      </div>
     </div>
   </div>
 
