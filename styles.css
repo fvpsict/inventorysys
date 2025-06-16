@@ -64,3 +64,9 @@ select {
     align-items: stretch;
   }
 }
+
+iframe {
+  width: 100%;
+  height: 600px;
+  border: 1px solid #ccc;
+}
