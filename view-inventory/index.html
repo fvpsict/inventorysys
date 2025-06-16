@@ -8,7 +8,7 @@
   <link href="../styles.css" rel="stylesheet" />
   <style>
     body {
-      padding-top: 70px; /* Account for fixed navbar */
+      padding-top: 70px;
     }
   </style>
 </head>
@@ -105,75 +105,23 @@
         </div>
 
         <div class="modal-body row g-3">
-          <div class="col-md-3">
-            <label class="form-label">Equipment Type *</label>
-            <select class="form-select" name="EquipmentType" required>
-              <option value="">Select</option>
-              <option>SSOE</option>
-              <option>Projector</option>
-              <option>Visualiser</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Vendor</label>
-            <input type="text" class="form-control" name="Vendor" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">BrandModel</label>
-            <input type="text" class="form-control" name="BrandModel" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Profile</label>
-            <input type="text" class="form-control" name="Profile" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Custodian</label>
-            <input type="text" class="form-control" name="Custodian" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Asset No *</label>
-            <input type="text" class="form-control" name="AssetNo" required />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Serial Number</label>
-            <input type="text" class="form-control" name="SerialNumber" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Location</label>
-            <input type="text" class="form-control" name="Location" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">End Date</label>
-            <input type="date" class="form-control" name="EndDate" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Start Date</label>
-            <input type="date" class="form-control" name="StartDate" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Hostname</label>
-            <input type="text" class="form-control" name="Hostname" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">SSOE PO Number</label>
-            <input type="text" class="form-control" name="SSOE PO Number" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Cart No</label>
-            <input type="text" class="form-control" name="Cart No" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Sanitise Date</label>
-            <input type="date" class="form-control" name="SanitiseDate" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Lamp Hour</label>
-            <input type="number" class="form-control" name="Lamp Hour" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Date Updated</label>
-            <input type="text" class="form-control" name="DateUpdated" readonly required />
-          </div>
+          <!-- All fields aligned left to right -->
+          <div class="col-md-3"><label class="form-label">Equipment Type *</label><select class="form-select" name="EquipmentType" required><option value="">Select</option><option>SSOE</option><option>Projector</option><option>Visualiser</option></select></div>
+          <div class="col-md-3"><label class="form-label">Vendor</label><input type="text" class="form-control" name="Vendor" /></div>
+          <div class="col-md-3"><label class="form-label">BrandModel</label><input type="text" class="form-control" name="BrandModel" /></div>
+          <div class="col-md-3"><label class="form-label">Profile</label><input type="text" class="form-control" name="Profile" /></div>
+          <div class="col-md-3"><label class="form-label">Custodian</label><input type="text" class="form-control" name="Custodian" /></div>
+          <div class="col-md-3"><label class="form-label">Asset No *</label><input type="text" class="form-control" name="AssetNo" required /></div>
+          <div class="col-md-3"><label class="form-label">Serial Number</label><input type="text" class="form-control" name="SerialNumber" /></div>
+          <div class="col-md-3"><label class="form-label">Location</label><input type="text" class="form-control" name="Location" /></div>
+          <div class="col-md-3"><label class="form-label">End Date</label><input type="date" class="form-control" name="EndDate" /></div>
+          <div class="col-md-3"><label class="form-label">Start Date</label><input type="date" class="form-control" name="StartDate" /></div>
+          <div class="col-md-3"><label class="form-label">Hostname</label><input type="text" class="form-control" name="Hostname" /></div>
+          <div class="col-md-3"><label class="form-label">SSOE PO Number</label><input type="text" class="form-control" name="SSOE PO Number" /></div>
+          <div class="col-md-3"><label class="form-label">Cart No</label><input type="text" class="form-control" name="Cart No" /></div>
+          <div class="col-md-3"><label class="form-label">Sanitise Date</label><input type="date" class="form-control" name="SanitiseDate" /></div>
+          <div class="col-md-3"><label class="form-label">Lamp Hour</label><input type="number" class="form-control" name="Lamp Hour" /></div>
+          <div class="col-md-3"><label class="form-label">Date Updated</label><input type="text" class="form-control" name="DateUpdated" readonly required /></div>
         </div>
 
         <div class="modal-footer">
