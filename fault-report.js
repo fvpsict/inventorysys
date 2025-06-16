@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let editIndex = null;
 
   // Format current date: dd MMMM yyyy (e.g., 25 June 2025)
-  function getCurrentDateTime() {
+  function getCurrentDate() {
     const now = new Date();
     const day = now.getDate().toString().padStart(2, "0");
     const monthNames = [
@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${day} ${month} ${year}`;
   }
 
+  // Render the table rows
   function renderTable() {
     faultTableBody.innerHTML = "";
     faults.forEach((fault, idx) => {
@@ -52,14 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Clear the form and reset state
   function clearForm() {
     faultForm.reset();
     editIndex = null;
     deleteFaultBtn.style.display = "none";
-    // Clear DateUpdated input as well
     faultForm.DateUpdated.value = "";
   }
 
+  // Fill the form with existing fault data
   function fillForm(fault) {
     faultForm.EquipmentType.value = fault.EquipmentType || "";
     faultForm.Vendor.value = fault.Vendor || "";
@@ -79,15 +81,20 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.DateUpdated.value = fault.DateUpdated || "";
   }
 
+  // Save faults array to localStorage
   function saveFaults() {
     localStorage.setItem("faults", JSON.stringify(faults));
   }
 
+  // Add button opens modal with empty form
   addFaultBtn.addEventListener("click", () => {
     clearForm();
+    // Set DateUpdated to current date when adding new
+    faultForm.DateUpdated.value = getCurrentDate();
     faultModal.show();
   });
 
+  // Table click handlers for Edit and Delete
   faultTableBody.addEventListener("click", (e) => {
     const target = e.target;
     const idx = target.getAttribute("data-index");
@@ -109,6 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Delete button in modal
   deleteFaultBtn.addEventListener("click", () => {
     if (editIndex !== null) {
       if (confirm("Delete this fault?")) {
@@ -121,11 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // On form submit, add or update fault with updated DateUpdated
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
-
-    // Auto set the DateUpdated to current date formatted
-    const currentDateFormatted = getCurrentDateTime();
 
     const newFault = {
       EquipmentType: faultForm.EquipmentType.value,
@@ -143,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Status: faultForm.Status.value,
       DateResolved: faultForm.DateResolved.value,
       ActionTaken: faultForm.ActionTaken.value.trim(),
-      DateUpdated: currentDateFormatted
+      DateUpdated: getCurrentDate(),  // Automatically update date here
     };
 
     if (editIndex === null) {
