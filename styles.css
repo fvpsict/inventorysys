@@ -89,6 +89,39 @@ table.inventory-table thead th {
   user-select: none;
 }
 
+/* Fault table full width */
+.fault-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border: 1px solid black;
+  border-radius: 8px;
+  background-color: white;
+}
+
+/* Consistent cell styling */
+.fault-table th,
+.fault-table td {
+  border: 1px solid black;
+  padding: 8px 12px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+/* Header style */
+.fault-table thead th {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 600;
+}
+
+/* Ensure responsive table stretches */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+
 /* Table buttons */
 table.inventory-table button.btn {
   font-size: 0.85rem;
