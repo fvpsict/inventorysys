@@ -1,5 +1,7 @@
+/* Global body and container */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
   margin: 0;
@@ -7,43 +9,105 @@ body {
 }
 
 .container {
-  max-width: 100vw;
   padding: 20px;
+  max-width: 100%;
 }
 
-/* Navbar fixed top spacing */
-body > .container {
-  padding-top: 80px;
+/* Navbar adjustments */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Remove table borders */
+/* Filter dropdown and button spacing */
+#filter-equipmenttype {
+  max-width: 320px;
+  margin-bottom: 1rem;
+}
+
+#add-item-btn {
+  margin-bottom: 1rem;
+}
+
+/* Table styling: full width, all-around borders with subtle color */
 table.table {
   width: 100%;
   border-collapse: collapse;
-  border: none;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
 }
 
-table th,
-table td {
-  white-space: nowrap;
-  vertical-align: middle;
+table.table th,
+table.table td {
+  border: 1px solid #dee2e6;
   padding: 8px 12px;
   text-align: left;
-  border: none;
+  vertical-align: middle;
 }
 
-/* Header background color */
-table thead tr th {
-  background-color: #0d6efd; /* Bootstrap primary blue */
+/* Header background color (change as you like) */
+table.table thead th {
+  background-color: #343a40; /* dark gray/black */
   color: white;
+  font-weight: 600;
+  user-select: none;
 }
 
-/* Button spacing */
-.btn {
-  min-width: 75px;
+/* Buttons inside table */
+table.table button.btn {
+  font-size: 0.85rem;
+  padding: 4px 8px;
 }
 
-/* Responsive modal width */
-.modal-lg {
-  max-width: 900px;
+/* Modal adjustments */
+.modal-content {
+  border-radius: 0.3rem;
+}
+
+/* Form inside modal */
+#inventory-form .form-label {
+  font-weight: 600;
+}
+
+#inventory-form .form-control,
+#inventory-form .form-select {
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+  box-shadow: none;
+}
+
+#inventory-form .btn-success {
+  margin-top: 1rem;
+}
+
+/* Responsive table wrapper */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Scrollbar styling for wide tables (optional) */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+/* Hover effect on table rows */
+table.table tbody tr:hover {
+  background-color: #f1f3f5;
+  cursor: pointer;
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  #filter-equipmenttype {
+    max-width: 100%;
+  }
+
+  table.table th,
+  table.table td {
+    padding: 6px 8px;
+  }
 }
