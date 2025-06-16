@@ -45,40 +45,22 @@ document.addEventListener("DOMContentLoaded", () => {
     tableBody.innerHTML = "";
 
     inventory.forEach((item, index) => {
-      // Filter by EquipmentType (case-insensitive)
       if (filter !== "all" && item.EquipmentType.toLowerCase() !== filter) return;
 
-      // Search in any field (simple)
       const searchableText = Object.values(item).join(" ").toLowerCase();
       if (!searchableText.includes(searchTerm)) return;
 
       const tr = document.createElement("tr");
 
-      // Columns (order matches your table headers)
       const cols = [
-        "EquipmentType",
-        "Vendor",
-        "BrandModel",
-        "Profile",
-        "Custodian",
-        "AssetNo",
-        "SerialNumber",
-        "Location",
-        "EndDate",
-        "StartDate",
-        "Hostname",
-        "SSOE_PONumber",
-        "CartNo",
-        "SanitiseDate",
-        "LampHour",
-        "DateUpdated",
+        "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian",
+        "AssetNo", "SerialNumber", "Location", "EndDate", "StartDate",
+        "Hostname", "SSOE_PONumber", "CartNo", "SanitiseDate"
       ];
 
       cols.forEach((col) => {
         const td = document.createElement("td");
-
-        // Format date fields
-        if (col === "EndDate" || col === "StartDate" || col === "SanitiseDate") {
+        if (["EndDate", "StartDate", "SanitiseDate"].includes(col)) {
           td.textContent = item[col] ? new Date(item[col]).toLocaleDateString() : "";
         } else {
           td.textContent = item[col] || "";
@@ -86,15 +68,24 @@ document.addEventListener("DOMContentLoaded", () => {
         tr.appendChild(td);
       });
 
-      // Duration in use column (calculated)
+      // Duration in use
       const durTd = document.createElement("td");
       durTd.textContent = calcDuration(item.StartDate, item.EndDate);
-      // Insert duration before Lamp Hour (index 14)
-      tr.insertBefore(durTd, tr.children[14]);
+      tr.appendChild(durTd);
 
-      // Actions column
+      // Lamp Hour
+      const lampTd = document.createElement("td");
+      lampTd.textContent = item.LampHour || "";
+      tr.appendChild(lampTd);
+
+      // Date Updated
+      const updatedTd = document.createElement("td");
+      updatedTd.textContent = item.DateUpdated || "";
+      tr.appendChild(updatedTd);
+
+      // Actions
       const actionTd = document.createElement("td");
-      actionTd.classList.add("text-center");
+      actionTd.className = "text-center";
 
       const editBtn = document.createElement("button");
       editBtn.className = "btn btn-sm btn-primary me-1";
@@ -114,18 +105,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Open modal for adding new item
   function openAddModal() {
     editingIndex = null;
     modalTitle.textContent = "Add Inventory Item";
     modalForm.reset();
-
-    // Clear DateUpdated (hidden field)
     modalForm.elements["DateUpdated"].value = "";
     modal.show();
   }
 
-  // Open modal for editing existing item
   function openEditModal(index) {
     editingIndex = index;
     modalTitle.textContent = "Edit Inventory Item";
@@ -140,7 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.show();
   }
 
-  // Delete item with confirmation
   function deleteItem(index) {
     if (confirm("Are you sure you want to delete this item?")) {
       inventory.splice(index, 1);
@@ -149,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Handle modal form submission (Add or Edit)
   modalForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -159,14 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
       newItem[key] = value.trim();
     }
 
-    // Set DateUpdated to current datetime string
     newItem.DateUpdated = new Date().toLocaleString();
 
     if (editingIndex === null) {
-      // Add new item
       inventory.push(newItem);
     } else {
-      // Update existing item
       inventory[editingIndex] = newItem;
     }
 
@@ -175,11 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.hide();
   });
 
-  // Event listeners for filter and search
   filterSelect.addEventListener("change", renderTable);
   searchInput.addEventListener("input", renderTable);
   addBtn.addEventListener("click", openAddModal);
 
-  // Initial render
   renderTable();
 });
