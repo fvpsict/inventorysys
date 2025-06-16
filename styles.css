@@ -1,93 +1,138 @@
-/* General Body Styling */
+/* Global body and container */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f6f9;
-  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
+  margin: 0;
+  padding: 0;
 }
 
-/* Navbar */
+.container {
+  padding: 20px;
+  max-width: 100%;
+}
+
+/* Navbar adjustments */
 .navbar {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.navbar-brand {
-  font-weight: bold;
-}
-.navbar .nav-link.active {
-  font-weight: bold;
-  color: #fff !important;
-  background-color: #0d6efd;
-  border-radius: 0.25rem;
+
+/* Filter dropdown and button spacing */
+#filter-equipmenttype {
+  max-width: 320px;
+  margin-bottom: 0;
 }
 
-/* Headings */
-h1, h2, h3 {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
+#search-inventory {
+  width: 100%;
+  margin-bottom: 0;
 }
 
-/* Tables */
-.table thead th {
-  vertical-align: middle;
-  text-align: center;
-}
-.table td, .table th {
-  vertical-align: middle;
-  padding: 0.75rem;
-}
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: #f9f9f9;
-}
-.table td:last-child {
-  text-align: center;
+#add-item-btn {
+  margin-bottom: 0;
 }
 
-/* Buttons */
-.btn {
-  min-width: 80px;
-}
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-}
-
-/* Modal */
-.modal .modal-title {
-  font-weight: 600;
-}
-.modal-body label {
-  font-weight: 500;
-}
-
-/* Forms */
-.form-label {
-  margin-bottom: 0.3rem;
-}
-input[type="text"], input[type="date"], select, textarea {
-  font-size: 0.95rem;
-}
-
-/* Responsive Table Container */
-.table-responsive {
-  margin-top: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
+/* Table styling: full width, all-around black borders with rounded corners */
+table.inventory-table {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border: 1px solid black !important;
+  border-radius: 8px;
+  overflow: hidden;
   background-color: white;
-  padding: 0.5rem;
 }
 
-/* Add/Edit Inventory button */
-button[data-bs-target="#inventoryModal"] {
-  font-weight: 500;
+table.inventory-table th,
+table.inventory-table td {
+  border: 1px solid black !important;
+  padding: 8px 12px;
+  vertical-align: middle;
+  text-align: left;
 }
 
-/* Spacing for main container */
-main.container-fluid {
-  padding: 1rem 2rem;
+/* Header background color blue */
+table.inventory-table thead th {
+  background-color: #0d6efd; /* Bootstrap primary blue */
+  color: white;
+  font-weight: 600;
+  user-select: none;
 }
 
-/* Sticky header fix on mobile */
-@media (max-width: 768px) {
-  body {
-    padding-top: 60px;
+/* Buttons inside table */
+table.inventory-table button.btn {
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  min-width: 60px;
+}
+
+/* Modal adjustments */
+.modal-content {
+  border-radius: 0.3rem;
+}
+
+/* Form inside modal */
+#inventory-form .form-label {
+  font-weight: 600;
+}
+
+#inventory-form .form-control,
+#inventory-form .form-select {
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+  box-shadow: none;
+}
+
+#inventory-form .btn-success {
+  margin-top: 1rem;
+}
+
+/* Responsive table wrapper */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Scrollbar styling for wide tables (optional) */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+/* Hover effect on table rows */
+table.inventory-table tbody tr:hover {
+  background-color: #f1f3f5;
+  cursor: pointer;
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  #filter-equipmenttype {
+    max-width: 100%;
   }
+
+  table.inventory-table th,
+  table.inventory-table td {
+    padding: 6px 8px;
+  }
+}
+
+/* Remove extra spacing between navbar and content for inventory container */
+.inventory-container {
+  margin-top: 56px; /* height of fixed navbar to avoid content behind navbar */
+  padding-top: 0.5rem !important;
+}
+
+/* Flex container for filter + search + button */
+.d-flex.flex-wrap.align-items-end.gap-3 > div {
+  flex-grow: 0;
+}
+
+/* Navbar brand font weight */
+.navbar-brand {
+  font-weight: 700;
 }
