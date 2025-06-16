@@ -1,5 +1,3 @@
-//fault-report.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const faultForm = document.getElementById("faultForm");
   const faultModalEl = document.getElementById("faultModal");
@@ -8,30 +6,39 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteFaultBtn = document.getElementById("deleteFaultBtn");
   const addFaultBtn = document.getElementById("addFaultBtn");
 
-  // Dropdown options (you can also define these in your HTML)
   const equipmentTypeOptions = ["Projector", "Projector Screen", "Visualiser"];
-  const statusOptions = ["Pending Vendor", "Resolved", "InProgress"];
+  const statusOptions = ["Pending Vendor", "Resolved", "In Progress"];
 
   let faults = JSON.parse(localStorage.getItem("faults")) || [];
-  let editIndex = null; // Index of fault being edited; null if adding new
+  let editIndex = null;
 
-  // Populate dropdowns in the form (if you want dynamic)
   function populateDropdowns() {
     const equipSelect = faultForm.EquipmentType;
     const statusSelect = faultForm.Status;
 
     equipSelect.innerHTML = equipmentTypeOptions
-      .map(opt => `<option value="${opt}">${opt}</option>`)
+      .map((opt) => `<option value="${opt}">${opt}</option>`)
       .join("");
 
     statusSelect.innerHTML = statusOptions
-      .map(opt => `<option value="${opt}">${opt}</option>`)
+      .map((opt) => `<option value="${opt}">${opt}</option>`)
       .join("");
   }
 
   populateDropdowns();
 
-  // Render fault table rows
+  // Format date as "YYYY-MM-DD HH:mm:ss"
+  function getCurrentFormattedDateTime() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+  }
+
   function renderTable() {
     faultTableBody.innerHTML = "";
     faults.forEach((fault, idx) => {
@@ -52,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${fault.Status || ""}</td>
         <td>${fault.DateResolved || ""}</td>
         <td>${fault.ActionTaken || ""}</td>
+        <td>${fault.DateUpdated || ""}</td>
         <td>
           <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
           <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
@@ -61,14 +69,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Clear and reset the form for adding new
   function clearForm() {
     faultForm.reset();
     editIndex = null;
     deleteFaultBtn.style.display = "none";
+    faultForm.DateUpdated.value = "";
   }
 
-  // Fill form fields with existing fault data for editing
   function fillForm(fault) {
     faultForm.EquipmentType.value = fault.EquipmentType || "";
     faultForm.Vendor.value = fault.Vendor || "";
@@ -85,30 +92,37 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.Status.value = fault.Status || "";
     faultForm.DateResolved.value = fault.DateResolved || "";
     faultForm.ActionTaken.value = fault.ActionTaken || "";
+    faultForm.DateUpdated.value = fault.DateUpdated || "";
   }
 
-  // Save faults array to localStorage
   function saveFaults() {
     localStorage.setItem("faults", JSON.stringify(faults));
   }
 
-  // Open modal for adding new fault
-  addFaultBtn.addEventListener("click", () => {
+  // When opening modal for add or edit, set DateUpdated automatically
+  function openModalForAdd() {
     clearForm();
+    faultForm.DateUpdated.value = getCurrentFormattedDateTime();
     faultModal.show();
-  });
+  }
 
-  // Table event delegation for Edit and Delete buttons
+  function openModalForEdit(idx) {
+    editIndex = idx;
+    fillForm(faults[editIndex]);
+    faultForm.DateUpdated.value = getCurrentFormattedDateTime();
+    deleteFaultBtn.style.display = "inline-block";
+    faultModal.show();
+  }
+
+  addFaultBtn.addEventListener("click", openModalForAdd);
+
   faultTableBody.addEventListener("click", (e) => {
     const target = e.target;
     const idx = target.getAttribute("data-index");
     if (!idx) return;
 
     if (target.classList.contains("edit-btn")) {
-      editIndex = parseInt(idx);
-      fillForm(faults[editIndex]);
-      deleteFaultBtn.style.display = "inline-block";
-      faultModal.show();
+      openModalForEdit(parseInt(idx));
     }
 
     if (target.classList.contains("delete-btn")) {
@@ -120,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Delete button inside modal
   deleteFaultBtn.addEventListener("click", () => {
     if (editIndex !== null) {
       if (confirm("Delete this fault?")) {
@@ -133,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Handle form submit (Add or Edit)
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -153,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Status: faultForm.Status.value,
       DateResolved: faultForm.DateResolved.value,
       ActionTaken: faultForm.ActionTaken.value.trim(),
+      DateUpdated: faultForm.DateUpdated.value,
     };
 
     if (editIndex === null) {
@@ -167,6 +180,5 @@ document.addEventListener("DOMContentLoaded", () => {
     clearForm();
   });
 
-  // Initial rendering of table
   renderTable();
 });
