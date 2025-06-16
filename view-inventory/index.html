@@ -1,5 +1,3 @@
-//view-inventory/index.html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +43,7 @@
     </div>
   </nav>
 
-  <!-- Content container with reduced top margin/padding -->
+  <!-- Content container -->
   <div class="container inventory-container">
     <h1 class="mb-4">Inventory</h1>
 
@@ -128,18 +126,220 @@
   >
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Item</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <form id="inventory-form"></form>
-        </div>
+        <form id="inventory-form" class="p-3 needs-validation" novalidate>
+          <div class="modal-header">
+            <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Item</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="equipmentType" class="form-label">Equipment Type</label>
+                <select
+                  class="form-select"
+                  id="equipmentType"
+                  name="equipmentType"
+                  required
+                >
+                  <!-- Options will be populated dynamically -->
+                </select>
+                <div class="invalid-feedback">Please select an equipment type.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="vendor" class="form-label">Vendor</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="vendor"
+                  name="vendor"
+                  placeholder="Vendor"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="brandModel" class="form-label">Brand/Model</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="brandModel"
+                  name="brandModel"
+                  placeholder="Brand/Model"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="profile" class="form-label">Profile</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="profile"
+                  name="profile"
+                  placeholder="Profile"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="custodian" class="form-label">Custodian</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="custodian"
+                  name="custodian"
+                  placeholder="Custodian"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="assetNo" class="form-label">Asset No</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="assetNo"
+                  name="assetNo"
+                  placeholder="Asset Number"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="serialNumber" class="form-label">Serial Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="serialNumber"
+                  name="serialNumber"
+                  placeholder="Serial Number"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="location" class="form-label">Location</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="location"
+                  name="location"
+                  placeholder="Location"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="endDate" class="form-label">End Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="endDate"
+                  name="endDate"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="startDate"
+                  name="startDate"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="hostname" class="form-label">Hostname</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="hostname"
+                  name="hostname"
+                  placeholder="Hostname"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="SSOE_PONumber" class="form-label">SSOE PO Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="SSOE_PONumber"
+                  name="SSOE_PONumber"
+                  placeholder="SSOE PO Number"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="cartNo" class="form-label">Cart No</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cartNo"
+                  name="cartNo"
+                  placeholder="Cart Number"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="sanitiseDate" class="form-label">Sanitise Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="sanitiseDate"
+                  name="sanitiseDate"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="durationInUse" class="form-label">Duration In Use</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="durationInUse"
+                  name="durationInUse"
+                  placeholder="e.g. 3 years 2 months"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="lampHour" class="form-label">Lamp Hour</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="lampHour"
+                  name="lampHour"
+                  placeholder="Lamp Hour"
+                  min="0"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label for="dateUpdated" class="form-label">Date Updated</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dateUpdated"
+                  name="dateUpdated"
+                  readonly
+                  tabindex="-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save Item</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
