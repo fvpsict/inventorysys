@@ -15,7 +15,7 @@ body {
 
 /* Spacing below navbar for content */
 .inventory-container {
-  margin-top: 70px; /* Adjusted gap below navbar */
+  margin-top: 80px; /* Adjusted gap below navbar */
   padding-top: 1rem !important;
 }
 
