@@ -5,10 +5,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const faultTableBody = document.querySelector("#faultTable tbody");
   const deleteFaultBtn = document.getElementById("deleteFaultBtn");
   const addFaultBtn = document.getElementById("addFaultBtn");
-  const dateUpdatedInput = document.getElementById("DateUpdated");
 
   let faults = JSON.parse(localStorage.getItem("faults")) || [];
   let editIndex = null;
+
+  // Format current date/time: YYYY-MM-DD HH:mm:ss
+  function getCurrentDateTime() {
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, "0");
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+      now.getDate()
+    )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
 
   function renderTable() {
     faultTableBody.innerHTML = "";
@@ -32,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${fault.ActionTaken || ""}</td>
         <td>${fault.DateUpdated || ""}</td>
         <td>
-          <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
+          <button class="btn btn-sm btn-primary edit-btn me-1" data-index="${idx}">Edit</button>
           <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
         </td>
       `;
@@ -44,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.reset();
     editIndex = null;
     deleteFaultBtn.style.display = "none";
-    dateUpdatedInput.value = "";
+    faultForm.DateUpdated.value = "";
   }
 
   function fillForm(fault) {
@@ -63,36 +71,15 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.Status.value = fault.Status || "";
     faultForm.DateResolved.value = fault.DateResolved || "";
     faultForm.ActionTaken.value = fault.ActionTaken || "";
-    dateUpdatedInput.value = fault.DateUpdated || "";
+    faultForm.DateUpdated.value = fault.DateUpdated || "";
   }
 
   function saveFaults() {
     localStorage.setItem("faults", JSON.stringify(faults));
   }
 
-  // Returns current date/time string in "YYYY-MM-DD HH:mm:ss" format
-  function getCurrentDateTimeString() {
-    const now = new Date();
-    const pad = (num) => num.toString().padStart(2, "0");
-    return (
-      now.getFullYear() +
-      "-" +
-      pad(now.getMonth() + 1) +
-      "-" +
-      pad(now.getDate()) +
-      " " +
-      pad(now.getHours()) +
-      ":" +
-      pad(now.getMinutes()) +
-      ":" +
-      pad(now.getSeconds())
-    );
-  }
-
   addFaultBtn.addEventListener("click", () => {
     clearForm();
-    // Set DateUpdated to current datetime on new fault
-    dateUpdatedInput.value = getCurrentDateTimeString();
     faultModal.show();
   });
 
@@ -132,6 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
+    const nowStr = getCurrentDateTime();
+
     const newFault = {
       EquipmentType: faultForm.EquipmentType.value,
       Vendor: faultForm.Vendor.value.trim(),
@@ -148,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Status: faultForm.Status.value,
       DateResolved: faultForm.DateResolved.value,
       ActionTaken: faultForm.ActionTaken.value.trim(),
-      DateUpdated: getCurrentDateTimeString(),
+      DateUpdated: nowStr,
     };
 
     if (editIndex === null) {
