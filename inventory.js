@@ -42,11 +42,6 @@ function calculateDuration(startDateStr) {
   return `${years}y ${months}m`;
 }
 
-function getTodayDate() {
-  const now = new Date();
-  return now.toISOString().slice(0, 10);
-}
-
 function saveData() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
@@ -85,6 +80,11 @@ function buildTable() {
 
     tableBody.appendChild(row);
   });
+}
+
+function getTodayDate() {
+  const today = new Date();
+  return today.toISOString().split("T")[0]; // YYYY-MM-DD for date input
 }
 
 function openForm(editIndex = null) {
@@ -130,8 +130,9 @@ function openForm(editIndex = null) {
       input.className = "form-control";
       input.name = header;
       input.value = values[header] || "";
-      if(header === "DateUpdated") {
-        input.disabled = true;  // disable editing DateUpdated
+      if (header === "DateUpdated" && editIndex === null) {
+        // For new item, auto set DateUpdated to today
+        input.value = getTodayDate();
       }
     } else {
       input = document.createElement("input");
@@ -159,7 +160,7 @@ function openForm(editIndex = null) {
       if (header !== "Actions") item[header] = formData.get(header) || "";
     });
 
-    // Auto update DateUpdated to today on save
+    // Always update DateUpdated to today on save
     item["DateUpdated"] = getTodayDate();
 
     if (editIndex !== null) {
