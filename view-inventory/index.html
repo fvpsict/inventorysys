@@ -30,27 +30,39 @@
   </nav>
 
   <!-- Main Content -->
-  <div class="container inventory-container">
-    <h1 class="mb-4">Inventory</h1>
+ <div class="container inventory-container mt-3">
+  <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
 
-    <!-- Filter dropdown -->
-    <div class="mb-3" style="max-width: 320px;">
-      <label for="filter-equipmenttype" class="form-label">Filter by Equipment Type:</label>
+    <!-- Equipment Type Filter -->
+    <div>
+      <label for="filter-equipmenttype" class="form-label">Filter by Equipment Type</label>
       <select id="filter-equipmenttype" class="form-select">
-        <option value="All">All</option>
-        <option value="SSOE">SSOE</option>
-        <option value="Projector">Projector</option>
-        <option value="Projector Screen">Projector Screen</option>
-        <option value="Touch Panel">Touch Panel</option>
-        <option value="Visualiser">Visualiser</option>
-        <option value="SMax">SMax</option>
-        <option value="Macbook">Macbook</option>
-        <option value="Portable HDD">Portable HDD</option>
-        <option value="TV">TV</option>
-        <option value="Monitor">Monitor</option>
-        <option value="OMR">OMR</option>
+        <option>All</option>
+        <option>SSOE</option>
+        <option>Projector</option>
+        <option>Projector Screen</option>
+        <option>Touch Panel</option>
+        <option>Visualiser</option>
+        <option>SMax</option>
+        <option>Macbook</option>
+        <option>Portable HDD</option>
+        <option>TV</option>
+        <option>Monitor</option>
+        <option>OMR</option>
       </select>
     </div>
+
+    <!-- Search Input -->
+    <div>
+      <label for="search-inventory" class="form-label">Search</label>
+      <input
+        type="text"
+        id="search-inventory"
+        class="form-control"
+        placeholder="Search inventory..."
+      />
+    </div>
+
 
     <!-- Add Item Button -->
     <button class="btn btn-success mb-3" id="add-item-btn">Add Item</button>
