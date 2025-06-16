@@ -11,11 +11,18 @@ body {
 .container {
   padding: 20px;
   max-width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 /* Navbar adjustments */
 .navbar {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Navbar brand font weight */
+.navbar-brand {
+  font-weight: 700;
 }
 
 /* Filter dropdown and button spacing */
@@ -26,57 +33,6 @@ body {
 
 #add-item-btn {
   margin-bottom: 1rem;
-}
-
-/* Table styling: full width, all-around borders with subtle color */
-table.table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #dee2e6;
-  background-color: #fff;
-}
-
-table.table th,
-table.table td {
-  border: 1px solid #dee2e6;
-  padding: 8px 12px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-/* Header background color (change as you like) */
-table.table thead th {
-  background-color: #343a40; /* dark gray/black */
-  color: white;
-  font-weight: 600;
-  user-select: none;
-}
-
-/* Buttons inside table */
-table.table button.btn {
-  font-size: 0.85rem;
-  padding: 4px 8px;
-}
-
-/* Modal adjustments */
-.modal-content {
-  border-radius: 0.3rem;
-}
-
-/* Form inside modal */
-#inventory-form .form-label {
-  font-weight: 600;
-}
-
-#inventory-form .form-control,
-#inventory-form .form-select {
-  border-radius: 0.25rem;
-  border: 1px solid #ced4da;
-  box-shadow: none;
-}
-
-#inventory-form .btn-success {
-  margin-top: 1rem;
 }
 
 /* Responsive table wrapper */
@@ -94,37 +50,6 @@ table.table button.btn {
   border-radius: 4px;
 }
 
-/* Hover effect on table rows */
-table.table tbody tr:hover {
-  background-color: #f1f3f5;
-  cursor: pointer;
-}
-
-/* Responsive tweaks */
-@media (max-width: 576px) {
-  #filter-equipmenttype {
-    max-width: 100%;
-  }
-
-  table.table th,
-  table.table td {
-    padding: 6px 8px;
-  }
-}
-
-/* Remove extra spacing between navbar and content for inventory container */
-.inventory-container {
-  margin-top: 56px; /* height of fixed navbar to avoid content behind navbar */
-  padding-top: 0.5rem !important;
-}
-
-/* Make container full width */
-.container {
-  max-width: 100% !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
 /* Inventory Table styling with all black borders and rounded corners */
 .inventory-table {
   border-collapse: separate !important;
@@ -140,15 +65,30 @@ table.table tbody tr:hover {
   background-color: black;
   color: white;
   border: 1px solid black !important;
+  user-select: none;
+  font-weight: 600;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: middle;
 }
 
 /* Table body cells with black borders */
 .inventory-table tbody td {
   border: 1px solid black !important;
+  padding: 8px 12px;
+  vertical-align: middle;
 }
 
-/* Button spacing in action column */
-.inventory-table tbody td button {
+/* Hover effect on table rows */
+.inventory-table tbody tr:hover {
+  background-color: #f1f3f5;
+  cursor: pointer;
+}
+
+/* Buttons inside table */
+.inventory-table button.btn {
+  font-size: 0.85rem;
+  padding: 4px 8px;
   min-width: 60px;
 }
 
@@ -157,19 +97,48 @@ table.table tbody tr:hover {
   border: none !important;
 }
 
-/* Fix modal body max height and scroll */
+/* Modal adjustments */
+.modal-content {
+  border-radius: 0.3rem;
+}
+
+/* Modal body max height and scroll */
 .modal-body {
   max-height: 70vh;
   overflow-y: auto;
 }
 
-/* Form label styling */
-.form-label {
+/* Form inside modal */
+#inventory-form .form-label {
   font-weight: 600;
 }
 
-/* Navbar brand font weight */
-.navbar-brand {
-  font-weight: 700;
+#inventory-form .form-control,
+#inventory-form .form-select {
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+  box-shadow: none;
 }
 
+/* Save button inside modal form */
+#inventory-form .btn-success {
+  margin-top: 1rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  #filter-equipmenttype {
+    max-width: 100%;
+  }
+
+  .inventory-table thead th,
+  .inventory-table tbody td {
+    padding: 6px 8px;
+  }
+}
+
+/* Remove extra spacing between navbar and content for inventory container */
+.inventory-container {
+  margin-top: 56px; /* height of fixed navbar */
+  padding-top: 0.5rem !important;
+}
