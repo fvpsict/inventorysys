@@ -1,256 +1,172 @@
-// fault-report.js
+//fault-report.js
 
-const faultEquipmentTypes = [
-  "Projector",
-  "Visualiser",
-  "Projector Screen",
-];
+document.addEventListener("DOMContentLoaded", () => {
+  const faultForm = document.getElementById("faultForm");
+  const faultModalEl = document.getElementById("faultModal");
+  const faultModal = new bootstrap.Modal(faultModalEl);
+  const faultTableBody = document.querySelector("#faultTable tbody");
+  const deleteFaultBtn = document.getElementById("deleteFaultBtn");
+  const addFaultBtn = document.getElementById("addFaultBtn");
 
-const faultStatusOptions = [
-  "Open",
-  "In Progress",
-  "Resolved",
-  "Closed",
-];
+  // Dropdown options (you can also define these in your HTML)
+  const equipmentTypeOptions = ["Projector", "Projector Screen", "Visualiser"];
+  const statusOptions = ["Pending Vendor", "Resolved", "InProgress"];
 
-// Columns to show in table & form
-const faultColumns = [
-  "EquipmentType",
-  "Vendor",
-  "BrandModel",
-  "AssetNo",
-  "SerialNumber",
-  "Location",
-  "Status",
-  "Fault",
-  "DateReported",
-];
+  let faults = JSON.parse(localStorage.getItem("faults")) || [];
+  let editIndex = null; // Index of fault being edited; null if adding new
 
-// Globals
-let faultReports = [];
-let editingFaultIndex = null;
+  // Populate dropdowns in the form (if you want dynamic)
+  function populateDropdowns() {
+    const equipSelect = faultForm.EquipmentType;
+    const statusSelect = faultForm.Status;
 
-// DOM elements
-const faultTableBody = document.querySelector("#fault-table tbody");
-const filterFaultEquipment = document.getElementById("filter-fault-equipmenttype");
-const searchFaultInput = document.getElementById("search-fault");
-const addFaultBtn = document.getElementById("add-fault-btn");
+    equipSelect.innerHTML = equipmentTypeOptions
+      .map(opt => `<option value="${opt}">${opt}</option>`)
+      .join("");
 
-const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
-const faultModalForm = document.getElementById("fault-form");
-const faultModalBody = faultModalForm.querySelector(".modal-body");
-const faultModalFooter = faultModalForm.querySelector(".modal-footer");
+    statusSelect.innerHTML = statusOptions
+      .map(opt => `<option value="${opt}">${opt}</option>`)
+      .join("");
+  }
 
-// Load fault reports from localStorage
-function loadFaultReports() {
-  const data = localStorage.getItem("faultReports");
-  faultReports = data ? JSON.parse(data) : [];
-}
+  populateDropdowns();
 
-// Save fault reports to localStorage
-function saveFaultReports() {
-  localStorage.setItem("faultReports", JSON.stringify(faultReports));
-}
-
-// Render fault report table
-function renderFaultTable() {
-  const filterValue = filterFaultEquipment.value;
-  const searchTerm = searchFaultInput.value.toLowerCase();
-
-  faultTableBody.innerHTML = "";
-
-  faultReports.forEach((fault, index) => {
-    if (filterValue !== "All" && fault.EquipmentType !== filterValue) return;
-
-    const matchesSearch = faultColumns.some((col) =>
-      (fault[col] || "").toString().toLowerCase().includes(searchTerm)
-    );
-    if (!matchesSearch) return;
-
-    const tr = document.createElement("tr");
-
-    faultColumns.forEach((col) => {
-      const td = document.createElement("td");
-      if (col === "DateReported") {
-        td.textContent = fault[col] || "";
-      } else {
-        td.textContent = fault[col] || "";
-      }
-      tr.appendChild(td);
+  // Render fault table rows
+  function renderTable() {
+    faultTableBody.innerHTML = "";
+    faults.forEach((fault, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${fault.EquipmentType || ""}</td>
+        <td>${fault.Vendor || ""}</td>
+        <td>${fault.BrandModel || ""}</td>
+        <td>${fault.AssetNo || ""}</td>
+        <td>${fault.SerialNumber || ""}</td>
+        <td>${fault.EndDate || ""}</td>
+        <td>${fault.StartDate || ""}</td>
+        <td>${fault.Room || ""}</td>
+        <td>${fault.RoomNumber || ""}</td>
+        <td>${fault.Level || ""}</td>
+        <td>${fault.Lamphour || ""}</td>
+        <td>${fault.Fault || ""}</td>
+        <td>${fault.Status || ""}</td>
+        <td>${fault.DateResolved || ""}</td>
+        <td>${fault.ActionTaken || ""}</td>
+        <td>
+          <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
+        </td>
+      `;
+      faultTableBody.appendChild(tr);
     });
+  }
 
-    // Actions column
-    const actionsTd = document.createElement("td");
-    actionsTd.classList.add("text-center");
+  // Clear and reset the form for adding new
+  function clearForm() {
+    faultForm.reset();
+    editIndex = null;
+    deleteFaultBtn.style.display = "none";
+  }
 
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-sm btn-primary me-2";
-    editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", () => openFaultModalForEdit(index));
+  // Fill form fields with existing fault data for editing
+  function fillForm(fault) {
+    faultForm.EquipmentType.value = fault.EquipmentType || "";
+    faultForm.Vendor.value = fault.Vendor || "";
+    faultForm.BrandModel.value = fault.BrandModel || "";
+    faultForm.AssetNo.value = fault.AssetNo || "";
+    faultForm.SerialNumber.value = fault.SerialNumber || "";
+    faultForm.EndDate.value = fault.EndDate || "";
+    faultForm.StartDate.value = fault.StartDate || "";
+    faultForm.Room.value = fault.Room || "";
+    faultForm.RoomNumber.value = fault.RoomNumber || "";
+    faultForm.Level.value = fault.Level || "";
+    faultForm.Lamphour.value = fault.Lamphour || "";
+    faultForm.Fault.value = fault.Fault || "";
+    faultForm.Status.value = fault.Status || "";
+    faultForm.DateResolved.value = fault.DateResolved || "";
+    faultForm.ActionTaken.value = fault.ActionTaken || "";
+  }
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn btn-sm btn-danger";
-    deleteBtn.textContent = "Delete";
-    deleteBtn.addEventListener("click", () => {
-      if (
-        confirm(
-          `Are you sure you want to delete the fault for AssetNo "${fault.AssetNo}"?`
-        )
-      ) {
-        faultReports.splice(index, 1);
-        saveFaultReports();
-        renderFaultTable();
-      }
-    });
+  // Save faults array to localStorage
+  function saveFaults() {
+    localStorage.setItem("faults", JSON.stringify(faults));
+  }
 
-    actionsTd.appendChild(editBtn);
-    actionsTd.appendChild(deleteBtn);
-    tr.appendChild(actionsTd);
-
-    faultTableBody.appendChild(tr);
+  // Open modal for adding new fault
+  addFaultBtn.addEventListener("click", () => {
+    clearForm();
+    faultModal.show();
   });
-}
 
-// Open modal to add new fault
-function openFaultModalForAdd() {
-  editingFaultIndex = null;
-  faultModalForm.reset();
-  buildFaultModalForm(null);
-  faultModal.show();
-  setFaultModalTitle("Add Fault Report");
-}
+  // Table event delegation for Edit and Delete buttons
+  faultTableBody.addEventListener("click", (e) => {
+    const target = e.target;
+    const idx = target.getAttribute("data-index");
+    if (!idx) return;
 
-// Open modal to edit fault
-function openFaultModalForEdit(index) {
-  editingFaultIndex = index;
-  faultModalForm.reset();
-  buildFaultModalForm(faultReports[index]);
-  faultModal.show();
-  setFaultModalTitle("Edit Fault Report");
-}
-
-// Set modal title
-function setFaultModalTitle(title) {
-  document.getElementById("faultModalLabel").textContent = title;
-}
-
-// Build modal form fields dynamically based on faultColumns and optional fault data
-function buildFaultModalForm(fault) {
-  faultModalBody.innerHTML = "";
-  faultModalFooter.innerHTML = "";
-
-  faultColumns.forEach((key) => {
-    const div = document.createElement("div");
-    div.className = "mb-3";
-
-    const label = document.createElement("label");
-    label.htmlFor = `input-${key}`;
-    label.className = "form-label fw-semibold";
-    label.textContent = key.replace(/([A-Z])/g, " $1").trim();
-
-    let input;
-
-    if (key === "EquipmentType") {
-      input = document.createElement("select");
-      input.className = "form-select";
-      input.id = `input-${key}`;
-      input.name = key;
-
-      faultEquipmentTypes.forEach((type) => {
-        const option = document.createElement("option");
-        option.value = type;
-        option.textContent = type;
-        if (fault && fault[key] === type) option.selected = true;
-        input.appendChild(option);
-      });
-    } else if (key === "Status") {
-      input = document.createElement("select");
-      input.className = "form-select";
-      input.id = `input-${key}`;
-      input.name = key;
-
-      faultStatusOptions.forEach((status) => {
-        const option = document.createElement("option");
-        option.value = status;
-        option.textContent = status;
-        if (fault && fault[key] === status) option.selected = true;
-        input.appendChild(option);
-      });
-    } else if (key === "DateReported") {
-      input = document.createElement("input");
-      input.type = "date";
-      input.className = "form-control";
-      input.id = `input-${key}`;
-      input.name = key;
-      if (fault && fault[key]) {
-        input.value = fault[key];
-      } else {
-        // Default to today
-        input.value = new Date().toISOString().slice(0, 10);
-      }
-    } else {
-      input = document.createElement("input");
-      input.type = "text";
-      input.className = "form-control";
-      input.id = `input-${key}`;
-      input.name = key;
-      input.value = fault ? fault[key] || "" : "";
+    if (target.classList.contains("edit-btn")) {
+      editIndex = parseInt(idx);
+      fillForm(faults[editIndex]);
+      deleteFaultBtn.style.display = "inline-block";
+      faultModal.show();
     }
 
-    div.appendChild(label);
-    div.appendChild(input);
-    faultModalBody.appendChild(div);
+    if (target.classList.contains("delete-btn")) {
+      if (confirm("Are you sure you want to delete this fault?")) {
+        faults.splice(parseInt(idx), 1);
+        saveFaults();
+        renderTable();
+      }
+    }
   });
 
-  // Add Save and Cancel buttons
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "submit";
-  saveBtn.className = "btn btn-success";
-  saveBtn.textContent = "Save";
-
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-secondary";
-  cancelBtn.textContent = "Cancel";
-  cancelBtn.setAttribute("data-bs-dismiss", "modal");
-
-  faultModalFooter.appendChild(saveBtn);
-  faultModalFooter.appendChild(cancelBtn);
-}
-
-// Handle fault form submit
-faultModalForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const formData = new FormData(faultModalForm);
-  let newFault = {};
-
-  faultColumns.forEach((col) => {
-    newFault[col] = formData.get(col) ? formData.get(col).trim() : "";
+  // Delete button inside modal
+  deleteFaultBtn.addEventListener("click", () => {
+    if (editIndex !== null) {
+      if (confirm("Delete this fault?")) {
+        faults.splice(editIndex, 1);
+        saveFaults();
+        renderTable();
+        faultModal.hide();
+        clearForm();
+      }
+    }
   });
 
-  // Validate AssetNo required
-  if (!newFault.AssetNo) {
-    alert("AssetNo is required.");
-    return;
-  }
+  // Handle form submit (Add or Edit)
+  faultForm.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-  if (editingFaultIndex === null) {
-    faultReports.push(newFault);
-  } else {
-    faultReports[editingFaultIndex] = newFault;
-  }
+    const newFault = {
+      EquipmentType: faultForm.EquipmentType.value,
+      Vendor: faultForm.Vendor.value.trim(),
+      BrandModel: faultForm.BrandModel.value.trim(),
+      AssetNo: faultForm.AssetNo.value.trim(),
+      SerialNumber: faultForm.SerialNumber.value.trim(),
+      EndDate: faultForm.EndDate.value,
+      StartDate: faultForm.StartDate.value,
+      Room: faultForm.Room.value.trim(),
+      RoomNumber: faultForm.RoomNumber.value.trim(),
+      Level: faultForm.Level.value.trim(),
+      Lamphour: faultForm.Lamphour.value.trim(),
+      Fault: faultForm.Fault.value.trim(),
+      Status: faultForm.Status.value,
+      DateResolved: faultForm.DateResolved.value,
+      ActionTaken: faultForm.ActionTaken.value.trim(),
+    };
 
-  saveFaultReports();
-  renderFaultTable();
-  faultModal.hide();
+    if (editIndex === null) {
+      faults.push(newFault);
+    } else {
+      faults[editIndex] = newFault;
+    }
+
+    saveFaults();
+    renderTable();
+    faultModal.hide();
+    clearForm();
+  });
+
+  // Initial rendering of table
+  renderTable();
 });
-
-// Attach event listeners for filters and buttons
-filterFaultEquipment.addEventListener("change", renderFaultTable);
-searchFaultInput.addEventListener("input", renderFaultTable);
-addFaultBtn.addEventListener("click", openFaultModalForAdd);
-
-// Initialize
-loadFaultReports();
-renderFaultTable();
