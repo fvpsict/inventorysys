@@ -1,115 +1,40 @@
-/* General Styling */
+/* styles.css */
+
+/* Body font & background */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
 }
 
-h1 {
-  font-size: 2rem;
+/* Navbar brand font-weight */
+.navbar-brand {
   font-weight: 600;
+  font-size: 1.3rem;
 }
 
-/* Navbar */
-.navbar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Active nav link */
+.navbar-nav .nav-link.active {
+  font-weight: 600;
+  color: #0d6efd !important; /* Bootstrap primary blue */
 }
 
-.navbar .nav-link.active {
-  font-weight: bold;
-  color: #0d6efd !important;
+/* Table header background */
+.table-primary th {
+  background-color: #007bff !important;
+  color: white !important;
+  user-select: none;
 }
 
-/* Buttons */
-.btn {
-  min-width: 100px;
+/* Buttons spacing */
+.btn + .btn {
+  margin-left: 0.3rem;
 }
 
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-/* Tables */
-.table {
-  background-color: white;
-}
-
-.table thead th {
-  background-color: #007bff;
-  color: white;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.table tbody td {
-  vertical-align: middle;
-}
-
-.table-bordered th,
-.table-bordered td {
-  border: 1px solid #dee2e6;
-}
-
-/* Table Row Hover */
-.table-hover tbody tr:hover {
-  background-color: #f1f1f1;
-}
-
-/* Modal */
-.modal-header {
-  background-color: #0d6efd;
-  color: white;
-}
-
-.modal-title {
-  font-weight: 500;
-}
-
-.modal-footer {
-  background-color: #f1f1f1;
-}
-
-/* Form Controls */
-.form-control, .form-select {
-  border-radius: 0.3rem;
-}
-
-label.form-label {
-  font-weight: 500;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 1.5rem;
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
   }
-
-  .table-responsive {
-    font-size: 0.875rem;
-  }
-
-  .btn {
-    min-width: auto;
-    font-size: 0.875rem;
-  }
-
-  .form-label {
-    font-size: 0.85rem;
-  }
-}
-
-/* Filter & Search Box */
-#filter-equipmenttype,
-#search-inventory {
-  min-width: 200px;
-}
-
-#search-inventory {
-  margin-top: 0.25rem;
-}
-
-/* Utility */
-.text-end {
-  text-align: end !important;
 }
