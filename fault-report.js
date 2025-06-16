@@ -1,5 +1,3 @@
-//fault-report.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const faultForm = document.getElementById("faultForm");
   const faultModalEl = document.getElementById("faultModal");
@@ -7,31 +5,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const faultTableBody = document.querySelector("#faultTable tbody");
   const deleteFaultBtn = document.getElementById("deleteFaultBtn");
   const addFaultBtn = document.getElementById("addFaultBtn");
-
-  // Dropdown options (you can also define these in your HTML)
-  const equipmentTypeOptions = ["Projector", "Projector Screen", "Visualiser"];
-  const statusOptions = ["Pending Vendor", "Resolved", "InProgress"];
+  const dateUpdatedInput = document.getElementById("DateUpdated");
 
   let faults = JSON.parse(localStorage.getItem("faults")) || [];
-  let editIndex = null; // Index of fault being edited; null if adding new
+  let editIndex = null;
 
-  // Populate dropdowns in the form (if you want dynamic)
-  function populateDropdowns() {
-    const equipSelect = faultForm.EquipmentType;
-    const statusSelect = faultForm.Status;
-
-    equipSelect.innerHTML = equipmentTypeOptions
-      .map(opt => `<option value="${opt}">${opt}</option>`)
-      .join("");
-
-    statusSelect.innerHTML = statusOptions
-      .map(opt => `<option value="${opt}">${opt}</option>`)
-      .join("");
-  }
-
-  populateDropdowns();
-
-  // Render fault table rows
   function renderTable() {
     faultTableBody.innerHTML = "";
     faults.forEach((fault, idx) => {
@@ -52,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${fault.Status || ""}</td>
         <td>${fault.DateResolved || ""}</td>
         <td>${fault.ActionTaken || ""}</td>
+        <td>${fault.DateUpdated || ""}</td>
         <td>
           <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
           <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
@@ -61,14 +40,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Clear and reset the form for adding new
   function clearForm() {
     faultForm.reset();
     editIndex = null;
     deleteFaultBtn.style.display = "none";
+    dateUpdatedInput.value = "";
   }
 
-  // Fill form fields with existing fault data for editing
   function fillForm(fault) {
     faultForm.EquipmentType.value = fault.EquipmentType || "";
     faultForm.Vendor.value = fault.Vendor || "";
@@ -85,20 +63,39 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.Status.value = fault.Status || "";
     faultForm.DateResolved.value = fault.DateResolved || "";
     faultForm.ActionTaken.value = fault.ActionTaken || "";
+    dateUpdatedInput.value = fault.DateUpdated || "";
   }
 
-  // Save faults array to localStorage
   function saveFaults() {
     localStorage.setItem("faults", JSON.stringify(faults));
   }
 
-  // Open modal for adding new fault
+  // Returns current date/time string in "YYYY-MM-DD HH:mm:ss" format
+  function getCurrentDateTimeString() {
+    const now = new Date();
+    const pad = (num) => num.toString().padStart(2, "0");
+    return (
+      now.getFullYear() +
+      "-" +
+      pad(now.getMonth() + 1) +
+      "-" +
+      pad(now.getDate()) +
+      " " +
+      pad(now.getHours()) +
+      ":" +
+      pad(now.getMinutes()) +
+      ":" +
+      pad(now.getSeconds())
+    );
+  }
+
   addFaultBtn.addEventListener("click", () => {
     clearForm();
+    // Set DateUpdated to current datetime on new fault
+    dateUpdatedInput.value = getCurrentDateTimeString();
     faultModal.show();
   });
 
-  // Table event delegation for Edit and Delete buttons
   faultTableBody.addEventListener("click", (e) => {
     const target = e.target;
     const idx = target.getAttribute("data-index");
@@ -120,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Delete button inside modal
   deleteFaultBtn.addEventListener("click", () => {
     if (editIndex !== null) {
       if (confirm("Delete this fault?")) {
@@ -133,7 +129,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Handle form submit (Add or Edit)
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -153,6 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Status: faultForm.Status.value,
       DateResolved: faultForm.DateResolved.value,
       ActionTaken: faultForm.ActionTaken.value.trim(),
+      DateUpdated: getCurrentDateTimeString(),
     };
 
     if (editIndex === null) {
@@ -167,6 +163,5 @@ document.addEventListener("DOMContentLoaded", () => {
     clearForm();
   });
 
-  // Initial rendering of table
   renderTable();
 });
