@@ -8,11 +8,14 @@ body {
   padding: 0;
 }
 
-.container {
-  padding: 20px;
-  max-width: 100%;
+.container,
+.report-container,
+.inventory-container {
+  max-width: 100% !important;
   padding-left: 1rem;
   padding-right: 1rem;
+  margin-top: 56px; /* height of fixed navbar */
+  padding-top: 0.5rem !important;
 }
 
 /* Navbar adjustments */
@@ -20,7 +23,6 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Navbar brand font weight */
 .navbar-brand {
   font-weight: 700;
 }
@@ -35,33 +37,20 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Responsive table wrapper */
-.table-responsive {
-  overflow-x: auto;
-}
-
-/* Scrollbar styling for wide tables (optional) */
-.table-responsive::-webkit-scrollbar {
-  height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
-}
-
-/* Inventory Table styling with all black borders and rounded corners */
-.inventory-table {
+/* Common table styling for all inventory/report tables */
+.inventory-table,
+.report-table {
   border-collapse: separate !important;
   border-spacing: 0;
   width: 100%;
   border: 1px solid black !important;
   border-radius: 8px;
   overflow: hidden;
+  background-color: #fff;
 }
 
-/* Table header with black background and white text */
-.inventory-table thead th {
+.inventory-table thead th,
+.report-table thead th {
   background-color: black;
   color: white;
   border: 1px solid black !important;
@@ -72,21 +61,23 @@ body {
   vertical-align: middle;
 }
 
-/* Table body cells with black borders */
-.inventory-table tbody td {
+.inventory-table tbody td,
+.report-table tbody td {
   border: 1px solid black !important;
   padding: 8px 12px;
   vertical-align: middle;
 }
 
-/* Hover effect on table rows */
-.inventory-table tbody tr:hover {
+/* Hover effect */
+.inventory-table tbody tr:hover,
+.report-table tbody tr:hover {
   background-color: #f1f3f5;
   cursor: pointer;
 }
 
 /* Buttons inside table */
-.inventory-table button.btn {
+.inventory-table button.btn,
+.report-table button.btn {
   font-size: 0.85rem;
   padding: 4px 8px;
   min-width: 60px;
@@ -102,7 +93,6 @@ body {
   border-radius: 0.3rem;
 }
 
-/* Modal body max height and scroll */
 .modal-body {
   max-height: 70vh;
   overflow-y: auto;
@@ -120,7 +110,6 @@ body {
   box-shadow: none;
 }
 
-/* Save button inside modal form */
 #inventory-form .btn-success {
   margin-top: 1rem;
 }
@@ -131,14 +120,10 @@ body {
     max-width: 100%;
   }
 
-  .inventory-table thead th,
-  .inventory-table tbody td {
+  .inventory-table th,
+  .inventory-table td,
+  .report-table th,
+  .report-table td {
     padding: 6px 8px;
   }
-}
-
-/* Remove extra spacing between navbar and content for inventory container */
-.inventory-container {
-  margin-top: 56px; /* height of fixed navbar */
-  padding-top: 0.5rem !important;
 }
