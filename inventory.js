@@ -6,12 +6,22 @@ const inventoryTableBody = document.querySelector("#inventory-table tbody");
 const filterEquipmentType = document.getElementById("filter-equipmenttype");
 const searchInventory = document.getElementById("search-inventory");
 const addItemBtn = document.getElementById("add-item-btn");
-const inventoryModalElement = document.getElementById("inventoryModal");
-const inventoryModal = new bootstrap.Modal(inventoryModalElement);
+const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
 const inventoryForm = document.getElementById("inventory-modal-form");
 
 let inventoryData = [];
 let editingIndex = null; // null means adding new
+
+// Helper: format date string YYYY-MM-DD to "dd MMMM yyyy"
+function formatDateDMY(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date)) return "";
+  const day = date.getDate();
+  const month = date.toLocaleString("default", { month: "long" });
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+}
 
 // Load data from localStorage
 function loadInventory() {
@@ -22,25 +32,6 @@ function loadInventory() {
 // Save data to localStorage
 function saveInventory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
-}
-
-// Format date string (yyyy-mm-dd) to "dd MMMM yyyy" (e.g., 25 June 2025)
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return "";
-
-  const options = { day: "2-digit", month: "long", year: "numeric" };
-  return date.toLocaleDateString("en-GB", options);
-}
-
-// Parse "dd MMMM yyyy" back to yyyy-mm-dd for inputs, or "" if invalid
-function parseDisplayDateToISO(displayDate) {
-  if (!displayDate) return "";
-  const parsed = Date.parse(displayDate);
-  if (isNaN(parsed)) return "";
-  const d = new Date(parsed);
-  return d.toISOString().slice(0, 10);
 }
 
 // Calculate duration between dates in years and months
@@ -75,9 +66,7 @@ function renderInventory() {
   inventoryTableBody.innerHTML = "";
 
   const filtered = inventoryData.filter(item => {
-    const matchesType =
-      filterType === "all" ||
-      (item.EquipmentType && item.EquipmentType.toLowerCase() === filterType);
+    const matchesType = filterType === "all" || (item.EquipmentType && item.EquipmentType.toLowerCase() === filterType);
     const matchesSearch = Object.values(item).some(val =>
       val && val.toString().toLowerCase().includes(searchText)
     );
@@ -96,15 +85,15 @@ function renderInventory() {
       <td>${item.AssetNo || ""}</td>
       <td>${item.SerialNumber || ""}</td>
       <td>${item.Location || ""}</td>
-      <td>${formatDate(item.EndDate)}</td>
-      <td>${formatDate(item.StartDate)}</td>
+      <td>${formatDateDMY(item.EndDate)}</td>
+      <td>${formatDateDMY(item.StartDate)}</td>
       <td>${item.Hostname || ""}</td>
       <td>${item["SSOE PO Number"] || ""}</td>
       <td>${item["Cart No"] || ""}</td>
-      <td>${formatDate(item.SanitiseDate)}</td>
+      <td>${formatDateDMY(item.SanitiseDate)}</td>
       <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
       <td>${item["Lamp Hour"] || ""}</td>
-      <td>${formatDate(item.DateUpdated)}</td>
+      <td>${formatDateDMY(item.DateUpdated)}</td>
       <td>
         <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
         <button class="btn btn-sm btn-danger delete-btn ms-1" data-index="${index}">Delete</button>
@@ -126,20 +115,33 @@ function renderInventory() {
 // Clear and reset modal form fields
 function resetForm() {
   inventoryForm.reset();
-  inventoryForm["DateUpdated"].value = "";
   editingIndex = null;
   document.getElementById("inventoryModalLabel").textContent = "Add Inventory Item";
+
+  // Auto-fill DateUpdated field with today in modal on Add
+  const now = new Date();
+  const day = now.getDate();
+  const month = now.toLocaleString("default", { month: "long" });
+  const year = now.getFullYear();
+  inventoryForm["DateUpdated"].value = `${day} ${month} ${year}`;
 }
+
+// Handle Add Item button click
+addItemBtn.addEventListener("click", () => {
+  resetForm();
+  inventoryModal.show();
+});
 
 // Fill form fields with data for editing
 function fillForm(item) {
   Object.keys(item).forEach(key => {
     if (inventoryForm.elements[key]) {
-      if (key === "EndDate" || key === "StartDate" || key === "SanitiseDate") {
-        inventoryForm.elements[key].value = item[key] || "";
-      } else if (key === "DateUpdated") {
-        // Show formatted date
-        inventoryForm.elements[key].value = formatDate(item[key]);
+      // For dates, convert display back to yyyy-mm-dd for input fields
+      if (["StartDate", "EndDate", "SanitiseDate"].includes(key) && item[key]) {
+        // Accept stored YYYY-MM-DD, else blank
+        inventoryForm.elements[key].value = item[key];
+      } else if (key === "DateUpdated" && item[key]) {
+        inventoryForm.elements[key].value = item[key]; // Already formatted dd MMM yyyy
       } else {
         inventoryForm.elements[key].value = item[key];
       }
@@ -147,16 +149,6 @@ function fillForm(item) {
   });
   document.getElementById("inventoryModalLabel").textContent = "Edit Inventory Item";
 }
-
-// Handle Add Item button click
-addItemBtn.addEventListener("click", () => {
-  resetForm();
-  // Set DateUpdated to today in display format
-  const now = new Date();
-  const options = { day: "2-digit", month: "long", year: "numeric" };
-  inventoryForm["DateUpdated"].value = now.toLocaleDateString("en-GB", options);
-  inventoryModal.show();
-});
 
 // Handle Edit button click
 function onEditItem(e) {
@@ -177,50 +169,33 @@ function onDeleteItem(e) {
   }
 }
 
-// Convert date input value (yyyy-mm-dd) to display format dd MMMM yyyy
-function dateInputToDisplay(inputVal) {
-  if (!inputVal) return "";
-  const date = new Date(inputVal);
-  if (isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-}
-
-// Convert display format dd MMMM yyyy to ISO yyyy-mm-dd
-function displayToISODate(displayStr) {
-  if (!displayStr) return "";
-  const d = new Date(displayStr);
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10);
-}
-
 // Handle form submission for add/edit
 inventoryForm.addEventListener("submit", e => {
   e.preventDefault();
 
   const formData = new FormData(inventoryForm);
   let item = {};
-
   for (let [key, value] of formData.entries()) {
-    value = value.trim();
-
-    // For date inputs, convert display dates to ISO (yyyy-mm-dd)
-    if (key === "EndDate" || key === "StartDate" || key === "SanitiseDate") {
-      item[key] = value; // Date inputs return yyyy-mm-dd already
-    } else if (key === "DateUpdated") {
-      // We'll overwrite DateUpdated below with today's date
-      item[key] = value;
-    } else {
-      item[key] = value;
-    }
+    item[key] = value.trim();
   }
 
-  // Overwrite DateUpdated with today's date in ISO format
+  // Convert date inputs to YYYY-MM-DD string for storage and display formatting
+  ["StartDate", "EndDate", "SanitiseDate"].forEach(field => {
+    if (item[field]) {
+      // Ensure date is in YYYY-MM-DD format (from input type="date")
+      const d = new Date(item[field]);
+      if (!isNaN(d)) {
+        item[field] = d.toISOString().slice(0, 10);
+      }
+    }
+  });
+
+  // Update DateUpdated to current date in dd MMMM yyyy format
   const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const todayISO = `${yyyy}-${mm}-${dd}`;
-  item.DateUpdated = todayISO;
+  const day = now.getDate();
+  const month = now.toLocaleString("default", { month: "long" });
+  const year = now.getFullYear();
+  item.DateUpdated = `${day} ${month} ${year}`;
 
   if (editingIndex !== null) {
     // Editing existing item
