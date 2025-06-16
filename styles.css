@@ -65,4 +65,8 @@ select {
   }
 }
 
+#searchInput {
+  max-width: 300px;  /* or any width you prefer */
+  display: inline-block;
+}
 
