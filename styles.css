@@ -1,60 +1,93 @@
-/* Remove extra spacing between navbar and content for inventory container */
-.inventory-container {
-  margin-top: 56px; /* height of fixed navbar to avoid content behind navbar */
-  padding-top: 0.5rem !important;
+/* General Body Styling */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
 }
 
-/* Make container full width */
-.container {
-  max-width: 100% !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* Navbar */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.navbar-brand {
+  font-weight: bold;
+}
+.navbar .nav-link.active {
+  font-weight: bold;
+  color: #fff !important;
+  background-color: #0d6efd;
+  border-radius: 0.25rem;
 }
 
-/* Inventory Table styling with all black borders and rounded corners */
-.inventory-table {
-  border-collapse: separate !important;
-  border-spacing: 0;
-  width: 100%;
-  border: 1px solid black !important;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* Table header with black background and white text */
-.inventory-table thead th {
-  background-color: blue;
-  color: white;
-  border: 1px solid black !important;
-}
-
-/* Table body cells with black borders */
-.inventory-table tbody td {
-  border: 1px solid black !important;
-}
-
-/* Button spacing in action column */
-.inventory-table tbody td button {
-  min-width: 60px;
-}
-
-/* Remove default table borders from bootstrap */
-.table-bordered {
-  border: none !important;
-}
-
-/* Fix modal body max height and scroll */
-.modal-body {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* Form label styling */
-.form-label {
+/* Headings */
+h1, h2, h3 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   font-weight: 600;
 }
 
-/* Navbar brand font weight */
-.navbar-brand {
-  font-weight: 700;
+/* Tables */
+.table thead th {
+  vertical-align: middle;
+  text-align: center;
+}
+.table td, .table th {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+.table td:last-child {
+  text-align: center;
+}
+
+/* Buttons */
+.btn {
+  min-width: 80px;
+}
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Modal */
+.modal .modal-title {
+  font-weight: 600;
+}
+.modal-body label {
+  font-weight: 500;
+}
+
+/* Forms */
+.form-label {
+  margin-bottom: 0.3rem;
+}
+input[type="text"], input[type="date"], select, textarea {
+  font-size: 0.95rem;
+}
+
+/* Responsive Table Container */
+.table-responsive {
+  margin-top: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  background-color: white;
+  padding: 0.5rem;
+}
+
+/* Add/Edit Inventory button */
+button[data-bs-target="#inventoryModal"] {
+  font-weight: 500;
+}
+
+/* Spacing for main container */
+main.container-fluid {
+  padding: 1rem 2rem;
+}
+
+/* Sticky header fix on mobile */
+@media (max-width: 768px) {
+  body {
+    padding-top: 60px;
+  }
 }
