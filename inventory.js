@@ -10,7 +10,7 @@ const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryMod
 const inventoryForm = document.getElementById("inventory-modal-form");
 
 let inventoryData = [];
-let editingIndex = null; // null means adding new
+let editingIndex = null;
 
 // Load data from localStorage
 function loadInventory() {
@@ -47,7 +47,7 @@ function calculateDuration(startDateStr, endDateStr = null) {
   return result.trim();
 }
 
-// Render the inventory table rows based on current filter and search
+// Render inventory table based on filter and search
 function renderInventory() {
   const filterType = filterEquipmentType.value.toLowerCase();
   const searchText = searchInventory.value.trim().toLowerCase();
@@ -64,7 +64,6 @@ function renderInventory() {
 
   filtered.forEach((item, index) => {
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
       <td>${item.EquipmentType || ""}</td>
       <td>${item.Vendor || ""}</td>
@@ -88,11 +87,10 @@ function renderInventory() {
         <button class="btn btn-sm btn-danger delete-btn ms-1" data-index="${index}">Delete</button>
       </td>
     `;
-
     inventoryTableBody.appendChild(tr);
   });
 
-  // Attach event listeners for edit/delete buttons
+  // Attach event listeners
   document.querySelectorAll(".edit-btn").forEach(btn =>
     btn.addEventListener("click", onEditItem)
   );
@@ -101,7 +99,6 @@ function renderInventory() {
   );
 }
 
-// Clear and reset modal form fields
 function resetForm() {
   inventoryForm.reset();
   inventoryForm["DateUpdated"].value = "";
@@ -109,13 +106,6 @@ function resetForm() {
   document.getElementById("inventoryModalLabel").textContent = "Add Inventory Item";
 }
 
-// Handle Add Item button click
-addItemBtn.addEventListener("click", () => {
-  resetForm();
-  inventoryModal.show();
-});
-
-// Fill form fields with data for editing
 function fillForm(item) {
   Object.keys(item).forEach(key => {
     if (inventoryForm.elements[key]) {
@@ -125,16 +115,23 @@ function fillForm(item) {
   document.getElementById("inventoryModalLabel").textContent = "Edit Inventory Item";
 }
 
-// Handle Edit button click
+addItemBtn.addEventListener("click", () => {
+  resetForm();
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  inventoryForm["DateUpdated"].value = `${yyyy}-${mm}-${dd}`;
+  inventoryModal.show();
+});
+
 function onEditItem(e) {
   const index = +e.target.dataset.index;
   editingIndex = index;
-  const item = inventoryData[index];
-  fillForm(item);
+  fillForm(inventoryData[index]);
   inventoryModal.show();
 }
 
-// Handle Delete button click
 function onDeleteItem(e) {
   const index = +e.target.dataset.index;
   if (confirm("Are you sure you want to delete this item?")) {
@@ -144,17 +141,14 @@ function onDeleteItem(e) {
   }
 }
 
-// Handle form submission for add/edit
 inventoryForm.addEventListener("submit", e => {
   e.preventDefault();
-
   const formData = new FormData(inventoryForm);
   let item = {};
   for (let [key, value] of formData.entries()) {
     item[key] = value.trim();
   }
-
-  // Update DateUpdated to current date in YYYY-MM-DD format
+  // Update DateUpdated to today
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, "0");
@@ -162,22 +156,18 @@ inventoryForm.addEventListener("submit", e => {
   item.DateUpdated = `${yyyy}-${mm}-${dd}`;
 
   if (editingIndex !== null) {
-    // Editing existing item
     inventoryData[editingIndex] = item;
   } else {
-    // Adding new item
     inventoryData.push(item);
   }
-
   saveInventory();
   renderInventory();
   inventoryModal.hide();
 });
 
-// Filter and Search handlers
 filterEquipmentType.addEventListener("change", renderInventory);
 searchInventory.addEventListener("input", renderInventory);
 
-// Initialize
+// Initial load
 loadInventory();
 renderInventory();
