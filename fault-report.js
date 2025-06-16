@@ -54,9 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function clearForm() {
     faultForm.reset();
-    faultForm.DateUpdated.value = ""; // clear Date Updated field on new
     editIndex = null;
     deleteFaultBtn.style.display = "none";
+    // Clear DateUpdated input as well
+    faultForm.DateUpdated.value = "";
   }
 
   function fillForm(fault) {
@@ -123,6 +124,9 @@ document.addEventListener("DOMContentLoaded", () => {
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
+    // Auto set the DateUpdated to current date formatted
+    const currentDateFormatted = getCurrentDateTime();
+
     const newFault = {
       EquipmentType: faultForm.EquipmentType.value,
       Vendor: faultForm.Vendor.value.trim(),
@@ -139,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Status: faultForm.Status.value,
       DateResolved: faultForm.DateResolved.value,
       ActionTaken: faultForm.ActionTaken.value.trim(),
-      DateUpdated: getCurrentDateTime(), // Auto update date updated here
+      DateUpdated: currentDateFormatted
     };
 
     if (editIndex === null) {
