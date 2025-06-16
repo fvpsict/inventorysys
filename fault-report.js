@@ -9,13 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let faults = JSON.parse(localStorage.getItem("faults")) || [];
   let editIndex = null;
 
-  // Format current date/time: YYYY-MM-DD HH:mm:ss
+  // Format current date: dd MMMM yyyy (e.g., 25 June 2025)
   function getCurrentDateTime() {
     const now = new Date();
-    const pad = (n) => n.toString().padStart(2, "0");
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
-      now.getDate()
-    )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const day = now.getDate().toString().padStart(2, "0");
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    return `${day} ${month} ${year}`;
   }
 
   function renderTable() {
@@ -40,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${fault.ActionTaken || ""}</td>
         <td>${fault.DateUpdated || ""}</td>
         <td>
-          <button class="btn btn-sm btn-primary edit-btn me-1" data-index="${idx}">Edit</button>
+          <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
           <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
         </td>
       `;
@@ -50,9 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function clearForm() {
     faultForm.reset();
+    faultForm.DateUpdated.value = ""; // clear Date Updated field on new
     editIndex = null;
     deleteFaultBtn.style.display = "none";
-    faultForm.DateUpdated.value = "";
   }
 
   function fillForm(fault) {
@@ -119,8 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const nowStr = getCurrentDateTime();
-
     const newFault = {
       EquipmentType: faultForm.EquipmentType.value,
       Vendor: faultForm.Vendor.value.trim(),
@@ -137,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Status: faultForm.Status.value,
       DateResolved: faultForm.DateResolved.value,
       ActionTaken: faultForm.ActionTaken.value.trim(),
-      DateUpdated: nowStr,
+      DateUpdated: getCurrentDateTime(), // Auto update date updated here
     };
 
     if (editIndex === null) {
