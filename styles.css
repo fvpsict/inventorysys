@@ -46,6 +46,11 @@ select {
   border-radius: 0.375rem !important;
 }
 
+/* Patching Report Header Bold */
+#patchTable thead th {
+  font-weight: bold;
+}
+
 /* Filter/search/add row spacing on small screens */
 @media (max-width: 768px) {
   .d-flex.flex-wrap.gap-3 {
