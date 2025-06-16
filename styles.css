@@ -13,23 +13,23 @@ body {
   max-width: 100%;
 }
 
-/* Spacing below navbar for content */
-.inventory-container {
-  margin-top: 80px; /* Adjusted gap below navbar */
-  padding-top: 1rem !important;
-}
-
-
 /* Navbar adjustments */
 .navbar {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1030;
 }
 
 .navbar-brand {
   font-weight: 700;
 }
 
-/* Layout for filter + search + add button */
+/* Spacing below navbar for content visibility */
+.inventory-container {
+  margin-top: 70px;
+  padding-top: 1rem;
+}
+
+/* Unified layout for filter, search, and add button */
 .inventory-header {
   display: flex;
   flex-wrap: wrap;
@@ -40,7 +40,7 @@ body {
 
 .inventory-header > div {
   flex-grow: 1;
-  min-width: 200px;
+  min-width: 160px;
 }
 
 /* Equipment Type Dropdown */
@@ -49,9 +49,9 @@ body {
   margin-bottom: 0;
 }
 
-/* Search Input - shorter width */
+/* Search Input */
 #search-inventory {
-  max-width: 220px;
+  max-width: 200px;
   margin-bottom: 0;
 }
 
@@ -62,7 +62,7 @@ body {
   min-width: 120px;
 }
 
-/* Table styling: full width, borders, rounded corners */
+/* Table styling */
 table.inventory-table {
   width: 100%;
   border-collapse: separate !important;
@@ -89,7 +89,7 @@ table.inventory-table thead th {
   user-select: none;
 }
 
-/* Table button styles */
+/* Table buttons */
 table.inventory-table button.btn {
   font-size: 0.85rem;
   padding: 4px 8px;
@@ -101,6 +101,7 @@ table.inventory-table button.btn {
   border-radius: 0.3rem;
 }
 
+/* Modal form inputs */
 #inventory-form .form-label {
   font-weight: 600;
 }
@@ -116,7 +117,7 @@ table.inventory-table button.btn {
   margin-top: 1rem;
 }
 
-/* Table responsive */
+/* Table responsiveness */
 .table-responsive {
   overflow-x: auto;
 }
@@ -136,13 +137,7 @@ table.inventory-table tbody tr:hover {
   cursor: pointer;
 }
 
-/* Spacing below navbar */
-.inventory-container {
-  margin-top: 56px;
-  padding-top: 0.5rem !important;
-}
-
-/* Responsive tweaks */
+/* Responsive tweaks for mobile */
 @media (max-width: 576px) {
   .inventory-header {
     flex-direction: column;
