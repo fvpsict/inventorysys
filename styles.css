@@ -75,6 +75,35 @@ input[type="text"], input[type="date"], select, textarea {
   padding: 0.5rem;
 }
 
+/* Make the container full width */
+.container-fluid, .container {
+  width: 100%;
+  padding: 20px;
+  margin: 0 auto;
+}
+
+/* Force the table to take full width */
+#inventory-table {
+  width: 100%;
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+
+/* Optional: Make headers sticky and styled */
+#inventory-table thead th {
+  background-color: #007bff;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Optional: Ensure responsiveness */
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
 /* Add/Edit Inventory button */
 button[data-bs-target="#inventoryModal"] {
   font-weight: 500;
