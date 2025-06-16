@@ -1,205 +1,176 @@
-const headers = [
-  "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo", "SerialNumber",
-  "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number", "Cart No", "SanitiseDate",
-  "Duration in use", "Lamp Hour", "DateUpdated", "Actions"
-];
-
-const equipmentTypeColors = {
-  SSOE: "#e8f0fe",
-  Projector: "#fff3cd",
-  "Projector Screen": "#f8d7da",
-  "Touch Panel": "#d1ecf1",
-  Visualiser: "#e2e3e5",
-  SMax: "#fefefe",
-  Macbook: "#d4edda",
-  "Portable HDD": "#cce5ff",
-  TV: "#f5c6cb",
-  Monitor: "#c3e6cb",
-  OMR: "#f8d7da"
-};
-
-let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return isNaN(date) ? dateStr : date.toLocaleDateString("en-GB", {
-    day: "2-digit", month: "short", year: "numeric"
-  }).replace(/ /g, " ");
-}
-
-function calculateDuration(startDateStr) {
-  const startDate = new Date(startDateStr);
-  const now = new Date();
-  if (isNaN(startDate)) return "";
-  let years = now.getFullYear() - startDate.getFullYear();
-  let months = now.getMonth() - startDate.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-  return `${years}y ${months}m`;
-}
-
-function getTodayDate() {
-  const today = new Date();
-  return today.toISOString().split("T")[0];
-}
-
-function saveData() {
-  localStorage.setItem("inventoryData", JSON.stringify(inventory));
-}
-
-function buildTable() {
-  const tableBody = document.querySelector("#inventory-table tbody");
-  tableBody.innerHTML = "";
-
-  const filterValue = document.getElementById("filter-equipmenttype")?.value || "All";
-
-  inventory.forEach((item, index) => {
-    if (filterValue !== "All" && item.EquipmentType !== filterValue) return;
-
-    const row = document.createElement("tr");
-    const color = equipmentTypeColors[item.EquipmentType] || "";
-    if (color) row.style.backgroundColor = color;
-
-    headers.forEach((header) => {
-      const cell = document.createElement("td");
-
-      if (["EndDate", "StartDate", "SanitiseDate", "DateUpdated"].includes(header)) {
-        cell.textContent = formatDate(item[header]);
-      } else if (header === "Duration in use") {
-        cell.textContent = calculateDuration(item["StartDate"]);
-      } else if (header === "Actions") {
-        cell.innerHTML = `
-          <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
-        `;
-      } else {
-        cell.textContent = item[header] || "";
-      }
-
-      row.appendChild(cell);
-    });
-
-    tableBody.appendChild(row);
-  });
-}
-
-function openForm(editIndex = null) {
-  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const form = document.getElementById("inventory-form");
-  form.innerHTML = "";
-
-  const values = editIndex !== null ? inventory[editIndex] : {};
-
-  headers.forEach(header => {
-    if (["Actions", "Duration in use"].includes(header)) return;
-
-    const formGroup = document.createElement("div");
-    formGroup.className = "mb-2";
-
-    const label = document.createElement("label");
-    label.className = "form-label";
-    label.textContent = header;
-    formGroup.appendChild(label);
-
-    let input;
-
-    if (header === "EquipmentType") {
-      input = document.createElement("select");
-      input.className = "form-select";
-      input.name = header;
-
-      const options = [
-        "", "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
-        "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
-      ];
-
-      options.forEach(opt => {
-        const option = document.createElement("option");
-        option.value = opt;
-        option.textContent = opt || "Select EquipmentType";
-        if (values[header] === opt) option.selected = true;
-        input.appendChild(option);
-      });
-    } else if (["EndDate", "StartDate", "SanitiseDate"].includes(header)) {
-      input = document.createElement("input");
-      input.type = "date";
-      input.className = "form-control";
-      input.name = header;
-      input.value = values[header] || "";
-    } else if (header === "DateUpdated") {
-      input = document.createElement("input");
-      input.type = "date";
-      input.className = "form-control";
-      input.name = header;
-      input.value = getTodayDate();
-      input.disabled = true;
-    } else {
-      input = document.createElement("input");
-      input.type = "text";
-      input.className = "form-control";
-      input.name = header;
-      input.value = values[header] || "";
-    }
-
-    formGroup.appendChild(input);
-    form.appendChild(formGroup);
-  });
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "btn btn-success";
-  saveButton.textContent = "Save";
-  form.appendChild(saveButton);
-
-  form.onsubmit = function (e) {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const item = {};
-
-    headers.forEach((header) => {
-      if (!["Actions", "Duration in use"].includes(header)) {
-        item[header] = formData.get(header) || "";
-      }
-    });
-
-    item["DateUpdated"] = getTodayDate();
-
-    if (editIndex !== null) {
-      inventory[editIndex] = item;
-    } else {
-      inventory.push(item);
-    }
-
-    saveData();
-    buildTable();
-    modal.hide();
-  };
-
-  modal.show();
-}
-
-function editItem(index) {
-  openForm(index);
-}
-
-function deleteItem(index) {
-  if (confirm("Are you sure you want to delete this item?")) {
-    inventory.splice(index, 1);
-    saveData();
-    buildTable();
-  }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  buildTable();
+  const inventoryTable = document.querySelector("#inventory-table tbody");
+  const inventoryForm = document.getElementById("inventory-form");
+  const addItemBtn = document.getElementById("add-item-btn");
+  const filterSelect = document.getElementById("filter-equipmenttype");
+  const searchInput = document.getElementById("search-inventory");
 
-  document.getElementById("add-item-btn").addEventListener("click", () => openForm());
+  let inventoryData = JSON.parse(localStorage.getItem("inventoryData")) || [];
 
-  const filter = document.getElementById("filter-equipmenttype");
-  if (filter) {
-    filter.addEventListener("change", buildTable);
+  function saveData() {
+    localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
   }
+
+  function formatToday() {
+    return new Date().toISOString().split("T")[0];
+  }
+
+  function renderTable(data) {
+    inventoryTable.innerHTML = "";
+    data.forEach((item, index) => {
+      const row = document.createElement("tr");
+      Object.keys(item).forEach((key) => {
+        const cell = document.createElement("td");
+        cell.textContent = item[key];
+        row.appendChild(cell);
+      });
+
+      // Actions cell
+      const actionsCell = document.createElement("td");
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-primary me-1";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => openForm(item, index));
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete this item?")) {
+          inventoryData.splice(index, 1);
+          saveData();
+          renderTable(applyFilterAndSearch());
+        }
+      });
+
+      actionsCell.appendChild(editBtn);
+      actionsCell.appendChild(deleteBtn);
+      row.appendChild(actionsCell);
+
+      inventoryTable.appendChild(row);
+    });
+  }
+
+  function applyFilterAndSearch() {
+    const filter = filterSelect.value;
+    const search = searchInput.value.toLowerCase();
+
+    return inventoryData.filter(item => {
+      const matchesFilter = filter === "All" || item.EquipmentType === filter;
+      const matchesSearch = Object.values(item).some(val =>
+        val.toLowerCase().includes(search)
+      );
+      return matchesFilter && matchesSearch;
+    });
+  }
+
+  function generateFormFields(data = {}) {
+    inventoryForm.innerHTML = "";
+
+    const headers = [
+      "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
+      "SerialNumber", "Location", "EndDate", "StartDate", "Hostname", "SSOE PO Number",
+      "Cart No", "SanitiseDate", "Duration in use", "Lamp Hour", "DateUpdated"
+    ];
+
+    headers.forEach(key => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "mb-3";
+
+      const label = document.createElement("label");
+      label.className = "form-label";
+      label.textContent = key;
+      label.htmlFor = key;
+
+      let input;
+
+      if (key === "EquipmentType") {
+        input = document.createElement("select");
+        input.className = "form-select";
+        input.id = key;
+        input.name = key;
+
+        const options = [
+          "SSOE", "Projector", "Projector Screen", "Touch Panel", "Visualiser",
+          "SMax", "Macbook", "Portable HDD", "TV", "Monitor", "OMR"
+        ];
+
+        options.forEach(option => {
+          const opt = document.createElement("option");
+          opt.value = option;
+          opt.textContent = option;
+          input.appendChild(opt);
+        });
+
+        input.value = data[key] || "";
+      } else if (key === "DateUpdated") {
+        input = document.createElement("input");
+        input.type = "date";
+        input.className = "form-control";
+        input.id = key;
+        input.name = key;
+        input.value = formatToday(); // auto populate
+        input.readOnly = true;
+      } else {
+        input = document.createElement("input");
+        input.type = key.toLowerCase().includes("date") ? "date" : "text";
+        input.className = "form-control";
+        input.id = key;
+        input.name = key;
+        input.value = data[key] || "";
+      }
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
+      inventoryForm.appendChild(wrapper);
+    });
+
+    const submitBtn = document.createElement("button");
+    submitBtn.type = "submit";
+    submitBtn.className = "btn btn-success";
+    submitBtn.textContent = "Save";
+
+    inventoryForm.appendChild(submitBtn);
+  }
+
+  function openForm(data = {}, index = null) {
+    generateFormFields(data);
+
+    const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+    modal.show();
+
+    inventoryForm.onsubmit = function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(inventoryForm);
+      const item = {};
+      formData.forEach((val, key) => {
+        item[key] = val;
+      });
+
+      item["DateUpdated"] = formatToday();
+
+      if (index !== null) {
+        inventoryData[index] = item;
+      } else {
+        inventoryData.push(item);
+      }
+
+      saveData();
+      renderTable(applyFilterAndSearch());
+      modal.hide();
+    };
+  }
+
+  addItemBtn.addEventListener("click", () => openForm());
+
+  filterSelect.addEventListener("change", () => {
+    renderTable(applyFilterAndSearch());
+  });
+
+  searchInput.addEventListener("input", () => {
+    renderTable(applyFilterAndSearch());
+  });
+
+  renderTable(applyFilterAndSearch());
 });
