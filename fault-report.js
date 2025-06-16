@@ -1,7 +1,6 @@
-// fault-report.js
+ // fault-report.js
 
 const STORAGE_KEY_FAULT = "fault_report_data";
-
 const EQUIPMENT_TYPES = ["Projector", "Visualiser", "Projector Screen"];
 const STATUS_OPTIONS = ["Open", "In Progress", "Resolved", "Closed"];
 
@@ -10,11 +9,7 @@ let filteredEquipmentType = "All";
 
 function loadFaultData() {
   const stored = localStorage.getItem(STORAGE_KEY_FAULT);
-  if (stored) {
-    faultData = JSON.parse(stored);
-  } else {
-    faultData = [];
-  }
+  faultData = stored ? JSON.parse(stored) : [];
 }
 
 function saveFaultData() {
@@ -25,26 +20,12 @@ function renderEquipmentTypeFilter() {
   const select = document.getElementById("filter-equipmenttype");
   if (!select) return;
 
-  // Clear existing options
-  select.innerHTML = "";
-
-  // Add "All" option
-  const allOption = document.createElement("option");
-  allOption.value = "All";
-  allOption.textContent = "All Equipment Types";
-  select.appendChild(allOption);
-
-  EQUIPMENT_TYPES.forEach(type => {
-    const option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    select.appendChild(option);
-  });
-
+  select.innerHTML = `<option value="All">All Equipment Types</option>` +
+    EQUIPMENT_TYPES.map(type => `<option value="${type}">${type}</option>`).join("");
   select.value = filteredEquipmentType;
 
-  select.onchange = (e) => {
-    filteredEquipmentType = e.target.value;
+  select.onchange = () => {
+    filteredEquipmentType = select.value;
     renderTableRows();
   };
 }
@@ -55,282 +36,191 @@ function renderTableRows() {
 
   tbody.innerHTML = "";
 
-  let dataToShow = faultData;
+  let filtered = filteredEquipmentType === "All"
+    ? faultData
+    : faultData.filter(f => f.EquipmentType === filteredEquipmentType);
 
-  if (filteredEquipmentType !== "All") {
-    dataToShow = faultData.filter(item => item.EquipmentType === filteredEquipmentType);
-  }
-
-  dataToShow.forEach((item, index) => {
+  filtered.forEach((item, idx) => {
     const tr = document.createElement("tr");
 
-    // EquipmentType
-    let td = document.createElement("td");
-    td.textContent = item.EquipmentType || "";
-    tr.appendChild(td);
+    // Columns: EquipmentType, Vendor, BrandModel, AssetNo, SerialNumber, EndDate, StartDate, Room, Fault, Status, Actions
 
-    // Vendor
-    td = document.createElement("td");
-    td.textContent = item.Vendor || "";
-    tr.appendChild(td);
-
-    // BrandModel
-    td = document.createElement("td");
-    td.textContent = item.BrandModel || "";
-    tr.appendChild(td);
-
-    // AssetNo
-    td = document.createElement("td");
-    td.textContent = item.AssetNo || "";
-    tr.appendChild(td);
-
-    // SerialNumber
-    td = document.createElement("td");
-    td.textContent = item.SerialNumber || "";
-    tr.appendChild(td);
-
-    // EndDate
-    td = document.createElement("td");
-    td.textContent = item.EndDate || "";
-    tr.appendChild(td);
-
-    // StartDate
-    td = document.createElement("td");
-    td.textContent = item.StartDate || "";
-    tr.appendChild(td);
-
-    // Room (optional, if used)
-    td = document.createElement("td");
-    td.textContent = item.Room || "";
-    tr.appendChild(td);
-
-    // Fault
-    td = document.createElement("td");
-    const faultInput = document.createElement("input");
-    faultInput.type = "text";
-    faultInput.value = item.Fault || "";
-    faultInput.className = "form-control form-control-sm";
-    faultInput.onchange = e => {
-      faultData[index].Fault = e.target.value.trim();
-      saveFaultData();
-    };
-    td.appendChild(faultInput);
-    tr.appendChild(td);
-
-    // Status - dropdown inline editable
-    td = document.createElement("td");
-    const statusSelect = document.createElement("select");
-    statusSelect.className = "form-select form-select-sm";
-    STATUS_OPTIONS.forEach(status => {
-      const opt = document.createElement("option");
-      opt.value = status;
-      opt.textContent = status;
-      if (item.Status === status) opt.selected = true;
-      statusSelect.appendChild(opt);
+    ["EquipmentType", "Vendor", "BrandModel", "AssetNo", "SerialNumber", "EndDate", "StartDate", "Room"].forEach(key => {
+      const td = document.createElement("td");
+      td.textContent = item[key] || "";
+      tr.appendChild(td);
     });
-    statusSelect.onchange = e => {
-      faultData[index].Status = e.target.value;
-      saveFaultData();
-      renderTableRows(); // Re-render if needed (for example, if filtering by status later)
-    };
-    td.appendChild(statusSelect);
-    tr.appendChild(td);
 
-    // Actions: Delete button
-    td = document.createElement("td");
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-sm btn-danger";
-    delBtn.textContent = "Delete";
-    delBtn.onclick = () => {
+    // Fault editable input
+    let tdFault = document.createElement("td");
+    let inputFault = document.createElement("input");
+    inputFault.type = "text";
+    inputFault.value = item.Fault || "";
+    inputFault.className = "form-control form-control-sm";
+    inputFault.onchange = e => {
+      faultData[idx].Fault = e.target.value.trim();
+      saveFaultData();
+    };
+    tdFault.appendChild(inputFault);
+    tr.appendChild(tdFault);
+
+    // Status dropdown inline editable
+    let tdStatus = document.createElement("td");
+    let selectStatus = document.createElement("select");
+    selectStatus.className = "form-select form-select-sm";
+    STATUS_OPTIONS.forEach(status => {
+      let option = document.createElement("option");
+      option.value = status;
+      option.textContent = status;
+      if (item.Status === status) option.selected = true;
+      selectStatus.appendChild(option);
+    });
+    selectStatus.onchange = e => {
+      faultData[idx].Status = e.target.value;
+      saveFaultData();
+      renderTableRows();
+    };
+    tdStatus.appendChild(selectStatus);
+    tr.appendChild(tdStatus);
+
+    // Actions - Delete button
+    let tdActions = document.createElement("td");
+    let btnDel = document.createElement("button");
+    btnDel.textContent = "Delete";
+    btnDel.className = "btn btn-sm btn-danger";
+    btnDel.onclick = () => {
       if (confirm("Delete this fault report?")) {
-        faultData.splice(index, 1);
+        faultData.splice(idx, 1);
         saveFaultData();
         renderTableRows();
       }
     };
-    td.appendChild(delBtn);
-    tr.appendChild(td);
+    tdActions.appendChild(btnDel);
+    tr.appendChild(tdActions);
 
     tbody.appendChild(tr);
   });
 }
 
 function showAddFaultModal() {
-  const modal = document.getElementById("faultModal");
-  if (!modal) return;
+  const modalEl = document.getElementById("faultModal");
+  if (!modalEl) return;
+  const modalBody = modalEl.querySelector(".modal-body");
+  modalBody.innerHTML = "";
 
-  const formBody = modal.querySelector(".modal-body");
-  formBody.innerHTML = "";
+  // Build inputs dynamically (you can customize)
+  function createLabel(text) {
+    const label = document.createElement("label");
+    label.className = "form-label mt-2";
+    label.textContent = text;
+    return label;
+  }
+  function createInput(type = "text") {
+    const input = document.createElement("input");
+    input.type = type;
+    input.className = "form-control";
+    return input;
+  }
+  function createSelect(options, defaultVal = null) {
+    const select = document.createElement("select");
+    select.className = "form-select";
+    options.forEach(opt => {
+      const option = document.createElement("option");
+      option.value = opt;
+      option.textContent = opt;
+      if (defaultVal && opt === defaultVal) option.selected = true;
+      select.appendChild(option);
+    });
+    return select;
+  }
 
-  // Create form inputs
-  // EquipmentType select
-  const equipmentLabel = document.createElement("label");
-  equipmentLabel.className = "form-label";
-  equipmentLabel.textContent = "Equipment Type";
-  const equipmentSelect = document.createElement("select");
-  equipmentSelect.className = "form-select";
-  EQUIPMENT_TYPES.forEach(type => {
-    const opt = document.createElement("option");
-    opt.value = type;
-    opt.textContent = type;
-    equipmentSelect.appendChild(opt);
-  });
+  // EquipmentType
+  modalBody.appendChild(createLabel("Equipment Type"));
+  const equipmentTypeSelect = createSelect(EQUIPMENT_TYPES, EQUIPMENT_TYPES[0]);
+  modalBody.appendChild(equipmentTypeSelect);
 
-  // Fault text input
-  const faultLabel = document.createElement("label");
-  faultLabel.className = "form-label mt-3";
-  faultLabel.textContent = "Fault Description";
+  // Vendor
+  modalBody.appendChild(createLabel("Vendor"));
+  const vendorInput = createInput();
+
+  modalBody.appendChild(vendorInput);
+
+  // BrandModel
+  modalBody.appendChild(createLabel("Brand/Model"));
+  const brandInput = createInput();
+  modalBody.appendChild(brandInput);
+
+  // AssetNo
+  modalBody.appendChild(createLabel("Asset No"));
+  const assetInput = createInput();
+  modalBody.appendChild(assetInput);
+
+  // SerialNumber
+  modalBody.appendChild(createLabel("Serial Number"));
+  const serialInput = createInput();
+  modalBody.appendChild(serialInput);
+
+  // EndDate
+  modalBody.appendChild(createLabel("End Date"));
+  const endDateInput = createInput("date");
+  modalBody.appendChild(endDateInput);
+
+  // StartDate
+  modalBody.appendChild(createLabel("Start Date"));
+  const startDateInput = createInput("date");
+  modalBody.appendChild(startDateInput);
+
+  // Room
+  modalBody.appendChild(createLabel("Room"));
+  const roomInput = createInput();
+  modalBody.appendChild(roomInput);
+
+  // Fault description
+  modalBody.appendChild(createLabel("Fault Description"));
   const faultInput = document.createElement("textarea");
   faultInput.className = "form-control";
   faultInput.rows = 3;
+  modalBody.appendChild(faultInput);
 
-  // Status select default to "Open"
-  const statusLabel = document.createElement("label");
-  statusLabel.className = "form-label mt-3";
-  statusLabel.textContent = "Status";
-  const statusSelect = document.createElement("select");
-  statusSelect.className = "form-select";
-  STATUS_OPTIONS.forEach(status => {
-    const opt = document.createElement("option");
-    opt.value = status;
-    opt.textContent = status;
-    if (status === "Open") opt.selected = true;
-    statusSelect.appendChild(opt);
-  });
+  // Status select
+  modalBody.appendChild(createLabel("Status"));
+  const statusSelect = createSelect(STATUS_OPTIONS, "Open");
+  modalBody.appendChild(statusSelect);
 
-  // Additional fields example (Vendor, BrandModel, AssetNo, SerialNumber, EndDate, StartDate, Room)
-  // You can expand this with more fields as needed.
+  // Show modal via Bootstrap
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
 
-  // Vendor
-  const vendorLabel = document.createElement("label");
-  vendorLabel.className = "form-label mt-3";
-  vendorLabel.textContent = "Vendor";
-  const vendorInput = document.createElement("input");
-  vendorInput.type = "text";
-  vendorInput.className = "form-control";
-
-  // BrandModel
-  const brandLabel = document.createElement("label");
-  brandLabel.className = "form-label mt-3";
-  brandLabel.textContent = "Brand/Model";
-  const brandInput = document.createElement("input");
-  brandInput.type = "text";
-  brandInput.className = "form-control";
-
-  // AssetNo
-  const assetLabel = document.createElement("label");
-  assetLabel.className = "form-label mt-3";
-  assetLabel.textContent = "Asset No";
-  const assetInput = document.createElement("input");
-  assetInput.type = "text";
-  assetInput.className = "form-control";
-
-  // SerialNumber
-  const serialLabel = document.createElement("label");
-  serialLabel.className = "form-label mt-3";
-  serialLabel.textContent = "Serial Number";
-  const serialInput = document.createElement("input");
-  serialInput.type = "text";
-  serialInput.className = "form-control";
-
-  // EndDate
-  const endDateLabel = document.createElement("label");
-  endDateLabel.className = "form-label mt-3";
-  endDateLabel.textContent = "End Date";
-  const endDateInput = document.createElement("input");
-  endDateInput.type = "date";
-  endDateInput.className = "form-control";
-
-  // StartDate
-  const startDateLabel = document.createElement("label");
-  startDateLabel.className = "form-label mt-3";
-  startDateLabel.textContent = "Start Date";
-  const startDateInput = document.createElement("input");
-  startDateInput.type = "date";
-  startDateInput.className = "form-control";
-
-  // Room
-  const roomLabel = document.createElement("label");
-  roomLabel.className = "form-label mt-3";
-  roomLabel.textContent = "Room";
-  const roomInput = document.createElement("input");
-  roomInput.type = "text";
-  roomInput.className = "form-control";
-
-  // Append all inputs to modal body
-  formBody.appendChild(equipmentLabel);
-  formBody.appendChild(equipmentSelect);
-  formBody.appendChild(vendorLabel);
-  formBody.appendChild(vendorInput);
-  formBody.appendChild(brandLabel);
-  formBody.appendChild(brandInput);
-  formBody.appendChild(assetLabel);
-  formBody.appendChild(assetInput);
-  formBody.appendChild(serialLabel);
-  formBody.appendChild(serialInput);
-  formBody.appendChild(endDateLabel);
-  formBody.appendChild(endDateInput);
-  formBody.appendChild(startDateLabel);
-  formBody.appendChild(startDateInput);
-  formBody.appendChild(roomLabel);
-  formBody.appendChild(roomInput);
-  formBody.appendChild(faultLabel);
-  formBody.appendChild(faultInput);
-  formBody.appendChild(statusLabel);
-  formBody.appendChild(statusSelect);
-
-  // Store modal inputs in dataset for saving reference
-  modal.dataset.editIndex = "";
-
-  // Show modal
-  const bootstrapModal = new bootstrap.Modal(modal);
-  bootstrapModal.show();
-
-  // Attach save button event
-  const saveBtn = modal.querySelector("#saveFaultBtn");
-  if (saveBtn) {
-    saveBtn.onclick = (e) => {
-      e.preventDefault();
-      addNewFault({
-        EquipmentType: equipmentSelect.value,
-        Vendor: vendorInput.value.trim(),
-        BrandModel: brandInput.value.trim(),
-        AssetNo: assetInput.value.trim(),
-        SerialNumber: serialInput.value.trim(),
-        EndDate: endDateInput.value,
-        StartDate: startDateInput.value,
-        Room: roomInput.value.trim(),
-        Fault: faultInput.value.trim(),
-        Status: statusSelect.value
-      });
-      bootstrapModal.hide();
-    };
-  }
-}
-
-function addNewFault(newFault) {
-  faultData.push(newFault);
-  saveFaultData();
-  renderTableRows();
+  // Save button handler
+  const saveBtn = modalEl.querySelector("#saveFaultBtn");
+  saveBtn.onclick = () => {
+    faultData.push({
+      EquipmentType: equipmentTypeSelect.value,
+      Vendor: vendorInput.value.trim(),
+      BrandModel: brandInput.value.trim(),
+      AssetNo: assetInput.value.trim(),
+      SerialNumber: serialInput.value.trim(),
+      EndDate: endDateInput.value,
+      StartDate: startDateInput.value,
+      Room: roomInput.value.trim(),
+      Fault: faultInput.value.trim(),
+      Status: statusSelect.value
+    });
+    saveFaultData();
+    renderTableRows();
+    modal.hide();
+  };
 }
 
 function searchFaultReports() {
-  const filter = document.getElementById("searchInput").value.toLowerCase();
+  const filter = (document.getElementById("searchInput")?.value || "").toLowerCase();
   const tbody = document.querySelector("#fault-table tbody");
   if (!tbody) return;
 
   Array.from(tbody.rows).forEach(row => {
-    const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(filter) ? "" : "none";
+    const rowText = row.textContent.toLowerCase();
+    row.style.display = rowText.includes(filter) ? "" : "none";
   });
-}
-
-function clearSearch() {
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.value = "";
-    searchFaultReports();
-  }
 }
 
 function initFaultReport() {
@@ -338,15 +228,8 @@ function initFaultReport() {
   renderEquipmentTypeFilter();
   renderTableRows();
 
-  const addFaultBtn = document.getElementById("addFaultBtn");
-  if (addFaultBtn) {
-    addFaultBtn.onclick = showAddFaultModal;
-  }
-
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.oninput = searchFaultReports;
-  }
+  document.getElementById("addFaultBtn")?.addEventListener("click", showAddFaultModal);
+  document.getElementById("searchInput")?.addEventListener("input", searchFaultReports);
 }
 
 document.addEventListener("DOMContentLoaded", initFaultReport);
