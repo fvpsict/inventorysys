@@ -25,8 +25,8 @@ body {
 
 /* Spacing below navbar for content visibility */
 .inventory-container {
-  margin-top: 70px;
-  padding-top: 1rem;
+  margin-top: 80px;
+  padding-top: 2rem;
 }
 
 /* Unified layout for filter, search, and add button */
