@@ -6,24 +6,22 @@ const inventoryTableBody = document.querySelector("#inventory-table tbody");
 const filterEquipmentType = document.getElementById("filter-equipmenttype");
 const searchInventory = document.getElementById("search-inventory");
 const addItemBtn = document.getElementById("add-item-btn");
-const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+const inventoryModalEl = document.getElementById("inventoryModal");
+const inventoryModal = new bootstrap.Modal(inventoryModalEl);
 const inventoryForm = document.getElementById("inventory-modal-form");
 
 let inventoryData = [];
-let editingIndex = null;
+let editingIndex = null; // null means adding new
 
-// Load data from localStorage
 function loadInventory() {
   const storedData = localStorage.getItem(STORAGE_KEY);
   inventoryData = storedData ? JSON.parse(storedData) : [];
 }
 
-// Save data to localStorage
 function saveInventory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
 }
 
-// Calculate duration between dates in years and months
 function calculateDuration(startDateStr, endDateStr = null) {
   if (!startDateStr) return "";
 
@@ -47,7 +45,6 @@ function calculateDuration(startDateStr, endDateStr = null) {
   return result.trim();
 }
 
-// Render inventory table based on filter and search
 function renderInventory() {
   const filterType = filterEquipmentType.value.toLowerCase();
   const searchText = searchInventory.value.trim().toLowerCase();
@@ -64,6 +61,7 @@ function renderInventory() {
 
   filtered.forEach((item, index) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>${item.EquipmentType || ""}</td>
       <td>${item.Vendor || ""}</td>
@@ -87,10 +85,10 @@ function renderInventory() {
         <button class="btn btn-sm btn-danger delete-btn ms-1" data-index="${index}">Delete</button>
       </td>
     `;
+
     inventoryTableBody.appendChild(tr);
   });
 
-  // Attach event listeners
   document.querySelectorAll(".edit-btn").forEach(btn =>
     btn.addEventListener("click", onEditItem)
   );
@@ -115,6 +113,7 @@ function fillForm(item) {
   document.getElementById("inventoryModalLabel").textContent = "Edit Inventory Item";
 }
 
+// Add Item button handler
 addItemBtn.addEventListener("click", () => {
   resetForm();
   const now = new Date();
@@ -143,12 +142,14 @@ function onDeleteItem(e) {
 
 inventoryForm.addEventListener("submit", e => {
   e.preventDefault();
+
   const formData = new FormData(inventoryForm);
   let item = {};
   for (let [key, value] of formData.entries()) {
     item[key] = value.trim();
   }
-  // Update DateUpdated to today
+
+  // Auto-set DateUpdated to today
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, "0");
@@ -160,6 +161,7 @@ inventoryForm.addEventListener("submit", e => {
   } else {
     inventoryData.push(item);
   }
+
   saveInventory();
   renderInventory();
   inventoryModal.hide();
@@ -168,6 +170,5 @@ inventoryForm.addEventListener("submit", e => {
 filterEquipmentType.addEventListener("change", renderInventory);
 searchInventory.addEventListener("input", renderInventory);
 
-// Initial load
 loadInventory();
 renderInventory();
