@@ -1,326 +1,159 @@
-//fault-report.html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fault Report</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
 </head>
 <body>
+  <div class="container mt-4">
+    <h2>Fault Report</h2>
+    <button class="btn btn-success mb-3" id="addFaultBtn">Add Fault</button>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">FVPS Inventory System</a>
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">View Inventory</a></li>
-        <li class="nav-item"><a class="nav-link active" href="fault-report.html">Fault Report</a></li>
-        <li class="nav-item"><a class="nav-link" href="patching/patching-report.html">Patching Report</a></li>
-      </ul>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="faultTable">
+        <thead class="table-primary">
+          <tr>
+            <th>EquipmentType</th>
+            <th>Vendor</th>
+            <th>BrandModel</th>
+            <th>AssetNo</th>
+            <th>SerialNumber</th>
+            <th>EndDate</th>
+            <th>StartDate</th>
+            <th>Room</th>
+            <th>RoomNumber</th>
+            <th>Level</th>
+            <th>Lamphour</th>
+            <th>Fault</th>
+            <th>Status</th>
+            <th>DateResolved</th>
+            <th>ActionTaken</th>
+            <th>DateUpdated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
-</nav>
 
-<!-- Main container -->
-<div class="container" style="padding-top: 90px;">
-
-  <h2>Fault Report</h2>
-
-  <button id="addFaultBtn" class="btn btn-success mb-3">Add Fault</button>
-
-  <!-- Faults Table -->
-  <div class="table-responsive">
-    <table id="faultTable" class="table table-striped table-bordered align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th>EquipmentType</th>
-          <th>Vendor</th>
-          <th>BrandModel</th>
-          <th>AssetNo</th>
-          <th>SerialNumber</th>
-          <th>EndDate</th>
-          <th>StartDate</th>
-          <th>Room</th>
-          <th>Room Number</th>
-          <th>Level</th>
-          <th>Lamphour</th>
-          <th>Fault</th>
-          <th>Status</th>
-          <th>Date Resolved</th>
-          <th>Action Taken</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Modal for Add/Edit Fault -->
-<div class="modal fade" id="faultModal" tabindex="-1" aria-labelledby="faultModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <form id="faultForm" class="p-3">
-        <div class="modal-header">
-          <h5 class="modal-title" id="faultModalLabel">Add/Edit Fault</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-
-          <div class="row g-3">
-
-            <div class="col-md-4">
-              <label for="EquipmentType" class="form-label">Equipment Type *</label>
-              <select name="EquipmentType" class="form-select" required>
-                <option value="">Select Equipment Type</option>
-                <option>Projector</option>
-                <option>Projector Screen</option>
-                <option>Visualiser</option>
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label for="Vendor" class="form-label">Vendor</label>
-              <input type="text" name="Vendor" class="form-control" />
-            </div>
-
-            <div class="col-md-4">
-              <label for="BrandModel" class="form-label">Brand Model</label>
-              <input type="text" name="BrandModel" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="AssetNo" class="form-label">Asset No</label>
-              <input type="text" name="AssetNo" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="SerialNumber" class="form-label">Serial Number</label>
-              <input type="text" name="SerialNumber" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="EndDate" class="form-label">End Date</label>
-              <input type="date" name="EndDate" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="StartDate" class="form-label">Start Date</label>
-              <input type="date" name="StartDate" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="Room" class="form-label">Room</label>
-              <input type="text" name="Room" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="RoomNumber" class="form-label">Room Number</label>
-              <input type="text" name="RoomNumber" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="Level" class="form-label">Level</label>
-              <input type="text" name="Level" class="form-control" />
-            </div>
-
-            <div class="col-md-3">
-              <label for="Lamphour" class="form-label">Lamphour</label>
-              <input type="text" name="Lamphour" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-              <label for="Fault" class="form-label">Fault</label>
-              <input type="text" name="Fault" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-              <label for="Status" class="form-label">Status *</label>
-              <select name="Status" class="form-select" required>
-                <option value="">Select Status</option>
-                <option>Pending Vendor</option>
-                <option>Resolved</option>
-                <option>InProgress</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label for="DateResolved" class="form-label">Date Resolved</label>
-              <input type="date" name="DateResolved" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-              <label for="ActionTaken" class="form-label">Action Taken</label>
-              <input type="text" name="ActionTaken" class="form-control" />
-            </div>
-
+  <!-- Modal -->
+  <div
+    class="modal fade"
+    id="faultModal"
+    tabindex="-1"
+    aria-labelledby="faultModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="faultForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="faultModalLabel">Add/Edit Fault</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" id="deleteFaultBtn" class="btn btn-danger me-auto" style="display:none;">Delete</button>
-          <button type="submit" class="btn btn-primary">Save</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-
-      </form>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label for="EquipmentType" class="form-label">Equipment Type</label>
+                <select class="form-select" id="EquipmentType" name="EquipmentType" required></select>
+              </div>
+              <div class="col-md-3">
+                <label for="Vendor" class="form-label">Vendor</label>
+                <input type="text" class="form-control" id="Vendor" name="Vendor" />
+              </div>
+              <div class="col-md-3">
+                <label for="BrandModel" class="form-label">BrandModel</label>
+                <input type="text" class="form-control" id="BrandModel" name="BrandModel" />
+              </div>
+              <div class="col-md-3">
+                <label for="AssetNo" class="form-label">Asset No</label>
+                <input type="text" class="form-control" id="AssetNo" name="AssetNo" />
+              </div>
+              <div class="col-md-3">
+                <label for="SerialNumber" class="form-label">Serial Number</label>
+                <input type="text" class="form-control" id="SerialNumber" name="SerialNumber" />
+              </div>
+              <div class="col-md-3">
+                <label for="EndDate" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="EndDate" name="EndDate" />
+              </div>
+              <div class="col-md-3">
+                <label for="StartDate" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="StartDate" name="StartDate" />
+              </div>
+              <div class="col-md-3">
+                <label for="Room" class="form-label">Room</label>
+                <input type="text" class="form-control" id="Room" name="Room" />
+              </div>
+              <div class="col-md-3">
+                <label for="RoomNumber" class="form-label">Room Number</label>
+                <input type="text" class="form-control" id="RoomNumber" name="RoomNumber" />
+              </div>
+              <div class="col-md-3">
+                <label for="Level" class="form-label">Level</label>
+                <input type="text" class="form-control" id="Level" name="Level" />
+              </div>
+              <div class="col-md-3">
+                <label for="Lamphour" class="form-label">Lamphour</label>
+                <input type="text" class="form-control" id="Lamphour" name="Lamphour" />
+              </div>
+              <div class="col-md-6">
+                <label for="Fault" class="form-label">Fault</label>
+                <input type="text" class="form-control" id="Fault" name="Fault" />
+              </div>
+              <div class="col-md-3">
+                <label for="Status" class="form-label">Status</label>
+                <select class="form-select" id="Status" name="Status" required></select>
+              </div>
+              <div class="col-md-3">
+                <label for="DateResolved" class="form-label">Date Resolved</label>
+                <input type="date" class="form-control" id="DateResolved" name="DateResolved" />
+              </div>
+              <div class="col-md-6">
+                <label for="ActionTaken" class="form-label">Action Taken</label>
+                <input type="text" class="form-control" id="ActionTaken" name="ActionTaken" />
+              </div>
+              <div class="col-md-3">
+                <label for="DateUpdated" class="form-label">Date Updated</label>
+                <input type="text" readonly class="form-control" id="DateUpdated" name="DateUpdated" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-danger me-auto"
+              id="deleteFaultBtn"
+              style="display:none"
+            >
+              Delete
+            </button>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const faultForm = document.getElementById("faultForm");
-    const faultModalEl = document.getElementById("faultModal");
-    const faultModal = new bootstrap.Modal(faultModalEl);
-    const faultTableBody = document.querySelector("#faultTable tbody");
-    const deleteFaultBtn = document.getElementById("deleteFaultBtn");
-    const addFaultBtn = document.getElementById("addFaultBtn");
-
-    let faults = JSON.parse(localStorage.getItem("faults")) || [];
-    let editIndex = null;
-
-    function renderTable() {
-      faultTableBody.innerHTML = "";
-      faults.forEach((fault, idx) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${fault.EquipmentType || ""}</td>
-          <td>${fault.Vendor || ""}</td>
-          <td>${fault.BrandModel || ""}</td>
-          <td>${fault.AssetNo || ""}</td>
-          <td>${fault.SerialNumber || ""}</td>
-          <td>${fault.EndDate || ""}</td>
-          <td>${fault.StartDate || ""}</td>
-          <td>${fault.Room || ""}</td>
-          <td>${fault.RoomNumber || ""}</td>
-          <td>${fault.Level || ""}</td>
-          <td>${fault.Lamphour || ""}</td>
-          <td>${fault.Fault || ""}</td>
-          <td>${fault.Status || ""}</td>
-          <td>${fault.DateResolved || ""}</td>
-          <td>${fault.ActionTaken || ""}</td>
-          <td>
-            <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
-            <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
-          </td>
-        `;
-        faultTableBody.appendChild(tr);
-      });
-    }
-
-    function clearForm() {
-      faultForm.reset();
-      editIndex = null;
-      deleteFaultBtn.style.display = "none";
-    }
-
-    function fillForm(fault) {
-      faultForm.EquipmentType.value = fault.EquipmentType || "";
-      faultForm.Vendor.value = fault.Vendor || "";
-      faultForm.BrandModel.value = fault.BrandModel || "";
-      faultForm.AssetNo.value = fault.AssetNo || "";
-      faultForm.SerialNumber.value = fault.SerialNumber || "";
-      faultForm.EndDate.value = fault.EndDate || "";
-      faultForm.StartDate.value = fault.StartDate || "";
-      faultForm.Room.value = fault.Room || "";
-      faultForm.RoomNumber.value = fault.RoomNumber || "";
-      faultForm.Level.value = fault.Level || "";
-      faultForm.Lamphour.value = fault.Lamphour || "";
-      faultForm.Fault.value = fault.Fault || "";
-      faultForm.Status.value = fault.Status || "";
-      faultForm.DateResolved.value = fault.DateResolved || "";
-      faultForm.ActionTaken.value = fault.ActionTaken || "";
-    }
-
-    function saveFaults() {
-      localStorage.setItem("faults", JSON.stringify(faults));
-    }
-
-    addFaultBtn.addEventListener("click", () => {
-      clearForm();
-      faultModal.show();
-    });
-
-    faultTableBody.addEventListener("click", (e) => {
-      const target = e.target;
-      const idx = target.getAttribute("data-index");
-      if (!idx) return;
-
-      if (target.classList.contains("edit-btn")) {
-        editIndex = parseInt(idx);
-        fillForm(faults[editIndex]);
-        deleteFaultBtn.style.display = "inline-block";
-        faultModal.show();
-      }
-
-      if (target.classList.contains("delete-btn")) {
-        if (confirm("Are you sure you want to delete this fault?")) {
-          faults.splice(parseInt(idx), 1);
-          saveFaults();
-          renderTable();
-        }
-      }
-    });
-
-    deleteFaultBtn.addEventListener("click", () => {
-      if (editIndex !== null) {
-        if (confirm("Delete this fault?")) {
-          faults.splice(editIndex, 1);
-          saveFaults();
-          renderTable();
-          faultModal.hide();
-          clearForm();
-        }
-      }
-    });
-
-    faultForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const newFault = {
-        EquipmentType: faultForm.EquipmentType.value,
-        Vendor: faultForm.Vendor.value.trim(),
-        BrandModel: faultForm.BrandModel.value.trim(),
-        AssetNo: faultForm.AssetNo.value.trim(),
-        SerialNumber: faultForm.SerialNumber.value.trim(),
-        EndDate: faultForm.EndDate.value,
-        StartDate: faultForm.StartDate.value,
-        Room: faultForm.Room.value.trim(),
-        RoomNumber: faultForm.RoomNumber.value.trim(),
-        Level: faultForm.Level.value.trim(),
-        Lamphour: faultForm.Lamphour.value.trim(),
-        Fault: faultForm.Fault.value.trim(),
-        Status: faultForm.Status.value,
-        DateResolved: faultForm.DateResolved.value,
-        ActionTaken: faultForm.ActionTaken.value.trim(),
-      };
-
-      if (editIndex === null) {
-        faults.push(newFault);
-      } else {
-        faults[editIndex] = newFault;
-      }
-
-      saveFaults();
-      renderTable();
-      faultModal.hide();
-      clearForm();
-    });
-
-    renderTable();
-  });
-</script>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="fault-report.js"></script>
 </body>
 </html>
