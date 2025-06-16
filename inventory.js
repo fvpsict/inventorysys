@@ -1,5 +1,3 @@
-// inventory.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const storageKey = "fvpsInventory";
   let inventory = JSON.parse(localStorage.getItem(storageKey)) || [];
@@ -47,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tableBody.innerHTML = "";
 
     inventory.forEach((item, index) => {
-      // Filter by EquipmentType
+      // Filter by EquipmentType (case-insensitive)
       if (filter !== "all" && item.EquipmentType.toLowerCase() !== filter) return;
 
       // Search in any field (simple)
@@ -56,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const tr = document.createElement("tr");
 
-      // Create cells for all required columns
+      // Columns (order matches your table headers)
       const cols = [
         "EquipmentType",
         "Vendor",
@@ -69,17 +67,17 @@ document.addEventListener("DOMContentLoaded", () => {
         "EndDate",
         "StartDate",
         "Hostname",
-        "SSOE PO Number",
-        "Cart No",
+        "SSOE_PONumber",
+        "CartNo",
         "SanitiseDate",
-        "Lamp Hour",
-        "DateUpdated"
+        "LampHour",
+        "DateUpdated",
       ];
 
       cols.forEach((col) => {
         const td = document.createElement("td");
 
-        // Format dates for display
+        // Format date fields
         if (col === "EndDate" || col === "StartDate" || col === "SanitiseDate") {
           td.textContent = item[col] ? new Date(item[col]).toLocaleDateString() : "";
         } else {
@@ -91,9 +89,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Duration in use column (calculated)
       const durTd = document.createElement("td");
       durTd.textContent = calcDuration(item.StartDate, item.EndDate);
-      tr.insertBefore(durTd, tr.children[14]); // Before Lamp Hour column
+      // Insert duration before Lamp Hour (index 14)
+      tr.insertBefore(durTd, tr.children[14]);
 
-      // Actions column with Edit and Delete buttons
+      // Actions column
       const actionTd = document.createElement("td");
       actionTd.classList.add("text-center");
 
@@ -121,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modalTitle.textContent = "Add Inventory Item";
     modalForm.reset();
 
-    // Clear DateUpdated field
+    // Clear DateUpdated (hidden field)
     modalForm.elements["DateUpdated"].value = "";
     modal.show();
   }
