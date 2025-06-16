@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FVPS Inventory Management</title>
+  <!-- Bootstrap 5 CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
   <style>
-    /* Custom styles */
     body {
       padding: 1rem;
       background: #f8f9fa;
@@ -17,29 +17,17 @@
     table thead th {
       background-color: #007bff;
       color: white;
-      vertical-align: middle;
       text-align: center;
-    }
-    table tbody td {
-      vertical-align: middle;
-    }
-    .filter-search-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      gap: 0.5rem;
     }
   </style>
 </head>
 <body>
   <h2 class="mb-3">FVPS Inventory Management</h2>
 
-  <div class="filter-search-row">
-    <div class="d-flex align-items-center gap-2">
-      <label for="filter-equipmenttype" class="form-label mb-0">Filter by Equipment Type:</label>
-      <select id="filter-equipmenttype" class="form-select">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div>
+      <label for="filter-equipmenttype" class="form-label me-2 mb-0">Filter by Equipment Type:</label>
+      <select id="filter-equipmenttype" class="form-select d-inline-block w-auto">
         <option value="all" selected>All</option>
         <option value="ssoe">SSOE</option>
         <option value="projector">Projector</option>
@@ -56,17 +44,17 @@
       </select>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
-      <label for="search-inventory" class="form-label mb-0">Search:</label>
+    <div>
+      <label for="search-inventory" class="form-label me-2 mb-0">Search:</label>
       <input
         type="search"
         id="search-inventory"
-        class="form-control"
+        class="form-control d-inline-block w-auto"
         placeholder="Search inventory..."
       />
     </div>
 
-    <button id="add-item-btn" class="btn btn-success">Add Item</button>
+    <button id="add-item-btn" class="btn btn-success ms-auto">Add Item</button>
   </div>
 
   <div class="table-responsive">
@@ -94,12 +82,12 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Populated by inventory.js -->
+        <!-- Inventory rows will be inserted here -->
       </tbody>
     </table>
   </div>
 
-  <!-- Inventory Modal -->
+  <!-- Modal -->
   <div
     class="modal fade"
     id="inventoryModal"
@@ -121,6 +109,7 @@
           </div>
           <div class="modal-body">
             <div class="row g-3">
+              <!-- EquipmentType -->
               <div class="col-md-4">
                 <label for="equipmentType" class="form-label">Equipment Type</label>
                 <select
@@ -129,7 +118,7 @@
                   id="equipmentType"
                   required
                 >
-                  <option value="" selected disabled>Select...</option>
+                  <option value="" disabled selected>Select...</option>
                   <option value="SSOE">SSOE</option>
                   <option value="Projector">Projector</option>
                   <option value="Projector Screen">Projector Screen</option>
@@ -145,168 +134,98 @@
                 </select>
               </div>
 
+              <!-- Vendor -->
               <div class="col-md-4">
                 <label for="vendor" class="form-label">Vendor</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="vendor"
-                  name="Vendor"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="Vendor" id="vendor" />
               </div>
 
+              <!-- BrandModel -->
               <div class="col-md-4">
                 <label for="brandModel" class="form-label">Brand Model</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="brandModel"
-                  name="BrandModel"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="BrandModel" id="brandModel" />
               </div>
 
+              <!-- Profile -->
               <div class="col-md-4">
                 <label for="profile" class="form-label">Profile</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="profile"
-                  name="Profile"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="Profile" id="profile" />
               </div>
 
+              <!-- Custodian -->
               <div class="col-md-4">
                 <label for="custodian" class="form-label">Custodian</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="custodian"
-                  name="Custodian"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="Custodian" id="custodian" />
               </div>
 
+              <!-- AssetNo -->
               <div class="col-md-4">
                 <label for="assetNo" class="form-label">Asset No</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="assetNo"
-                  name="AssetNo"
-                  autocomplete="off"
-                  required
-                />
+                <input type="text" class="form-control" name="AssetNo" id="assetNo" required />
               </div>
 
+              <!-- SerialNumber -->
               <div class="col-md-4">
                 <label for="serialNumber" class="form-label">Serial Number</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="serialNumber"
-                  name="SerialNumber"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="SerialNumber" id="serialNumber" />
               </div>
 
+              <!-- Location -->
               <div class="col-md-4">
                 <label for="location" class="form-label">Location</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="location"
-                  name="Location"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="Location" id="location" />
               </div>
 
+              <!-- EndDate -->
               <div class="col-md-4">
                 <label for="endDate" class="form-label">End Date</label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="endDate"
-                  name="EndDate"
-                />
+                <input type="date" class="form-control" name="EndDate" id="endDate" />
               </div>
 
+              <!-- StartDate -->
               <div class="col-md-4">
                 <label for="startDate" class="form-label">Start Date</label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="startDate"
-                  name="StartDate"
-                />
+                <input type="date" class="form-control" name="StartDate" id="startDate" />
               </div>
 
+              <!-- Hostname -->
               <div class="col-md-4">
                 <label for="hostname" class="form-label">Hostname</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="hostname"
-                  name="Hostname"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="Hostname" id="hostname" />
               </div>
 
+              <!-- SSOE_PONumber -->
               <div class="col-md-4">
                 <label for="ssoePoNumber" class="form-label">SSOE PO Number</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="ssoePoNumber"
-                  name="SSOE_PONumber"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="SSOE_PONumber" id="ssoePoNumber" />
               </div>
 
+              <!-- CartNo -->
               <div class="col-md-4">
                 <label for="cartNo" class="form-label">Cart No</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="cartNo"
-                  name="CartNo"
-                  autocomplete="off"
-                />
+                <input type="text" class="form-control" name="CartNo" id="cartNo" />
               </div>
 
+              <!-- SanitiseDate -->
               <div class="col-md-4">
                 <label for="sanitiseDate" class="form-label">Sanitise Date</label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="sanitiseDate"
-                  name="SanitiseDate"
-                />
+                <input type="date" class="form-control" name="SanitiseDate" id="sanitiseDate" />
               </div>
 
+              <!-- LampHour -->
               <div class="col-md-4">
                 <label for="lampHour" class="form-label">Lamp Hour</label>
                 <input
                   type="number"
                   class="form-control"
-                  id="lampHour"
                   name="LampHour"
+                  id="lampHour"
                   min="0"
                 />
               </div>
 
-              <div class="col-md-4 d-none">
-                <label for="dateUpdated" class="form-label">Date Updated</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="dateUpdated"
-                  name="DateUpdated"
-                  readonly
-                />
-              </div>
+              <!-- DateUpdated (hidden) -->
+              <input type="hidden" name="DateUpdated" id="dateUpdated" />
             </div>
           </div>
           <div class="modal-footer">
@@ -324,7 +243,9 @@
     </div>
   </div>
 
+  <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Your inventory JS -->
   <script src="inventory.js"></script>
 </body>
 </html>
