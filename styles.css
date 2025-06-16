@@ -22,6 +22,12 @@ body {
   vertical-align: middle;
 }
 
+/* Bold table header specifically for patching-report */
+#patchTable thead th {
+  font-weight: 700 !important;
+}
+
+
 /* Table header blue background */
 .inventory-table thead th {
   background-color: #007bff !important;
