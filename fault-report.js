@@ -1,183 +1,123 @@
-// fault-report.js
-
 document.addEventListener("DOMContentLoaded", () => {
-  const faultTableBody = document.querySelector("#fault-table tbody");
-  const filterSelect = document.getElementById("filter-equipmenttype");
-  const searchInput = document.getElementById("search-fault");
+  const faultTable = document.querySelector("#fault-table tbody");
+  const faultForm = document.getElementById("fault-modal-form");
   const addFaultBtn = document.getElementById("add-fault-btn");
   const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
-  const faultForm = document.getElementById("fault-modal-form");
+  const equipmentTypeFilter = document.getElementById("filter-equipmenttype");
+  const searchInput = document.getElementById("search-fault");
 
-  // Key for localStorage
-  const STORAGE_KEY = "faultReports";
+  let editingRow = null;
 
-  let faultReports = [];
-  let editingIndex = null; // null when adding new
-
-  // Load fault reports from localStorage or mock sample data
-  function loadFaultReports() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      faultReports = JSON.parse(stored);
-    } else {
-      // Mock sample data - replace with fetch or other real data loading
-      faultReports = [
-        {
-          DateReported: "2025-06-01",
-          EquipmentType: "Projector",
-          Equipment: "Projector",
-          BrandModel: "Epson X123",
-          SerialNumber: "SN123456",
-          Location: "Library",
-          RoomNumber: "L01",
-          FaultDescription: "No image displayed",
-          Status: "Open",
-        },
-        {
-          DateReported: "2025-06-15",
-          EquipmentType: "SSOE",
-          Equipment: "SSOE",
-          BrandModel: "VendorX ModelY",
-          SerialNumber: "SSOE7890",
-          Location: "Admin Office",
-          RoomNumber: "A10",
-          FaultDescription: "Network connectivity issue",
-          Status: "In Progress",
-        },
-      ];
-      saveFaultReports();
-    }
+  function createRow(data) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${data.DateReported}</td>
+      <td>${data.EquipmentType}</td>
+      <td>${data.Equipment}</td>
+      <td>${data.AssetNo}</td>
+      <td>${data.BrandModel}</td>
+      <td>${data.SerialNumber}</td>
+      <td>${data.Location}</td>
+      <td>${data.RoomNumber}</td>
+      <td>${data.FaultDescription}</td>
+      <td>
+        <select class="form-select form-select-sm status-dropdown">
+          ${["Open", "In Progress", "Pending vendor", "Resolved", "Closed"]
+            .map(status => `<option${data.Status === status ? " selected" : ""}>${status}</option>`)
+            .join("")}
+        </select>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-warning edit-btn">Edit</button>
+        <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+      </td>
+    `;
+    faultTable.appendChild(row);
   }
 
-  // Save fault reports to localStorage
-  function saveFaultReports() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(faultReports));
+  function updateRow(row, data) {
+    const cells = row.children;
+    cells[0].textContent = data.DateReported;
+    cells[1].textContent = data.EquipmentType;
+    cells[2].textContent = data.Equipment;
+    cells[3].textContent = data.AssetNo;
+    cells[4].textContent = data.BrandModel;
+    cells[5].textContent = data.SerialNumber;
+    cells[6].textContent = data.Location;
+    cells[7].textContent = data.RoomNumber;
+    cells[8].textContent = data.FaultDescription;
+    cells[9].querySelector("select").value = data.Status;
   }
 
-  // Render the fault reports into the table with current filters
-  function renderTable() {
-    const filterValue = filterSelect.value.toLowerCase();
-    const searchTerm = searchInput.value.trim().toLowerCase();
-
-    faultTableBody.innerHTML = "";
-
-    faultReports.forEach((report, index) => {
-      // Filter by equipment type
-      if (filterValue !== "all" && report.EquipmentType.toLowerCase() !== filterValue) {
-        return;
-      }
-
-      // Search filter: check if any cell contains the search term
-      const combinedText = Object.values(report).join(" ").toLowerCase();
-      if (searchTerm && !combinedText.includes(searchTerm)) {
-        return;
-      }
-
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${report.DateReported}</td>
-        <td>${report.EquipmentType}</td>
-        <td>${report.Equipment}</td>
-        <td>${report.BrandModel || ""}</td>
-        <td>${report.SerialNumber || ""}</td>
-        <td>${report.Location || ""}</td>
-        <td>${report.RoomNumber || ""}</td>
-        <td>${report.FaultDescription}</td>
-        <td>${report.Status}</td>
-        <td>
-          <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
-          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
-        </td>
-      `;
-
-      faultTableBody.appendChild(tr);
-    });
-
-    // Attach event listeners for Edit and Delete buttons
-    document.querySelectorAll(".edit-btn").forEach((btn) =>
-      btn.addEventListener("click", (e) => {
-        editingIndex = Number(e.target.dataset.index);
-        openEditModal(editingIndex);
-      })
-    );
-
-    document.querySelectorAll(".delete-btn").forEach((btn) =>
-      btn.addEventListener("click", (e) => {
-        const idx = Number(e.target.dataset.index);
-        if (confirm("Are you sure you want to delete this fault report?")) {
-          faultReports.splice(idx, 1);
-          saveFaultReports();
-          renderTable();
-        }
-      })
-    );
-  }
-
-  // Open modal and populate form for editing
-  function openEditModal(index) {
-    const report = faultReports[index];
-    if (!report) return;
-
+  addFaultBtn.addEventListener("click", () => {
     faultForm.reset();
-
-    for (const [key, value] of Object.entries(report)) {
-      const input = faultForm.elements.namedItem(key);
-      if (input) input.value = value;
-    }
-
+    editingRow = null;
     faultModal.show();
-  }
+  });
 
-  // Clear form for adding new fault
-  function openAddModal() {
-    editingIndex = null;
-    faultForm.reset();
-    faultModal.show();
-  }
-
-  // Handle form submission
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
-
     const formData = new FormData(faultForm);
-    const newReport = {};
+    const data = Object.fromEntries(formData.entries());
 
-    for (const [key, value] of formData.entries()) {
-      newReport[key] = value.trim();
-    }
-
-    // Simple validation check (DateReported, EquipmentType, Equipment, FaultDescription, Status required)
-    if (
-      !newReport.DateReported ||
-      !newReport.EquipmentType ||
-      !newReport.Equipment ||
-      !newReport.FaultDescription ||
-      !newReport.Status
-    ) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
-    if (editingIndex === null) {
-      // Add new
-      faultReports.push(newReport);
+    if (editingRow) {
+      updateRow(editingRow, data);
     } else {
-      // Update existing
-      faultReports[editingIndex] = newReport;
+      createRow(data);
     }
 
-    saveFaultReports();
-    renderTable();
     faultModal.hide();
   });
 
-  // Event listeners for filter and search inputs
-  filterSelect.addEventListener("change", renderTable);
-  searchInput.addEventListener("input", renderTable);
-  addFaultBtn.addEventListener("click", openAddModal);
+  faultTable.addEventListener("click", (e) => {
+    const row = e.target.closest("tr");
 
-  // Initial load
-  loadFaultReports();
-  renderTable();
+    if (e.target.classList.contains("edit-btn")) {
+      editingRow = row;
+      const cells = row.children;
+      faultForm.DateReported.value = cells[0].textContent;
+      faultForm.EquipmentType.value = cells[1].textContent;
+      faultForm.Equipment.value = cells[2].textContent;
+      faultForm.AssetNo.value = cells[3].textContent;
+      faultForm.BrandModel.value = cells[4].textContent;
+      faultForm.SerialNumber.value = cells[5].textContent;
+      faultForm.Location.value = cells[6].textContent;
+      faultForm.RoomNumber.value = cells[7].textContent;
+      faultForm.FaultDescription.value = cells[8].textContent;
+      faultForm.Status.value = cells[9].querySelector("select").value;
+      faultModal.show();
+    }
+
+    if (e.target.classList.contains("delete-btn")) {
+      row.remove();
+    }
+  });
+
+  // Allow live inline status change
+  faultTable.addEventListener("change", (e) => {
+    if (e.target.classList.contains("status-dropdown")) {
+      // Optionally handle status update (e.g. sync to backend or highlight)
+    }
+  });
+
+  // Equipment Type Filter
+  equipmentTypeFilter.addEventListener("change", () => {
+    const filterValue = equipmentTypeFilter.value.toLowerCase();
+
+    Array.from(faultTable.rows).forEach(row => {
+      const equipmentType = row.cells[1].textContent.toLowerCase();
+      row.style.display =
+        filterValue === "all" || equipmentType === filterValue ? "" : "none";
+    });
+  });
+
+  // Search Filter
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase();
+
+    Array.from(faultTable.rows).forEach(row => {
+      const rowText = row.textContent.toLowerCase();
+      row.style.display = rowText.includes(query) ? "" : "none";
+    });
+  });
 });
