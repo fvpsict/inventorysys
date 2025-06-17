@@ -3,181 +3,223 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventory Management</title>
+  <title>View Inventory</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="styles.css" rel="stylesheet" />
+  <link href="../styles.css" rel="stylesheet" />
+  <style>
+    body {
+      padding-top: 70px; /* Account for fixed navbar */
+    }
+    /* Navbar menu hover color: yellow */
+    .navbar-nav .nav-link:hover {
+      color: yellow !important;
+    }
+    /* Shorten search input */
+    #search-inventory {
+      max-width: 250px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container my-4">
 
-    <h1 class="mb-4">Inventory Management</h1>
-
-    <div class="d-flex mb-3 align-items-center gap-3 flex-wrap">
-      <div>
-        <label for="filter-equipmenttype" class="form-label fw-bold mb-0">Filter Equipment Type:</label>
-        <select id="filter-equipmenttype" class="form-select">
-          <option value="all" selected>All</option>
-          <option value="desktop">Desktop</option>
-          <option value="laptop">Laptop</option>
-          <option value="ipad">iPad</option>
-          <option value="mobile cart">Mobile Cart</option>
-        </select>
-      </div>
-
-      <div class="flex-grow-1">
-        <label for="search-inventory" class="form-label fw-bold mb-0">Search:</label>
-        <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
-      </div>
-
-      <div class="align-self-end">
-        <button class="btn btn-success" id="add-item-btn">Add Item</button>
-      </div>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">FVPS Inventory System</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">View Inventory</a></li>
+        <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
+        <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
+      </ul>
     </div>
-
-    <div class="table-responsive">
-      <table class="table table-bordered table-striped" id="inventory-table">
-        <thead class="table-primary">
-          <tr>
-            <th>EquipmentType</th>
-            <th>Vendor</th>
-            <th>Equipment</th>
-            <th>BrandModel</th>
-            <th>Profile</th>
-            <th>Custodian</th>
-            <th>AssetNo</th>
-            <th>SerialNumber</th>
-            <th>Location</th>
-            <th>EndDate</th>
-            <th>StartDate</th>
-            <th>Hostname</th>
-            <th>SSOE PO Number</th>
-            <th>Cart No</th>
-            <th>SanitiseDate</th>
-            <th>Duration in use</th>
-            <th>Lamp Hour</th>
-            <th>Date Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Rows populated by JS -->
-        </tbody>
-      </table>
-    </div>
-
   </div>
+</nav>
 
-  <!-- Modal -->
-  <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <form id="inventory-modal-form">
-          <div class="modal-header">
-            <h5 class="modal-title" id="inventoryModalLabel">Add / Edit Inventory Item</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-3">
-                <label for="EquipmentType" class="form-label">Equipment Type</label>
-                <select name="EquipmentType" id="EquipmentType" class="form-select" required>
-                  <option value="" disabled selected>Select type</option>
-                  <option value="Desktop">Desktop</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="iPad">iPad</option>
-                  <option value="Mobile Cart">Mobile Cart</option>
-                </select>
-              </div>
+<!-- Main Container -->
+<div class="container py-4">
+  <h1 class="mb-4">View Inventory</h1>
 
-              <div class="col-md-3">
-                <label for="Equipment" class="form-label">Equipment</label>
-                <input type="text" name="Equipment" id="Equipment" class="form-control" required />
-              </div>
+  <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-3">
+    <div>
+      <label for="filter-equipmenttype" class="form-label mb-1">Filter by Equipment Type</label>
+      <select id="filter-equipmenttype" class="form-select">
+        <option value="all" selected>All</option>
+        <option>SSOE</option>
+        <option>Projector</option>
+        <option>Projector Screen</option>
+        <option>Touch Panel</option>
+        <option>Visualiser</option>
+        <option>SMax</option>
+        <option>Macbook</option>
+        <option>Portable HDD</option>
+        <option>TV</option>
+        <option>Monitor</option>
+        <option>OMR</option>
+        <option>AV</option>
+      </select>
+    </div>
 
-              <div class="col-md-3">
-                <label for="Vendor" class="form-label">Vendor</label>
-                <input type="text" name="Vendor" id="Vendor" class="form-control" />
-              </div>
+    <div class="flex-grow-1">
+      <label for="search-inventory" class="col-form-label">Search Inventory</label>
+      <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
+    </div>
 
-              <div class="col-md-3">
-                <label for="BrandModel" class="form-label">Brand / Model</label>
-                <input type="text" name="BrandModel" id="BrandModel" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="Profile" class="form-label">Profile</label>
-                <input type="text" name="Profile" id="Profile" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="Custodian" class="form-label">Custodian</label>
-                <input type="text" name="Custodian" id="Custodian" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="AssetNo" class="form-label">Asset No</label>
-                <input type="text" name="AssetNo" id="AssetNo" class="form-control" required />
-              </div>
-
-              <div class="col-md-3">
-                <label for="SerialNumber" class="form-label">Serial Number</label>
-                <input type="text" name="SerialNumber" id="SerialNumber" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="Location" class="form-label">Location</label>
-                <input type="text" name="Location" id="Location" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="EndDate" class="form-label">End Date</label>
-                <input type="date" name="EndDate" id="EndDate" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="StartDate" class="form-label">Start Date</label>
-                <input type="date" name="StartDate" id="StartDate" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="Hostname" class="form-label">Hostname</label>
-                <input type="text" name="Hostname" id="Hostname" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="SSOE_PO_Number" class="form-label">SSOE PO Number</label>
-                <input type="text" name="SSOE PO Number" id="SSOE_PO_Number" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="Cart_No" class="form-label">Cart No</label>
-                <input type="text" name="Cart No" id="Cart_No" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="SanitiseDate" class="form-label">Sanitise Date</label>
-                <input type="date" name="SanitiseDate" id="SanitiseDate" class="form-control" />
-              </div>
-
-              <div class="col-md-3">
-                <label for="Lamp_Hour" class="form-label">Lamp Hour</label>
-                <input type="number" min="0" name="Lamp Hour" id="Lamp_Hour" class="form-control" />
-              </div>
-
-              <!-- DateUpdated is hidden, auto-managed by JS -->
-              <input type="hidden" name="DateUpdated" id="DateUpdated" />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Item</button>
-          </div>
-        </form>
-      </div>
+    <div>
+      <button class="btn btn-success" id="add-item-btn">Add Item</button>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="inventory.js"></script>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped inventory-table" id="inventory-table">
+      <thead class="table-primary">
+        <tr>
+          <th>EquipmentType</th>
+          <th>Vendor</th>
+          <th>Equipment</th> <!-- New column -->
+          <th>BrandModel</th>
+          <th>Profile</th>
+          <th>Custodian</th>
+          <th>AssetNo</th>
+          <th>SerialNumber</th>
+          <th>Location</th>
+          <th>EndDate</th>
+          <th>StartDate</th>
+          <th>Hostname</th>
+          <th>SSOE PO Number</th>
+          <th>Cart No</th>
+          <th>SanitiseDate</th>
+          <th>Duration in use</th>
+          <th>Lamp Hour</th>
+          <th>Date Updated</th>
+          <th>Actions</th> <!-- last column -->
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Inventory Modal -->
+<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <form id="inventory-modal-form" class="p-3">
+        <div class="modal-header">
+          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Inventory Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Equipment Type *</label>
+            <select class="form-select" name="EquipmentType" required>
+              <option value="">Select</option>
+              <option>SSOE</option>
+              <option>Projector</option>
+              <option>Projector Screen</option>
+              <option>Touch Panel</option>
+              <option>Visualiser</option>
+              <option>SMax</option>
+              <option>Macbook</option>
+              <option>Portable HDD</option>
+              <option>TV</option>
+              <option>Monitor</option>
+              <option>OMR</option>
+              <option>AV</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Equipment *</label>
+            <select class="form-select" name="Equipment" required>
+              <option value="">Select</option>
+              <option value="Desktop">Desktop</option>
+              <option value="Laptop">Laptop</option>
+              <option value="iPad">iPad</option>
+              <option value="Mobile Cart">Mobile Cart</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Vendor</label>
+            <input type="text" class="form-control" name="Vendor" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">BrandModel</label>
+            <input type="text" class="form-control" name="BrandModel" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Profile</label>
+            <input type="text" class="form-control" name="Profile" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Custodian</label>
+            <input type="text" class="form-control" name="Custodian" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Asset No *</label>
+            <input type="text" class="form-control" name="AssetNo" required />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Serial Number</label>
+            <input type="text" class="form-control" name="SerialNumber" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control" name="Location" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-control" name="EndDate" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control" name="StartDate" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Hostname</label>
+            <input type="text" class="form-control" name="Hostname" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">SSOE PO Number</label>
+            <input type="text" class="form-control" name="SSOE PO Number" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Cart No</label>
+            <input type="text" class="form-control" name="Cart No" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Sanitise Date</label>
+            <input type="date" class="form-control" name="SanitiseDate" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Lamp Hour</label>
+            <input type="number" class="form-control" name="Lamp Hour" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Date Updated</label>
+            <input type="text" class="form-control" name="DateUpdated" readonly />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Inventory Script -->
+<script src="../inventory.js"></script>
+
 </body>
 </html>
