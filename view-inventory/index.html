@@ -3,178 +3,154 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>View Inventory</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="../styles.css" />
+  <title>Inventory Management</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Inventory System</a>
+    </div>
+  </nav>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">FVPS Inventory System</a>
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
-        <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
-        <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
-      </ul>
+  <!-- Page Content -->
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1>Inventory</h1>
+      <div class="d-flex gap-2">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search..." />
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#itemModal">
+          Add Item
+        </button>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped table-hover" id="inventory-table">
+        <thead>
+          <tr>
+            <th>Equipment</th>
+            <th>EquipmentType</th>
+            <th>Vendor</th>
+            <th>BrandModel</th>
+            <th>Profile</th>
+            <th>Custodian</th>
+            <th>AssetNo</th>
+            <th>SerialNumber</th>
+            <th>Location</th>
+            <th>EndDate</th>
+            <th>StartDate</th>
+            <th>Hostname</th>
+            <th>SSOE PO Number</th>
+            <th>Cart No</th>
+            <th>SanitiseDate</th>
+            <th>Fault</th>
+            <th>DateUpdated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
-</nav>
 
-<!-- Main container -->
-<div class="container-fluid" style="padding-top: 90px;">
-  <h2>Inventory Management</h2>
-
-  <div class="d-flex justify-content-between mb-3">
-    <button id="addItemBtn" class="btn btn-success">Add Item</button>
-    <input id="searchInput" type="text" class="form-control w-25" placeholder="Search..." />
-  </div>
-
-  <div class="table-responsive">
-    <table id="inventory-table" class="table table-bordered table-striped">
-      <thead class="table-dark">
-        <tr>
-          <th>Equipment</th>
-          <th>EquipmentType</th>
-          <th>Vendor</th>
-          <th>BrandModel</th>
-          <th>Profile</th>
-          <th>Custodian</th>
-          <th>AssetNo</th>
-          <th>SerialNumber</th>
-          <th>Location</th>
-          <th>EndDate</th>
-          <th>StartDate</th>
-          <th>Hostname</th>
-          <th>SSOE PO Number</th>
-          <th>Cart No</th>
-          <th>SanitiseDate</th>
-          <th>Duration in use</th>
-          <th>Lamp Hour</th>
-          <th>DateUpdated</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Modal Form -->
-<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <form id="itemForm" class="p-3">
-        <div class="modal-header">
-          <h5 class="modal-title" id="itemModalLabel">Add/Edit Inventory Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="row g-3">
+  <!-- Modal -->
+  <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="itemForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="itemModalLabel">Add/Edit Item</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body row g-3">
             <div class="col-md-4">
               <label class="form-label">Equipment</label>
-              <select name="Equipment" class="form-select">
+              <select class="form-select" name="Equipment" required>
                 <option value="">Select</option>
-                <option>Desktop</option>
-                <option>Laptop</option>
-                <option>iPad</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Laptop">Laptop</option>
+                <option value="iPad">iPad</option>
               </select>
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Equipment Type</label>
-              <input type="text" name="EquipmentType" class="form-control" />
+              <label class="form-label">EquipmentType</label>
+              <input type="text" class="form-control" name="EquipmentType" required />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">Vendor</label>
-              <input type="text" name="Vendor" class="form-control" />
+              <input type="text" class="form-control" name="Vendor" />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Brand Model</label>
-              <input type="text" name="BrandModel" class="form-control" />
+              <label class="form-label">BrandModel</label>
+              <input type="text" class="form-control" name="BrandModel" />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">Profile</label>
-              <input type="text" name="Profile" class="form-control" />
+              <input type="text" class="form-control" name="Profile" />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">Custodian</label>
-              <input type="text" name="Custodian" class="form-control" />
+              <input type="text" class="form-control" name="Custodian" />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Asset No</label>
-              <input type="text" name="AssetNo" class="form-control" required />
+              <label class="form-label">AssetNo</label>
+              <input type="text" class="form-control" name="AssetNo" required />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Serial Number</label>
-              <input type="text" name="SerialNumber" class="form-control" />
+              <label class="form-label">SerialNumber</label>
+              <input type="text" class="form-control" name="SerialNumber" />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">Location</label>
-              <input type="text" name="Location" class="form-control" />
+              <input type="text" class="form-control" name="Location" />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">End Date</label>
-              <input type="date" name="EndDate" class="form-control" />
+              <label class="form-label">EndDate</label>
+              <input type="date" class="form-control" name="EndDate" />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Start Date</label>
-              <input type="date" name="StartDate" class="form-control" />
+              <label class="form-label">StartDate</label>
+              <input type="date" class="form-control" name="StartDate" />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">Hostname</label>
-              <input type="text" name="Hostname" class="form-control" />
+              <input type="text" class="form-control" name="Hostname" />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">SSOE PO Number</label>
-              <input type="text" name="SSOE PO Number" class="form-control" />
+              <input type="text" class="form-control" name="SSOE PO Number" />
             </div>
-
             <div class="col-md-4">
               <label class="form-label">Cart No</label>
-              <input type="text" name="Cart No" class="form-control" />
+              <input type="text" class="form-control" name="Cart No" />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Sanitise Date</label>
-              <input type="date" name="SanitiseDate" class="form-control" />
+              <label class="form-label">SanitiseDate</label>
+              <input type="date" class="form-control" name="SanitiseDate" />
             </div>
-
             <div class="col-md-4">
-              <label class="form-label">Lamp Hour</label>
-              <input type="text" name="LampHour" class="form-control" />
+              <label class="form-label">Fault</label>
+              <input type="text" class="form-control" name="Fault" />
             </div>
+            <!-- DateUpdated will be automatically handled in JS -->
           </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="inventory.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="inventory.js"></script>
 </body>
 </html>
