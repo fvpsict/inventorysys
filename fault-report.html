@@ -10,6 +10,10 @@
       padding-top: 56px;
       background-color: #f8f9fa;
     }
+    .table-responsive {
+      max-width: 100vw;
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body>
@@ -22,10 +26,10 @@
       </button>
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="index.html">View Inventory</a></li>
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="../fault-report.html">Fault Report</a></li>
-          <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="https://fvpsict.github.io/inventorysys/index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">View Inventory</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="fault-report.html">Fault Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="patching/patching-report.html">Patching Report</a></li>
         </ul>
       </div>
     </div>
@@ -66,7 +70,7 @@
 
     <button class="btn btn-success mb-3" id="add-fault-btn">Add Fault</button>
 
-    <div class="table-responsive" style="max-width:100vw; overflow-x:auto;">
+    <div class="table-responsive">
       <table class="table table-bordered table-striped" id="fault-table" style="min-width:1400px;">
         <thead class="table-primary">
           <tr>
