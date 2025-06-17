@@ -1,15 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
   const faultTableBody = document.querySelector("#fault-table tbody");
   const addFaultBtn = document.getElementById("add-fault-btn");
-  const faultModalElement = document.getElementById("faultModal");
-  const faultModal = new bootstrap.Modal(faultModalElement);
+  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
   const faultForm = document.getElementById("fault-modal-form");
   const filterSelect = document.getElementById("filter-equipmenttype");
   const searchInput = document.getElementById("search-fault");
 
-  let editingRow = null;
+  let editingRow = null; // track row being edited
 
-  // Format date for display: "dd MMM yyyy"
+  // Helper: Format date YYYY-MM-DD to DD MMM YYYY (e.g. 25 Jun 2025)
   function formatDate(dateStr) {
     if (!dateStr) return "";
     const date = new Date(dateStr);
@@ -21,19 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Parse displayed date string back to ISO yyyy-mm-dd for input[type=date]
-  function parseDate(displayDate) {
-    if (!displayDate) return "";
-    const parsed = Date.parse(displayDate);
-    if (isNaN(parsed)) return "";
-    const date = new Date(parsed);
-    // Format ISO yyyy-mm-dd
-    return date.toISOString().slice(0, 10);
-  }
-
-  // Create a new table row from form data
+  // Create table row from form data
   function createRowFromForm(formData) {
     const row = document.createElement("tr");
+
+    // Columns: DateReported, EquipmentType, Equipment, BrandModel, SerialNumber, Location, RoomNumber, FaultDescription, Status, Actions
     const values = [
       formatDate(formData.get("DateReported")),
       formData.get("EquipmentType") || "",
@@ -51,10 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
       cell.textContent = val;
     }
 
+    // Actions cell with Edit/Delete buttons
     const actionsCell = row.insertCell();
     actionsCell.innerHTML = `
-      <button class="btn btn-sm btn-primary btn-edit me-2" type="button">Edit</button>
-      <button class="btn btn-sm btn-danger btn-delete" type="button">Delete</button>
+      <button class="btn btn-sm btn-primary btn-edit me-2">Edit</button>
+      <button class="btn btn-sm btn-danger btn-delete">Delete</button>
     `;
 
     return row;
@@ -65,10 +57,10 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.reset();
   }
 
-  // Populate form fields from a table row (for editing)
-  function fillFormFromRow(row) {
+  // Populate form with row data for editing
+  function populateFormFromRow(row) {
     const cells = row.cells;
-    faultForm.elements["DateReported"].value = parseDate(cells[0].textContent);
+    faultForm.elements["DateReported"].value = cells[0].textContent ? new Date(cells[0].textContent).toISOString().substring(0, 10) : "";
     faultForm.elements["EquipmentType"].value = cells[1].textContent;
     faultForm.elements["Equipment"].value = cells[2].textContent;
     faultForm.elements["BrandModel"].value = cells[3].textContent;
@@ -79,33 +71,32 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.elements["Status"].value = cells[8].textContent;
   }
 
-  // Filter and search table rows based on filter dropdown and search input
+  // Filter & Search
   function filterAndSearch() {
-    const filterValue = filterSelect.value.toLowerCase();
-    const searchValue = searchInput.value.toLowerCase();
+    const filterVal = filterSelect.value.toLowerCase();
+    const searchVal = searchInput.value.toLowerCase();
 
     Array.from(faultTableBody.rows).forEach((row) => {
       const equipmentType = row.cells[1].textContent.toLowerCase();
       const rowText = row.textContent.toLowerCase();
 
-      const matchesFilter = filterValue === "all" || equipmentType === filterValue;
-      const matchesSearch = rowText.includes(searchValue);
+      const matchesFilter = filterVal === "all" || equipmentType === filterVal;
+      const matchesSearch = rowText.includes(searchVal);
 
       row.style.display = matchesFilter && matchesSearch ? "" : "none";
     });
   }
 
-  // Event: click Add Fault button
+  // Add Fault button opens modal for new entry
   addFaultBtn.addEventListener("click", () => {
     editingRow = null;
     clearForm();
     faultModal.show();
   });
 
-  // Event: submit form (add or edit)
+  // Submit form to add/edit fault
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
-
     const formData = new FormData(faultForm);
 
     if (editingRow) {
@@ -121,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cells[7].textContent = formData.get("FaultDescription") || "";
       cells[8].textContent = formData.get("Status") || "";
     } else {
-      // Create new row
+      // Add new row
       const newRow = createRowFromForm(formData);
       faultTableBody.appendChild(newRow);
     }
@@ -130,31 +121,22 @@ document.addEventListener("DOMContentLoaded", () => {
     filterAndSearch();
   });
 
-  // Event: Edit/Delete buttons in table rows
+  // Event delegation for Edit/Delete buttons in table
   faultTableBody.addEventListener("click", (e) => {
     const target = e.target;
-    const row = target.closest("tr");
-    if (!row) return;
-
     if (target.classList.contains("btn-edit")) {
-      editingRow = row;
-      fillFormFromRow(row);
+      editingRow = target.closest("tr");
+      populateFormFromRow(editingRow);
       faultModal.show();
-    }
-
-    if (target.classList.contains("btn-delete")) {
+    } else if (target.classList.contains("btn-delete")) {
       if (confirm("Are you sure you want to delete this fault report?")) {
+        const row = target.closest("tr");
         row.remove();
       }
     }
   });
 
-  // Filter and search inputs events
+  // Filter and search inputs
   filterSelect.addEventListener("change", filterAndSearch);
   searchInput.addEventListener("input", filterAndSearch);
-
-  // Optional: autofocus first input on modal shown
-  faultModalElement.addEventListener("shown.bs.modal", () => {
-    faultForm.elements["DateReported"].focus();
-  });
 });
