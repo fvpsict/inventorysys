@@ -4,66 +4,91 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fault Report</title>
+
+  <!-- Bootstrap CSS (5.3) -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      padding-top: 56px; /* for fixed navbar */
+    }
+    .container {
+      max-width: 1200px;
+    }
+    #fault-table th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="https://fvpsict.github.io/inventorysys/index.html">Home</a>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">Fault Report</a>
       <button
         class="navbar-toggler"
         type="button"
         data-bs-toggle="collapse"
-        data-bs-target="#navbarNavAltMarkup"
-        aria-controls="navbarNavAltMarkup"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
         aria-expanded="false"
         aria-label="Toggle navigation"
       >
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-          <a class="nav-link active" aria-current="page" href="#">Fault Report</a>
-          <!-- Add other menu links here -->
-        </div>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Inventory</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#">Fault Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="patching-report.html">Patching Report</a></li>
+          <!-- Add other nav links as needed -->
+        </ul>
       </div>
     </div>
   </nav>
 
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div>
-        <label for="filter-equipmenttype" class="form-label me-2">Filter by Equipment Type:</label>
-        <select id="filter-equipmenttype" class="form-select d-inline-block w-auto">
-          <option value="All">All</option>
-          <option>Projector</option>
-          <option>Visualiser</option>
-          <option>Projector Screen</option>
-          <option>Desktop</option>
-          <option>Laptop</option>
-          <option>iPad</option>
-          <option>Mobile Cart</option>
-          <!-- Add other types as needed -->
+  <!-- Main Container -->
+  <div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <label for="filter-equipmenttype" class="form-label mb-0">Filter by Equipment Type:</label>
+        <select id="filter-equipmenttype" class="form-select">
+          <option value="all" selected>All</option>
+          <option value="projector">Projector</option>
+          <option value="visualiser">Visualiser</option>
+          <option value="projector screen">Projector Screen</option>
+          <option value="desktop">Desktop</option>
+          <option value="laptop">Laptop</option>
+          <option value="ipad">iPad</option>
+          <option value="mobile cart">Mobile Cart</option>
+          <!-- Add other equipment types as needed -->
         </select>
       </div>
-      <div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
         <input
-          type="search"
           id="search-fault"
+          type="search"
           class="form-control"
           placeholder="Search faults..."
-          style="width: 250px"
+          style="min-width: 220px;"
+          aria-label="Search faults"
         />
+        <button id="add-fault-btn" class="btn btn-success">Add Fault</button>
       </div>
-      <button class="btn btn-success" id="add-fault-btn">Add Fault</button>
     </div>
 
+    <!-- Fault Table -->
     <div class="table-responsive">
-      <table class="table table-bordered table-striped" id="fault-table">
-        <thead class="table-primary">
+      <table id="fault-table" class="table table-bordered table-striped align-middle">
+        <thead>
           <tr>
             <th>Date Reported</th>
             <th>Equipment Type</th>
@@ -80,13 +105,13 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Filled dynamically by fault-report.js -->
+          <!-- Rows will be dynamically generated here -->
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Modal for Add/Edit Fault -->
+  <!-- Fault Modal -->
   <div
     class="modal fade"
     id="faultModal"
@@ -108,120 +133,70 @@
           </div>
           <div class="modal-body">
             <div class="row g-3">
-              <div class="col-md-4">
-                <label for="DateReported" class="form-label">Date Reported <span class="text-danger">*</span></label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="DateReported"
-                  name="DateReported"
-                  required
-                />
+              <div class="col-md-6">
+                <label for="DateReported" class="form-label">Date Reported *</label>
+                <input type="date" id="DateReported" name="DateReported" class="form-control" required />
               </div>
-              <div class="col-md-4">
-                <label for="EquipmentType" class="form-label">Equipment Type <span class="text-danger">*</span></label>
-                <select class="form-select" id="EquipmentType" name="EquipmentType" required>
-                  <option value="" selected disabled>Select type</option>
-                  <option>Projector</option>
-                  <option>Visualiser</option>
-                  <option>Projector Screen</option>
-                  <option>Desktop</option>
-                  <option>Laptop</option>
-                  <option>iPad</option>
-                  <option>Mobile Cart</option>
-                  <!-- Add more options as needed -->
+              <div class="col-md-6">
+                <label for="EquipmentType" class="form-label">Equipment Type *</label>
+                <select id="EquipmentType" name="EquipmentType" class="form-select" required>
+                  <option value="" disabled selected>Select equipment type</option>
+                  <option value="Projector">Projector</option>
+                  <option value="Visualiser">Visualiser</option>
+                  <option value="Projector Screen">Projector Screen</option>
+                  <option value="Desktop">Desktop</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="iPad">iPad</option>
+                  <option value="Mobile Cart">Mobile Cart</option>
+                  <!-- Add other equipment types as needed -->
                 </select>
               </div>
-              <div class="col-md-4">
+
+              <div class="col-md-6">
                 <label for="Equipment" class="form-label">Equipment</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="Equipment"
-                  name="Equipment"
-                  placeholder="Optional"
-                />
+                <input type="text" id="Equipment" name="Equipment" class="form-control" />
               </div>
-
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label for="AssetNo" class="form-label">Asset No</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="AssetNo"
-                  name="AssetNo"
-                  placeholder="Optional"
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="BrandModel" class="form-label">Brand / Model</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="BrandModel"
-                  name="BrandModel"
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="SerialNumber" class="form-label">Serial Number</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="SerialNumber"
-                  name="SerialNumber"
-                  placeholder="Optional"
-                />
+                <input type="text" id="AssetNo" name="AssetNo" class="form-control" />
               </div>
 
-              <div class="col-md-4">
+              <div class="col-md-6">
+                <label for="BrandModel" class="form-label">Brand / Model</label>
+                <input type="text" id="BrandModel" name="BrandModel" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label for="SerialNumber" class="form-label">Serial Number</label>
+                <input type="text" id="SerialNumber" name="SerialNumber" class="form-control" />
+              </div>
+
+              <div class="col-md-6">
                 <label for="Location" class="form-label">Location</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="Location"
-                  name="Location"
-                />
+                <input type="text" id="Location" name="Location" class="form-control" />
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label for="RoomNumber" class="form-label">Room Number</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="RoomNumber"
-                  name="RoomNumber"
-                  placeholder="Optional"
-                />
+                <input type="text" id="RoomNumber" name="RoomNumber" class="form-control" />
               </div>
-              <div class="col-md-12">
-                <label for="FaultDescription" class="form-label">Fault Description <span class="text-danger">*</span></label>
-                <textarea
-                  class="form-control"
-                  id="FaultDescription"
-                  name="FaultDescription"
-                  rows="3"
-                  required
-                ></textarea>
+
+              <div class="col-12">
+                <label for="FaultDescription" class="form-label">Fault Description *</label>
+                <textarea id="FaultDescription" name="FaultDescription" class="form-control" rows="3" required></textarea>
               </div>
-              <div class="col-md-4">
-                <label for="Status" class="form-label">Status <span class="text-danger">*</span></label>
-                <select class="form-select" id="Status" name="Status" required>
-                  <option value="" selected disabled>Select status</option>
-                  <option>Open</option>
-                  <option>In Progress</option>
-                  <option>Resolved</option>
-                  <option>Closed</option>
+
+              <div class="col-md-6">
+                <label for="Status" class="form-label">Status *</label>
+                <select id="Status" name="Status" class="form-select" required>
+                  <option value="" disabled selected>Select status</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
                 </select>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label for="DateUpdated" class="form-label">Date Updated</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="DateUpdated"
-                  name="DateUpdated"
-                  readonly
-                  placeholder="Auto-updated"
-                />
+                <input type="date" id="DateUpdated" name="DateUpdated" class="form-control" disabled />
               </div>
             </div>
           </div>
@@ -240,7 +215,12 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS Bundle (with Popper) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+
+  <!-- Your fault-report.js script -->
   <script src="fault-report.js"></script>
 </body>
 </html>
