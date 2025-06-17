@@ -1,186 +1,137 @@
 /* styles.css */
 
-/* General body & fonts */
+/* Body and general font */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
   margin: 0;
   padding: 0;
-  width: 100%;
 }
 
-/* Navbar hover and active link color */
-.navbar-dark .navbar-nav .nav-link.active,
-.navbar-dark .navbar-nav .nav-link:hover {
-  color: #ffc107 !important; /* Bootstrap warning yellow */
+/* Navbar fixes */
+.navbar {
+  /* Ensure navbar sticks to top */
+  position: sticky;
+  top: 0;
+  z-index: 1030;
 }
 
-/* Full-width layout */
-.container {
-  max-width: none;
-  width: 100%;
-  padding: 0 1rem;
+/* Navbar background color (Bootstrap primary) */
+.navbar.bg-primary {
+  background-color: #0d6efd !important;
 }
 
-/* Make table container take full width */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
+/* Navbar brand styling */
+.navbar-brand {
+  font-weight: 600;
+  color: #fff !important;
 }
 
-/* Table Styling */
-.inventory-table {
+/* Navbar link styles */
+.navbar-nav .nav-link {
+  color: #e2e6ea;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Navbar toggler button */
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.navbar-toggler-icon {
+  filter: invert(100%);
+}
+
+/* Table styling */
+table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
+  margin-bottom: 1rem;
 }
 
-.inventory-table thead th {
-  background-color: #0d6efd; /* Bootstrap primary blue */
+table th,
+table td {
+  border: 1px solid #dee2e6;
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+  text-align: left;
+}
+
+table thead th {
+  background-color: #0d6efd;
   color: white;
-  text-align: center;
-  vertical-align: middle;
-  padding: 10px;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-}
-
-.inventory-table tbody td {
-  vertical-align: middle;
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  word-break: break-word;
-}
-
-.inventory-table tbody tr:nth-child(even) {
-  background-color: #f2f6ff;
-}
-
-.inventory-table tbody tr:hover {
-  background-color: #dbe9ff;
-  cursor: default;
-}
-
-/* Action buttons center */
-.inventory-table tbody td:last-child {
-  text-align: center;
-  white-space: nowrap;
+  font-weight: 600;
 }
 
 /* Buttons */
-.btn {
-  font-size: 0.9rem;
+.btn-sm {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Modal fixes */
+.modal-header {
+  background-color: #0d6efd;
+  color: white;
   font-weight: 600;
-  user-select: none;
-  transition: background-color 0.3s ease;
 }
 
-.btn-success {
-  background-color: #198754;
-  border-color: #198754;
-}
-
-.btn-success:hover {
-  background-color: #157347;
-  border-color: #146c43;
-}
-
-.btn-primary {
+.modal-footer .btn-primary {
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
 
-.btn-primary:hover {
-  background-color: #0b5ed7;
-  border-color: #0a58ca;
+/* Form input focus */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  border-color: #0d6efd;
 }
 
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
+/* Responsive container padding */
+.container {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
-.btn-danger:hover {
-  background-color: #bb2d3b;
-  border-color: #b02a37;
+/* Add margin to top of content to avoid overlap with sticky navbar */
+.main-content {
+  margin-top: 60px; /* adjust based on navbar height */
 }
 
-/* Modal form spacing */
-.modal-body label {
-  font-weight: 600;
-}
-
-.modal-body input,
-.modal-body select {
-  font-size: 1rem;
-}
-
-.modal-footer {
+/* Filter and Search area */
+.filter-search-container {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-/* Responsive Modal */
-@media (max-width: 768px) {
-  .modal-dialog {
-    max-width: 95vw;
-  }
+.filter-search-container select,
+.filter-search-container input {
+  max-width: 250px;
+}
 
-  .modal-body .col-md-3 {
-    flex: 0 0 100%;
+/* Responsive tweaks */
+@media (max-width: 575.98px) {
+  .filter-search-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .filter-search-container select,
+  .filter-search-container input {
     max-width: 100%;
   }
 }
-
-/* Search input size */
-#search-inventory {
-  max-width: 320px;
-  margin-top: 0.25rem;
-}
-
-/* Filter dropdown size */
-#filter-equipmenttype {
-  max-width: 200px;
-}
-
-
-/* Maximize fault table width */
-.fault-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: auto;
-}
-
-.fault-table thead th {
-  background-color: #0d6efd; /* Bootstrap blue */
-  color: white;
-  text-align: center;
-  vertical-align: middle;
-  padding: 10px;
-  user-select: none;
-}
-
-.fault-table tbody td {
-  vertical-align: middle;
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  word-break: break-word;
-}
-
-.fault-table tbody tr:nth-child(even) {
-  background-color: #f2f6ff;
-}
-
-.fault-table tbody tr:hover {
-  background-color: #dbe9ff;
-}
-
-/* Ensure responsive table uses full width */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
