@@ -1,18 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
   const faultTableBody = document.querySelector("#fault-table tbody");
   const addFaultBtn = document.getElementById("add-fault-btn");
-  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
+  const faultModalEl = document.getElementById("faultModal");
+  const faultModal = new bootstrap.Modal(faultModalEl);
   const faultForm = document.getElementById("fault-modal-form");
   const filterEquipmentType = document.getElementById("filter-equipmenttype");
   const searchInput = document.getElementById("search-fault");
 
-  // Store faults data in-memory (replace with your own data source or localStorage)
+  // In-memory data store for faults
   let faults = [];
 
-  // Track currently editing fault index; -1 = adding new
+  // Editing index, -1 means adding new
   let editingIndex = -1;
 
-  // Render fault table rows filtered and searched
+  // Render the fault table with filter and search applied
   function renderTable() {
     const filterValue = filterEquipmentType.value.toLowerCase();
     const searchValue = searchInput.value.trim().toLowerCase();
@@ -20,8 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     faultTableBody.innerHTML = "";
 
     const filteredFaults = faults.filter(fault => {
-      const matchesFilter =
-        filterValue === "all" || fault.EquipmentType.toLowerCase() === filterValue;
+      const matchesFilter = filterValue === "all" || fault.EquipmentType.toLowerCase() === filterValue;
       const matchesSearch = Object.values(fault).some(value =>
         String(value).toLowerCase().includes(searchValue)
       );
@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     filteredFaults.forEach((fault, index) => {
       const tr = document.createElement("tr");
-
       tr.innerHTML = `
         <td>${fault.DateReported}</td>
         <td>${fault.EquipmentType}</td>
@@ -53,19 +52,21 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
         </td>
       `;
-
       faultTableBody.appendChild(tr);
     });
 
-    // Attach event listeners to status dropdowns, edit, and delete buttons
+    // Attach event listeners after rendering
+
+    // Status change handler
     document.querySelectorAll(".status-select").forEach(select => {
       select.addEventListener("change", (e) => {
         const i = e.target.dataset.index;
         faults[i].Status = e.target.value;
-        // Optionally save data here
+        // Optional: save changes to localStorage or backend here
       });
     });
 
+    // Edit button handler
     document.querySelectorAll(".edit-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         editingIndex = e.target.dataset.index;
@@ -74,13 +75,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Delete button handler
     document.querySelectorAll(".delete-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const i = e.target.dataset.index;
         if (confirm("Are you sure you want to delete this fault report?")) {
           faults.splice(i, 1);
           renderTable();
-          // Optionally save data here
+          // Optional: save changes here
         }
       });
     });
@@ -100,12 +102,12 @@ document.addEventListener("DOMContentLoaded", () => {
     formElements["Status"].value = fault.Status;
   }
 
-  // Clear modal form
+  // Clear modal form inputs
   function clearForm() {
     faultForm.reset();
   }
 
-  // Handle form submit to add or update fault
+  // Handle form submit: add or update fault
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -113,10 +115,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const faultData = Object.fromEntries(formData.entries());
 
     if (editingIndex === -1) {
-      // Add new
+      // Add new fault
       faults.push(faultData);
     } else {
-      // Update existing
+      // Update existing fault
       faults[editingIndex] = faultData;
     }
 
@@ -126,14 +128,14 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTable();
   });
 
-  // Add fault button opens modal for new fault
+  // Add Fault button click - open modal for new fault
   addFaultBtn.addEventListener("click", () => {
     editingIndex = -1;
     clearForm();
     faultModal.show();
   });
 
-  // Filter and search triggers
+  // Filter and search inputs change triggers
   filterEquipmentType.addEventListener("change", renderTable);
   searchInput.addEventListener("input", renderTable);
 
