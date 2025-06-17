@@ -12,15 +12,28 @@
 
     .container {
       margin-top: 80px;
+      max-width: 100vw;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
     }
 
     .table-responsive {
-      max-width: 100vw;
+      width: 100vw;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0;
     }
 
     table {
+      width: 100%;
       min-width: 1400px;
+      table-layout: fixed;
+    }
+
+    th, td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
