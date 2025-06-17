@@ -9,54 +9,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let editingRow = null;
 
-  // Format a date string YYYY-MM-DD to DD MMM YYYY
+  // Format date for display: "dd MMM yyyy"
   function formatDate(dateStr) {
     if (!dateStr) return "";
-    const d = new Date(dateStr);
-    if (isNaN(d)) return "";
-    return d.toLocaleDateString("en-GB", {
+    const date = new Date(dateStr);
+    if (isNaN(date)) return "";
+    return date.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   }
 
-  // Parse date from display format back to YYYY-MM-DD for form input
+  // Parse displayed date string back to ISO yyyy-mm-dd for input[type=date]
   function parseDate(displayDate) {
     if (!displayDate) return "";
-    // Try to parse DD MMM YYYY
-    const parts = displayDate.split(" ");
-    if (parts.length !== 3) return "";
-    const day = parts[0];
-    const monthStr = parts[1];
-    const year = parts[2];
-
-    // Convert month abbreviation to month number
-    const months = {
-      Jan: "01",
-      Feb: "02",
-      Mar: "03",
-      Apr: "04",
-      May: "05",
-      Jun: "06",
-      Jul: "07",
-      Aug: "08",
-      Sep: "09",
-      Oct: "10",
-      Nov: "11",
-      Dec: "12",
-    };
-
-    const month = months[monthStr];
-    if (!month) return "";
-
-    return `${year}-${month}-${day}`;
+    const parsed = Date.parse(displayDate);
+    if (isNaN(parsed)) return "";
+    const date = new Date(parsed);
+    // Format ISO yyyy-mm-dd
+    return date.toISOString().slice(0, 10);
   }
 
   // Create a new table row from form data
-  function createRow(formData) {
+  function createRowFromForm(formData) {
     const row = document.createElement("tr");
-    const columns = [
+    const values = [
       formatDate(formData.get("DateReported")),
       formData.get("EquipmentType") || "",
       formData.get("Equipment") || "",
@@ -68,16 +46,15 @@ document.addEventListener("DOMContentLoaded", () => {
       formData.get("Status") || "",
     ];
 
-    columns.forEach((text) => {
+    for (const val of values) {
       const cell = row.insertCell();
-      cell.textContent = text;
-    });
+      cell.textContent = val;
+    }
 
-    // Actions cell
     const actionsCell = row.insertCell();
     actionsCell.innerHTML = `
-      <button class="btn btn-sm btn-primary btn-edit me-2">Edit</button>
-      <button class="btn btn-sm btn-danger btn-delete">Delete</button>
+      <button class="btn btn-sm btn-primary btn-edit me-2" type="button">Edit</button>
+      <button class="btn btn-sm btn-danger btn-delete" type="button">Delete</button>
     `;
 
     return row;
@@ -88,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.reset();
   }
 
-  // Fill form with data from a table row (for editing)
+  // Populate form fields from a table row (for editing)
   function fillFormFromRow(row) {
     const cells = row.cells;
     faultForm.elements["DateReported"].value = parseDate(cells[0].textContent);
@@ -102,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     faultForm.elements["Status"].value = cells[8].textContent;
   }
 
-  // Filter and search the table rows
+  // Filter and search table rows based on filter dropdown and search input
   function filterAndSearch() {
     const filterValue = filterSelect.value.toLowerCase();
     const searchValue = searchInput.value.toLowerCase();
@@ -118,16 +95,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Open modal for adding new fault
+  // Event: click Add Fault button
   addFaultBtn.addEventListener("click", () => {
     editingRow = null;
     clearForm();
     faultModal.show();
   });
 
-  // Handle form submission
+  // Event: submit form (add or edit)
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
+
     const formData = new FormData(faultForm);
 
     if (editingRow) {
@@ -143,8 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
       cells[7].textContent = formData.get("FaultDescription") || "";
       cells[8].textContent = formData.get("Status") || "";
     } else {
-      // Add new row
-      const newRow = createRow(formData);
+      // Create new row
+      const newRow = createRowFromForm(formData);
       faultTableBody.appendChild(newRow);
     }
 
@@ -152,25 +130,31 @@ document.addEventListener("DOMContentLoaded", () => {
     filterAndSearch();
   });
 
-  // Edit/Delete button clicks
+  // Event: Edit/Delete buttons in table rows
   faultTableBody.addEventListener("click", (e) => {
     const target = e.target;
+    const row = target.closest("tr");
+    if (!row) return;
 
     if (target.classList.contains("btn-edit")) {
-      editingRow = target.closest("tr");
-      fillFormFromRow(editingRow);
+      editingRow = row;
+      fillFormFromRow(row);
       faultModal.show();
     }
 
     if (target.classList.contains("btn-delete")) {
-      const row = target.closest("tr");
       if (confirm("Are you sure you want to delete this fault report?")) {
         row.remove();
       }
     }
   });
 
-  // Filter & Search event listeners
+  // Filter and search inputs events
   filterSelect.addEventListener("change", filterAndSearch);
   searchInput.addEventListener("input", filterAndSearch);
+
+  // Optional: autofocus first input on modal shown
+  faultModalElement.addEventListener("shown.bs.modal", () => {
+    faultForm.elements["DateReported"].focus();
+  });
 });
