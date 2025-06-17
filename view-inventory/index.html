@@ -10,13 +10,12 @@
     body {
       padding-top: 70px; /* Account for fixed navbar */
     }
-    /* Navbar menu hover color: yellow */
     .navbar-nav .nav-link:hover {
       color: yellow !important;
     }
-    /* Shorten search input */
+    /* Shorter search input */
     #search-inventory {
-      max-width: 250px;
+      max-width: 300px;
     }
   </style>
 </head>
@@ -80,7 +79,7 @@
         <tr>
           <th>EquipmentType</th>
           <th>Vendor</th>
-          <th>Equipment</th> <!-- New column -->
+          <th>Equipment</th>
           <th>BrandModel</th>
           <th>Profile</th>
           <th>Custodian</th>
@@ -95,8 +94,8 @@
           <th>SanitiseDate</th>
           <th>Duration in use</th>
           <th>Lamp Hour</th>
-          <th>Date Updated</th>
-          <th>Actions</th> <!-- last column -->
+          <th>DateUpdated</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -135,8 +134,8 @@
           </div>
 
           <div class="col-md-3">
-            <label class="form-label">Equipment *</label>
-            <select class="form-select" name="Equipment" required>
+            <label class="form-label">Equipment</label>
+            <select class="form-select" name="Equipment">
               <option value="">Select</option>
               <option value="Desktop">Desktop</option>
               <option value="Laptop">Laptop</option>
