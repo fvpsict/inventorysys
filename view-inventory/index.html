@@ -76,6 +76,7 @@
         <tr>
           <th>EquipmentType</th>
           <th>Vendor</th>
+          <th>Equipment</th> <!-- New column -->
           <th>BrandModel</th>
           <th>Profile</th>
           <th>Custodian</th>
@@ -128,6 +129,19 @@
               <option>AV</option>
             </select>
           </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Equipment</label>
+            <select class="form-select" name="Equipment" required>
+              <option value="">Select</option>
+              <option value="Desktop">Desktop</option>
+              <option value="Laptop">Laptop</option>
+              <option value="iPad">iPad</option>
+              <option value="Mobile Cart">Mobile Cart</option>
+            </select>
+          </div>
+
+
           <div class="col-md-3">
             <label class="form-label">Vendor</label>
             <input type="text" class="form-control" name="Vendor" />
