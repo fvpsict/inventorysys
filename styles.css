@@ -1,46 +1,81 @@
-/* styles.css */
-
-body {
-  background-color: #f8f9fa;
-  padding-top: 70px; /* space for fixed navbar */
+/* Reset some default spacing */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
 }
 
+/* Ensure container spacing from fixed navbar */
 .container {
-  max-width: 95vw;
-  margin: auto;
-}
-
-.table-responsive {
+  padding-top: 1rem;
+  padding-bottom: 3rem;
   max-width: 100vw;
-  overflow-x: auto;
 }
 
-table {
-  min-width: 1400px;
+/* Navbar fix for fixed-top */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-th {
+/* Table styling */
+.table {
+  width: 100% !important; /* always fill width */
+  min-width: 1400px; /* horizontal scroll if viewport too narrow */
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.table thead th {
   background-color: #007bff;
   color: white;
+  position: sticky;
+  top: 56px; /* height of navbar + some margin */
+  z-index: 10;
 }
 
-.delete-btn {
-  min-width: 70px;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.85rem;
+/* Responsive table container */
+.table-responsive {
+  overflow-x: auto;
+  max-width: 100vw;
 }
 
+/* Buttons in action column */
 .btn-sm {
-  font-size: 0.85rem;
   padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
 }
 
-.navbar-brand, .nav-link {
-  cursor: pointer;
+/* Form labels spacing */
+.form-label {
+  font-weight: 600;
 }
 
-h2 {
-  margin-bottom: 1.5rem;
+/* Modal adjustments */
+.modal-lg {
+  max-width: 900px;
+}
+
+/* Fix large modal content scrolling */
+.modal-dialog-scrollable .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Inputs in form */
+input.form-control, select.form-select, textarea.form-control {
+  font-size: 0.9rem;
+}
+
+/* Fix spacing on filter/search row */
+.row.mb-3 > div {
+  margin-bottom: 0.5rem;
+}
+
+/* Buttons */
+#add-fault-btn {
+  min-width: 100px;
 }
