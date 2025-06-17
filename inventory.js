@@ -1,160 +1,134 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const tableBody = document.querySelector("#inventory-table tbody");
-  const form = document.getElementById("itemForm");
-  const modal = new bootstrap.Modal(document.getElementById("itemModal"));
-  const addItemBtn = document.getElementById("addItemBtn");
+document.addEventListener("DOMContentLoaded", function () {
+  const inventoryTableBody = document.querySelector("#inventory-table tbody");
+  const itemForm = document.getElementById("itemForm");
   const searchInput = document.getElementById("searchInput");
 
   let editIndex = null;
 
-  const headers = [
-    "Equipment",
-    "EquipmentType",
-    "Vendor",
-    "BrandModel",
-    "Profile",
-    "Custodian",
-    "AssetNo",
-    "SerialNumber",
-    "Location",
-    "EndDate",
-    "StartDate",
-    "Hostname",
-    "SSOE PO Number",
-    "Cart No",
-    "SanitiseDate",
-    "Duration in use",
-    "LampHour",
-    "DateUpdated"
-  ];
-
-  function formatDate(date = new Date()) {
-    return date.toLocaleDateString("en-GB", {
+  function formatDate(date) {
+    return new Intl.DateTimeFormat("en-GB", {
       day: "2-digit",
       month: "long",
       year: "numeric"
-    });
-  }
-
-  function calculateDuration(startDate) {
-    if (!startDate) return "";
-    const start = new Date(startDate);
-    const now = new Date();
-    let years = now.getFullYear() - start.getFullYear();
-    let months = now.getMonth() - start.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    return `${years}y ${months}m`;
-  }
-
-  function saveToLocalStorage(data) {
-    localStorage.setItem("inventoryData", JSON.stringify(data));
-  }
-
-  function loadFromLocalStorage() {
-    const data = JSON.parse(localStorage.getItem("inventoryData")) || [];
-    data.forEach((item, index) => {
-      addRow(item, index);
-    });
+    }).format(date);
   }
 
   function getFormData() {
-    const formData = {};
-    headers.forEach(header => {
-      const field = form.elements[header];
-      if (field) formData[header] = field.value.trim();
+    const formData = new FormData(itemForm);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value.trim();
     });
-    formData["Duration in use"] = calculateDuration(formData["StartDate"]);
-    formData["DateUpdated"] = formatDate();
-    return formData;
+    data["DateUpdated"] = formatDate(new Date());
+    return data;
   }
 
-  function populateForm(data) {
-    headers.forEach(header => {
-      const field = form.elements[header];
-      if (field) field.value = data[header] || "";
+  function createRow(data) {
+    const tr = document.createElement("tr");
+
+    const keys = [
+      "Equipment",
+      "EquipmentType",
+      "Vendor",
+      "BrandModel",
+      "Profile",
+      "Custodian",
+      "AssetNo",
+      "SerialNumber",
+      "Location",
+      "EndDate",
+      "StartDate",
+      "Hostname",
+      "SSOE PO Number",
+      "Cart No",
+      "SanitiseDate",
+      "Fault",
+      "DateUpdated"
+    ];
+
+    keys.forEach((key) => {
+      const td = document.createElement("td");
+      td.textContent = data[key] || "";
+      tr.appendChild(td);
+    });
+
+    const actionTd = document.createElement("td");
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.className = "btn btn-sm btn-primary me-2";
+    editBtn.onclick = () => editItem(tr);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.className = "btn btn-sm btn-danger";
+    deleteBtn.onclick = () => tr.remove();
+
+    actionTd.appendChild(editBtn);
+    actionTd.appendChild(deleteBtn);
+    tr.appendChild(actionTd);
+
+    return tr;
+  }
+
+  function populateForm(tr) {
+    const cells = tr.querySelectorAll("td");
+    const fields = [
+      "Equipment",
+      "EquipmentType",
+      "Vendor",
+      "BrandModel",
+      "Profile",
+      "Custodian",
+      "AssetNo",
+      "SerialNumber",
+      "Location",
+      "EndDate",
+      "StartDate",
+      "Hostname",
+      "SSOE PO Number",
+      "Cart No",
+      "SanitiseDate",
+      "Fault"
+    ];
+
+    fields.forEach((field, index) => {
+      const input = itemForm.querySelector(`[name="${field}"]`);
+      if (input) input.value = cells[index].textContent;
     });
   }
 
-  function clearForm() {
-    form.reset();
-    editIndex = null;
+  function editItem(tr) {
+    populateForm(tr);
+    editIndex = Array.from(inventoryTableBody.children).indexOf(tr);
+    const modal = new bootstrap.Modal(document.getElementById("itemModal"));
+    modal.show();
   }
 
-  function addRow(data, index) {
-    const row = document.createElement("tr");
-
-    headers.forEach(header => {
-      const cell = document.createElement("td");
-      cell.textContent = data[header] || "";
-      row.appendChild(cell);
-    });
-
-    const actions = document.createElement("td");
-    actions.innerHTML = `
-      <button class="btn btn-sm btn-primary me-2 edit-btn">Edit</button>
-      <button class="btn btn-sm btn-danger delete-btn">Delete</button>
-    `;
-    row.appendChild(actions);
-
-    row.querySelector(".edit-btn").addEventListener("click", () => {
-      populateForm(data);
-      editIndex = index;
-      modal.show();
-    });
-
-    row.querySelector(".delete-btn").addEventListener("click", () => {
-      const inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
-      inventory.splice(index, 1);
-      saveToLocalStorage(inventory);
-      renderTable();
-    });
-
-    tableBody.appendChild(row);
-  }
-
-  function renderTable() {
-    tableBody.innerHTML = "";
-    const inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
-    inventory.forEach((item, index) => {
-      item["Duration in use"] = calculateDuration(item["StartDate"]);
-      item["DateUpdated"] = formatDate();
-      addRow(item, index);
-    });
-  }
-
-  form.addEventListener("submit", (e) => {
+  itemForm.addEventListener("submit", function (e) {
     e.preventDefault();
-    const data = getFormData();
-    const inventory = JSON.parse(localStorage.getItem("inventoryData")) || [];
+    const formData = getFormData();
+    const newRow = createRow(formData);
 
     if (editIndex !== null) {
-      inventory[editIndex] = data;
+      inventoryTableBody.children[editIndex].replaceWith(newRow);
+      editIndex = null;
     } else {
-      inventory.push(data);
+      inventoryTableBody.appendChild(newRow);
     }
 
-    saveToLocalStorage(inventory);
-    renderTable();
-    modal.hide();
-    clearForm();
+    itemForm.reset();
+    bootstrap.Modal.getInstance(document.getElementById("itemModal")).hide();
   });
 
-  addItemBtn.addEventListener("click", () => {
-    clearForm();
-    modal.show();
-  });
-
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.toLowerCase();
-    const rows = tableBody.querySelectorAll("tr");
-    rows.forEach(row => {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(query) ? "" : "none";
+  searchInput.addEventListener("input", function () {
+    const query = this.value.toLowerCase();
+    const rows = inventoryTableBody.querySelectorAll("tr");
+    rows.forEach((row) => {
+      row.style.display = [...row.cells].some((cell) =>
+        cell.textContent.toLowerCase().includes(query)
+      )
+        ? ""
+        : "none";
     });
   });
-
-  loadFromLocalStorage();
 });
