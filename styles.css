@@ -1,90 +1,131 @@
-/* Reset default margin */
-body, html {
-  margin: 0;
-  padding: 0;
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
 }
 
-/* Fix spacing for fixed navbar */
 body {
+  margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
-  padding-top: 56px; /* Match navbar height */
+  color: #212529;
+  min-height: 100vh;
+  padding-top: 56px; /* height of fixed navbar */
 }
 
-/* Navbar Styles */
-.navbar-brand {
-  font-weight: bold;
+/* Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1030;
 }
 
-.nav-link.active {
-  font-weight: bold;
-  color: #ffc107 !important;
-}
-
-/* Page Container */
+/* Container */
 .container {
   max-width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-top: 1.5rem; /* small spacing below navbar */
 }
 
-/* Table Styles */
-.table-responsive {
-  max-width: 100vw;
-  overflow-x: auto;
+/* Headings */
+h2 {
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
-table {
-  min-width: 1400px;
-  border-collapse: collapse;
+/* Filter and Search Row */
+.row.mb-3.align-items-center {
+  margin-bottom: 1.5rem !important;
 }
 
-th,
-td {
-  white-space: nowrap;
-  vertical-align: middle;
-}
-
-thead.table-primary th {
-  background-color: #007bff;
-  color: white;
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
 }
 
 /* Buttons */
 .btn {
-  min-width: 80px;
+  font-weight: 600;
+  min-width: 100px;
 }
 
-/* Form Styling */
-.form-label {
-  font-weight: 500;
-}
-
-/* Modal Dialog */
-.modal-lg {
-  max-width: 90%;
-}
-
-.modal-body {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* Search and Filter */
-#search-fault {
+/* Table wrapper */
+.table-responsive {
   width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0.25rem;
+  background: white;
+  box-shadow: 0 0 10px rgb(0 0 0 / 0.05);
+  padding: 0.25rem;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 767.98px) {
-  .navbar .container-fluid {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+/* Table styling */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1400px; /* minimum width to fit all columns */
+  table-layout: fixed; /* fixed layout for consistent column widths */
+}
 
-  .modal-body {
-    max-height: 60vh;
-  }
+thead tr {
+  background-color: #0d6efd; /* Bootstrap primary blue */
+  color: white;
+}
 
+thead th {
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid #dee2e6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+tbody td {
+  padding: 0.5rem 0.5rem;
+  border: 1px solid #dee2e6;
+  vertical-align: middle;
+  word-wrap: break-word;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Buttons inside table */
+tbody .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Modal styling tweaks */
+.modal-lg {
+  max-width: 900px;
+}
+
+.modal-header .btn-close {
+  margin: -1rem -1rem -1rem auto;
+}
+
+/* Form inputs inside modal */
+.modal-body .form-control,
+.modal-body .form-select,
+.modal-body textarea.form-control {
+  font-size: 0.95rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
   table {
-    min-width: 1000px;
+    min-width: 900px; /* allow smaller min width on small screens */
+  }
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .btn {
+    min-width: 90px;
+    font-size: 0.85rem;
   }
 }
