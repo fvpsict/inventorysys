@@ -3,19 +3,22 @@
 document.addEventListener("DOMContentLoaded", () => {
   const faultTableBody = document.querySelector("#fault-table tbody");
   const addFaultBtn = document.getElementById("add-fault-btn");
-  const faultModalEl = document.getElementById("faultModal");
-  const faultModal = new bootstrap.Modal(faultModalEl);
+  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
   const faultForm = document.getElementById("fault-modal-form");
 
   const filterEquipmentType = document.getElementById("filter-equipmenttype");
   const searchInput = document.getElementById("search-fault");
 
+  // Storage key
   const STORAGE_KEY = "faultReports";
 
+  // Current editing index (null if adding)
   let editIndex = null;
+
+  // Load data from localStorage or empty array
   let faultReports = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-  // Format date to yyyy-mm-dd (for input values)
+  // Utility: format date as yyyy-mm-dd (for inputs)
   function formatDateISO(date) {
     if (!date) return "";
     const d = new Date(date);
@@ -23,12 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return d.toISOString().slice(0, 10);
   }
 
-  // Format date for display (yyyy-mm-dd)
+  // Utility: format date for display (e.g. 2025-06-17)
   function formatDateDisplay(date) {
-    return formatDateISO(date); // reuse same formatting for now
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d)) return "";
+    return d.toISOString().slice(0, 10);
   }
 
-  // Render the fault reports table filtered & searched
+  // Render table rows based on filtered & searched data
   function renderTable() {
     const filterVal = filterEquipmentType.value.toLowerCase();
     const searchVal = searchInput.value.toLowerCase();
@@ -36,13 +42,16 @@ document.addEventListener("DOMContentLoaded", () => {
     faultTableBody.innerHTML = "";
 
     faultReports.forEach((item, index) => {
-      // Filter by EquipmentType
-      if (filterVal !== "all" && filterVal !== "") {
-        if (!item.EquipmentType || item.EquipmentType.toLowerCase() !== filterVal)
+      // Filter by equipment type
+      if (filterVal !== "all" && filterVal !== "all" && filterVal !== "") {
+        if (
+          !item.EquipmentType ||
+          item.EquipmentType.toLowerCase() !== filterVal
+        )
           return;
       }
 
-      // Search filter
+      // Search filter: check all relevant text fields
       const searchableFields = [
         item.DateReported,
         item.EquipmentType,
@@ -56,12 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
         item.Status,
         item.DateUpdated,
       ];
-      const matchesSearch = searchableFields.some(
-        (field) => field && field.toLowerCase().includes(searchVal)
+      const matchesSearch = searchableFields.some((field) =>
+        field ? field.toLowerCase().includes(searchVal) : false
       );
       if (!matchesSearch) return;
 
-      // Build table row
+      // Create table row
       const tr = document.createElement("tr");
 
       // Date Reported
@@ -119,14 +128,16 @@ document.addEventListener("DOMContentLoaded", () => {
       tdDateUpdated.textContent = formatDateDisplay(item.DateUpdated);
       tr.appendChild(tdDateUpdated);
 
-      // Actions
+      // Actions (Edit/Delete)
       const tdActions = document.createElement("td");
 
       // Edit button
       const editBtn = document.createElement("button");
       editBtn.className = "btn btn-sm btn-primary me-2";
       editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => openEditModal(index));
+      editBtn.addEventListener("click", () => {
+        openEditModal(index);
+      });
       tdActions.appendChild(editBtn);
 
       // Delete button
@@ -134,7 +145,11 @@ document.addEventListener("DOMContentLoaded", () => {
       deleteBtn.className = "btn btn-sm btn-danger";
       deleteBtn.textContent = "Delete";
       deleteBtn.addEventListener("click", () => {
-        if (confirm("Are you sure you want to delete this fault report?")) {
+        if (
+          confirm(
+            "Are you sure you want to delete this fault report?"
+          )
+        ) {
           faultReports.splice(index, 1);
           saveAndRender();
         }
@@ -142,28 +157,36 @@ document.addEventListener("DOMContentLoaded", () => {
       tdActions.appendChild(deleteBtn);
 
       tr.appendChild(tdActions);
+
       faultTableBody.appendChild(tr);
     });
   }
 
-  // Save to localStorage and rerender
+  // Save to localStorage and rerender table
   function saveAndRender() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(faultReports));
     renderTable();
   }
 
-  // Clear form for new entry
+  // Clear form fields
   function clearForm() {
     faultForm.reset();
     document.getElementById("DateUpdated").value = "";
     editIndex = null;
   }
 
-  // Open modal for editing
+  // Open modal for adding new fault
+  addFaultBtn.addEventListener("click", () => {
+    clearForm();
+    faultModal.show();
+  });
+
+  // Open modal for editing existing fault
   function openEditModal(index) {
     editIndex = index;
     const item = faultReports[index];
 
+    // Fill form fields
     document.getElementById("DateReported").value = formatDateISO(item.DateReported);
     document.getElementById("EquipmentType").value = item.EquipmentType || "";
     document.getElementById("Equipment").value = item.Equipment || "";
@@ -174,22 +197,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("RoomNumber").value = item.RoomNumber || "";
     document.getElementById("FaultDescription").value = item.FaultDescription || "";
     document.getElementById("Status").value = item.Status || "";
-    document.getElementById("DateUpdated").value = formatDateISO(item.DateUpdated);
+    document.getElementById("DateUpdated").value = formatDateDisplay(item.DateUpdated);
 
     faultModal.show();
   }
 
-  // Add new fault modal
-  addFaultBtn.addEventListener("click", () => {
-    clearForm();
-    faultModal.show();
-  });
-
-  // Handle form submission
+  // Form submit handler for add/edit
   faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    // Validation
+    // Validate required fields
     if (!faultForm.DateReported.value) {
       alert("Date Reported is required.");
       return;
@@ -207,8 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const nowISO = new Date().toISOString().slice(0, 10);
-
+    // Prepare data object
+    const now = new Date();
     const data = {
       DateReported: faultForm.DateReported.value,
       EquipmentType: faultForm.EquipmentType.value,
@@ -220,12 +237,14 @@ document.addEventListener("DOMContentLoaded", () => {
       RoomNumber: faultForm.RoomNumber.value.trim() || "",
       FaultDescription: faultForm.FaultDescription.value.trim(),
       Status: faultForm.Status.value,
-      DateUpdated: nowISO,
+      DateUpdated: now.toISOString().slice(0, 10),
     };
 
     if (editIndex === null) {
+      // Add new
       faultReports.push(data);
     } else {
+      // Update existing
       faultReports[editIndex] = data;
     }
 
@@ -233,15 +252,18 @@ document.addEventListener("DOMContentLoaded", () => {
     faultModal.hide();
   });
 
-  // Filter and Search event listeners
+  // Filter change handler
   filterEquipmentType.addEventListener("change", renderTable);
 
-  let searchTimeout;
+  // Search input handler (debounced)
+  let searchTimeout = null;
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(renderTable, 300);
+    searchTimeout = setTimeout(() => {
+      renderTable();
+    }, 300);
   });
 
-  // Initial table render
+  // Initial render
   renderTable();
 });
