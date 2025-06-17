@@ -1,123 +1,112 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const faultTable = document.querySelector("#fault-table tbody");
-  const faultForm = document.getElementById("fault-modal-form");
-  const addFaultBtn = document.getElementById("add-fault-btn");
-  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
-  const equipmentTypeFilter = document.getElementById("filter-equipmenttype");
-  const searchInput = document.getElementById("search-fault");
+const faultForm = document.getElementById('fault-modal-form');
+const faultTableBody = document.querySelector('#fault-table tbody');
+let editingRow = null;
 
-  let editingRow = null;
+// Load from localStorage
+let faultData = JSON.parse(localStorage.getItem('faultData') || '[]');
+renderFaultTable(faultData);
 
-  function createRow(data) {
-    const row = document.createElement("tr");
+// Add Fault
+document.getElementById('add-fault-btn').addEventListener('click', () => {
+  editingRow = null;
+  faultForm.reset();
+  new bootstrap.Modal(document.getElementById('faultModal')).show();
+});
+
+faultForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(faultForm).entries());
+
+  if (editingRow) {
+    faultData[editingRow] = data;
+  } else {
+    faultData.push(data);
+  }
+
+  localStorage.setItem('faultData', JSON.stringify(faultData));
+  renderFaultTable(faultData);
+  bootstrap.Modal.getInstance(document.getElementById('faultModal')).hide();
+});
+
+function renderFaultTable(data) {
+  faultTableBody.innerHTML = '';
+  data.forEach((item, index) => {
+    const row = document.createElement('tr');
+
     row.innerHTML = `
-      <td>${data.DateReported}</td>
-      <td>${data.EquipmentType}</td>
-      <td>${data.Equipment}</td>
-      <td>${data.AssetNo}</td>
-      <td>${data.BrandModel}</td>
-      <td>${data.SerialNumber}</td>
-      <td>${data.Location}</td>
-      <td>${data.RoomNumber}</td>
-      <td>${data.FaultDescription}</td>
+      <td>${item.DateReported || ''}</td>
+      <td>${item.EquipmentType || ''}</td>
+      <td>${item.Equipment || ''}</td>
+      <td>${item.AssetNo || ''}</td>
+      <td>${item.BrandModel || ''}</td>
+      <td>${item.SerialNumber || ''}</td>
+      <td>${item.Location || ''}</td>
+      <td>${item.RoomNumber || ''}</td>
+      <td>${item.FaultDescription || ''}</td>
       <td>
         <select class="form-select form-select-sm status-dropdown">
-          ${["Open", "In Progress", "Pending vendor", "Resolved", "Closed"]
-            .map(status => `<option${data.Status === status ? " selected" : ""}>${status}</option>`)
-            .join("")}
+          <option${item.Status === 'Open' ? ' selected' : ''}>Open</option>
+          <option${item.Status === 'In Progress' ? ' selected' : ''}>In Progress</option>
+          <option${item.Status === 'Pending vendor' ? ' selected' : ''}>Pending vendor</option>
+          <option${item.Status === 'Resolved' ? ' selected' : ''}>Resolved</option>
+          <option${item.Status === 'Closed' ? ' selected' : ''}>Closed</option>
         </select>
       </td>
       <td>
-        <button class="btn btn-sm btn-warning edit-btn">Edit</button>
-        <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+        <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
+        <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
       </td>
     `;
-    faultTable.appendChild(row);
+
+    faultTableBody.appendChild(row);
+  });
+}
+
+faultTableBody.addEventListener('click', function (e) {
+  const index = e.target.dataset.index;
+
+  if (e.target.classList.contains('edit-btn')) {
+    const item = faultData[index];
+    Object.entries(item).forEach(([key, value]) => {
+      if (faultForm.elements[key]) faultForm.elements[key].value = value;
+    });
+    editingRow = index;
+    new bootstrap.Modal(document.getElementById('faultModal')).show();
   }
 
-  function updateRow(row, data) {
-    const cells = row.children;
-    cells[0].textContent = data.DateReported;
-    cells[1].textContent = data.EquipmentType;
-    cells[2].textContent = data.Equipment;
-    cells[3].textContent = data.AssetNo;
-    cells[4].textContent = data.BrandModel;
-    cells[5].textContent = data.SerialNumber;
-    cells[6].textContent = data.Location;
-    cells[7].textContent = data.RoomNumber;
-    cells[8].textContent = data.FaultDescription;
-    cells[9].querySelector("select").value = data.Status;
+  if (e.target.classList.contains('delete-btn')) {
+    if (confirm('Delete this fault report?')) {
+      faultData.splice(index, 1);
+      localStorage.setItem('faultData', JSON.stringify(faultData));
+      renderFaultTable(faultData);
+    }
   }
-
-  addFaultBtn.addEventListener("click", () => {
-    faultForm.reset();
-    editingRow = null;
-    faultModal.show();
-  });
-
-  faultForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const formData = new FormData(faultForm);
-    const data = Object.fromEntries(formData.entries());
-
-    if (editingRow) {
-      updateRow(editingRow, data);
-    } else {
-      createRow(data);
-    }
-
-    faultModal.hide();
-  });
-
-  faultTable.addEventListener("click", (e) => {
-    const row = e.target.closest("tr");
-
-    if (e.target.classList.contains("edit-btn")) {
-      editingRow = row;
-      const cells = row.children;
-      faultForm.DateReported.value = cells[0].textContent;
-      faultForm.EquipmentType.value = cells[1].textContent;
-      faultForm.Equipment.value = cells[2].textContent;
-      faultForm.AssetNo.value = cells[3].textContent;
-      faultForm.BrandModel.value = cells[4].textContent;
-      faultForm.SerialNumber.value = cells[5].textContent;
-      faultForm.Location.value = cells[6].textContent;
-      faultForm.RoomNumber.value = cells[7].textContent;
-      faultForm.FaultDescription.value = cells[8].textContent;
-      faultForm.Status.value = cells[9].querySelector("select").value;
-      faultModal.show();
-    }
-
-    if (e.target.classList.contains("delete-btn")) {
-      row.remove();
-    }
-  });
-
-  // Allow live inline status change
-  faultTable.addEventListener("change", (e) => {
-    if (e.target.classList.contains("status-dropdown")) {
-      // Optionally handle status update (e.g. sync to backend or highlight)
-    }
-  });
-
-  // Equipment Type Filter
-  equipmentTypeFilter.addEventListener("change", () => {
-    const filterValue = equipmentTypeFilter.value.toLowerCase();
-
-    Array.from(faultTable.rows).forEach(row => {
-      const equipmentType = row.cells[1].textContent.toLowerCase();
-      row.style.display =
-        filterValue === "all" || equipmentType === filterValue ? "" : "none";
-    });
-  });
-
-  // Search Filter
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.toLowerCase();
-
-    Array.from(faultTable.rows).forEach(row => {
-      const rowText = row.textContent.toLowerCase();
-      row.style.display = rowText.includes(query) ? "" : "none";
-    });
-  });
 });
+
+// Handle status change
+faultTableBody.addEventListener('change', function (e) {
+  if (e.target.classList.contains('status-dropdown')) {
+    const rowIndex = [...faultTableBody.children].indexOf(e.target.closest('tr'));
+    faultData[rowIndex].Status = e.target.value;
+    localStorage.setItem('faultData', JSON.stringify(faultData));
+  }
+});
+
+// Filter and search
+document.getElementById('filter-equipmenttype').addEventListener('change', filterAndSearch);
+document.getElementById('search-fault').addEventListener('input', filterAndSearch);
+
+function filterAndSearch() {
+  const filter = document.getElementById('filter-equipmenttype').value.toLowerCase();
+  const search = document.getElementById('search-fault').value.toLowerCase();
+
+  const filtered = faultData.filter(item => {
+    const matchesFilter = filter === 'all' || item.EquipmentType?.toLowerCase() === filter;
+    const matchesSearch = Object.values(item).some(value =>
+      value?.toLowerCase().includes(search)
+    );
+    return matchesFilter && matchesSearch;
+  });
+
+  renderFaultTable(filtered);
+}
