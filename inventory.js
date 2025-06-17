@@ -1,6 +1,5 @@
 // inventory.js
 
-// Globals
 let inventoryItems = [];
 let editIndex = -1;
 
@@ -8,10 +7,10 @@ const equipmentTypeFilter = document.getElementById("filter-equipmenttype");
 const searchInput = document.getElementById("search-inventory");
 const addItemBtn = document.getElementById("add-item-btn");
 const tbody = document.querySelector("#inventory-table tbody");
-const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+const modalEl = document.getElementById("inventoryModal");
+const modal = new bootstrap.Modal(modalEl);
 const form = document.getElementById("inventory-modal-form");
 
-// Helper: format DateUpdated as "DD Month YYYY"
 function formatDateDDMMMYYYY(dateStr) {
   if (!dateStr) return "";
   const months = [
@@ -28,7 +27,6 @@ function formatDateDDMMMYYYY(dateStr) {
   return `${day} ${month} ${year}`;
 }
 
-// Helper: calculate Duration in use from StartDate to today as "X yrs Y mos"
 function getDurationInUse(startDateStr) {
   if (!startDateStr) return "";
 
@@ -52,18 +50,15 @@ function getDurationInUse(startDateStr) {
   return result.trim() || "0 mo";
 }
 
-// Load data from localStorage
 function loadInventory() {
   const data = localStorage.getItem("inventoryItems");
   inventoryItems = data ? JSON.parse(data) : [];
 }
 
-// Save data to localStorage
 function saveInventory() {
   localStorage.setItem("inventoryItems", JSON.stringify(inventoryItems));
 }
 
-// Render inventory table rows with current filters and search
 function renderTable() {
   const filterVal = equipmentTypeFilter.value.toLowerCase();
   const searchVal = searchInput.value.toLowerCase();
@@ -71,10 +66,8 @@ function renderTable() {
   tbody.innerHTML = "";
 
   inventoryItems.forEach((item, index) => {
-    // Filter by EquipmentType if not "all"
     if (filterVal !== "all" && item.EquipmentType.toLowerCase() !== filterVal) return;
 
-    // Search all string fields for match
     const searchableFields = [
       item.EquipmentType, item.Vendor, item.Equipment, item.BrandModel, item.Profile,
       item.Custodian, item.AssetNo, item.SerialNumber, item.Location, item.EndDate,
@@ -118,7 +111,6 @@ function renderTable() {
   attachRowEventListeners();
 }
 
-// Attach Edit/Delete button handlers after rendering table
 function attachRowEventListeners() {
   document.querySelectorAll(".edit-btn").forEach(btn =>
     btn.addEventListener("click", e => {
@@ -139,7 +131,6 @@ function attachRowEventListeners() {
   );
 }
 
-// Open modal for editing
 function openEditModal(index) {
   editIndex = index;
   const item = inventoryItems[index];
@@ -161,32 +152,28 @@ function openEditModal(index) {
   formElements["Cart No"].value = item["Cart No"] || "";
   formElements["SanitiseDate"].value = item.SanitiseDate || "";
   formElements["Lamp Hour"].value = item["Lamp Hour"] || "";
-  formElements["DateUpdated"].value = item.DateUpdated || "";
+
+  // DateUpdated is auto-updated on save, no need to populate here
 
   modal.show();
 }
 
-// Open modal for adding new item
 function openAddModal() {
   editIndex = -1;
   form.reset();
-  // Clear DateUpdated
-  form.elements["DateUpdated"].value = "";
   modal.show();
 }
 
-// On modal form submit
 form.addEventListener("submit", e => {
   e.preventDefault();
-  const formData = new FormData(form);
 
-  // Convert form data to object
+  const formData = new FormData(form);
   const newItem = {};
   for (const [key, value] of formData.entries()) {
     newItem[key] = value.trim();
   }
 
-  // Validate required fields
+  // Validation
   if (!newItem.EquipmentType) {
     alert("Equipment Type is required.");
     return;
@@ -200,15 +187,12 @@ form.addEventListener("submit", e => {
     return;
   }
 
-  // Update DateUpdated to today in ISO format (for storage)
-  const todayISO = new Date().toISOString();
-  newItem.DateUpdated = todayISO;
+  // Set DateUpdated to current date ISO string
+  newItem.DateUpdated = new Date().toISOString();
 
   if (editIndex > -1) {
-    // Update existing item
     inventoryItems[editIndex] = newItem;
   } else {
-    // Add new item
     inventoryItems.push(newItem);
   }
 
@@ -217,11 +201,9 @@ form.addEventListener("submit", e => {
   modal.hide();
 });
 
-// Event listeners for filter and search
 equipmentTypeFilter.addEventListener("change", renderTable);
 searchInput.addEventListener("input", renderTable);
 addItemBtn.addEventListener("click", openAddModal);
 
-// Initial load
 loadInventory();
 renderTable();
