@@ -1,144 +1,146 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const faultTableBody = document.querySelector("#fault-table tbody");
+  const faultTable = document.getElementById("fault-table");
+  const faultTableBody = faultTable.querySelector("tbody");
   const addFaultBtn = document.getElementById("add-fault-btn");
-  const faultModalEl = document.getElementById("faultModal");
-  const faultModal = new bootstrap.Modal(faultModalEl);
+  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
   const faultForm = document.getElementById("fault-modal-form");
-
-  const filterEquipmentType = document.getElementById("filter-equipmenttype");
+  const filterSelect = document.getElementById("filter-equipmenttype");
   const searchInput = document.getElementById("search-fault");
 
-  const STORAGE_KEY = "faultReports";
-  let faultReports = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  let editIndex = null;
+  let faults = [];
+  let editingIndex = null;
 
-  function formatDateISO(date) {
-    const d = new Date(date);
-    if (isNaN(d)) return "";
-    return d.toISOString().split("T")[0];
+  // Approximate column widths in pixels (adjust as needed)
+  const columnWidths = {
+    DateReported: 110,
+    EquipmentType: 130,
+    Equipment: 120,
+    AssetNo: 100,
+    BrandModel: 150,
+    SerialNumber: 130,
+    Location: 120,
+    RoomNumber: 100,
+    FaultDescription: 250,
+    Status: 120,
+    DateUpdated: 110,
+    Actions: 120
+  };
+
+  // Calculate total min width based on columns present in table header
+  function setTableMinWidth() {
+    const headers = faultTable.querySelectorAll("thead th");
+    let totalWidth = 0;
+    headers.forEach((th) => {
+      const key = th.textContent.replace(/\s+/g, '');
+      totalWidth += columnWidths[key] || 120; // fallback width
+    });
+    faultTable.style.minWidth = totalWidth + "px";
+  }
+
+  // Format date as YYYY-MM-DD
+  function formatDate(date = new Date()) {
+    return date.toISOString().split("T")[0];
   }
 
   function renderTable() {
-    const filterVal = filterEquipmentType.value.toLowerCase();
-    const searchVal = searchInput.value.toLowerCase();
+    const filterValue = filterSelect.value.toLowerCase();
+    const searchValue = searchInput.value.toLowerCase();
+
     faultTableBody.innerHTML = "";
 
-    faultReports.forEach((item, index) => {
-      if (filterVal !== "all" && filterVal !== "") {
-        if (!item.EquipmentType || item.EquipmentType.toLowerCase() !== filterVal) return;
+    faults.forEach((fault, index) => {
+      if (filterValue !== "all" && fault.EquipmentType.toLowerCase() !== filterValue) {
+        return;
       }
 
-      const searchableFields = Object.values(item).map((field) =>
-        field ? field.toLowerCase?.() ?? field : ""
-      );
-      if (!searchableFields.some((f) => f.includes(searchVal))) return;
+      const combinedText = Object.values(fault).join(" ").toLowerCase();
+      if (!combinedText.includes(searchValue)) {
+        return;
+      }
 
       const tr = document.createElement("tr");
-      const fields = [
-        "DateReported",
-        "EquipmentType",
-        "Equipment",
-        "AssetNo",
-        "BrandModel",
-        "SerialNumber",
-        "Location",
-        "RoomNumber",
-        "FaultDescription",
-        "Status",
-        "DateUpdated"
-      ];
-
-      fields.forEach((field) => {
-        const td = document.createElement("td");
-        td.textContent = item[field] || "";
-        tr.appendChild(td);
-      });
-
-      const tdActions = document.createElement("td");
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn btn-sm btn-primary me-2";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = () => openEditModal(index);
-      tdActions.appendChild(editBtn);
-
-      const delBtn = document.createElement("button");
-      delBtn.className = "btn btn-sm btn-danger";
-      delBtn.textContent = "Delete";
-      delBtn.onclick = () => {
-        if (confirm("Are you sure you want to delete this fault report?")) {
-          faultReports.splice(index, 1);
-          saveAndRender();
-        }
-      };
-      tdActions.appendChild(delBtn);
-      tr.appendChild(tdActions);
+      tr.innerHTML = `
+        <td>${fault.DateReported || ""}</td>
+        <td>${fault.EquipmentType || ""}</td>
+        <td>${fault.Equipment || ""}</td>
+        <td>${fault.AssetNo || ""}</td>
+        <td>${fault.BrandModel || ""}</td>
+        <td>${fault.SerialNumber || ""}</td>
+        <td>${fault.Location || ""}</td>
+        <td>${fault.RoomNumber || ""}</td>
+        <td>${fault.FaultDescription || ""}</td>
+        <td>${fault.Status || ""}</td>
+        <td>${fault.DateUpdated || ""}</td>
+        <td>
+          <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+        </td>
+      `;
 
       faultTableBody.appendChild(tr);
     });
   }
 
-  function saveAndRender() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(faultReports));
-    renderTable();
-  }
-
-  function clearForm() {
+  function resetForm() {
     faultForm.reset();
-    faultForm.DateUpdated.value = "";
-    editIndex = null;
+    faultForm.elements["DateUpdated"].value = "";
+    editingIndex = null;
   }
 
-  function openEditModal(index) {
-    const item = faultReports[index];
-    editIndex = index;
-
-    for (const key in item) {
-      if (faultForm[key]) faultForm[key].value = item[key];
-    }
-
+  addFaultBtn.addEventListener("click", () => {
+    resetForm();
+    faultForm.elements["DateReported"].value = formatDate();
     faultModal.show();
-  }
+  });
 
-  addFaultBtn.onclick = () => {
-    clearForm();
-    faultModal.show();
-  };
-
-  faultForm.onsubmit = (e) => {
+  faultForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const requiredFields = ["DateReported", "EquipmentType", "FaultDescription", "Status"];
-    for (const field of requiredFields) {
-      if (!faultForm[field].value.trim()) {
-        alert(`${field.replace(/([A-Z])/g, " $1")} is required.`);
-        return;
+    const formData = new FormData(faultForm);
+    const faultData = {};
+    for (const [key, value] of formData.entries()) {
+      faultData[key] = value.trim();
+    }
+
+    faultData.DateUpdated = formatDate();
+
+    if (editingIndex !== null) {
+      faults[editingIndex] = faultData;
+    } else {
+      faults.push(faultData);
+    }
+
+    renderTable();
+    faultModal.hide();
+  });
+
+  faultTableBody.addEventListener("click", (e) => {
+    if (e.target.classList.contains("edit-btn")) {
+      const index = parseInt(e.target.dataset.index, 10);
+      editingIndex = index;
+
+      const fault = faults[index];
+      for (const key in fault) {
+        if (faultForm.elements[key]) {
+          faultForm.elements[key].value = fault[key];
+        }
+      }
+
+      faultModal.show();
+    } else if (e.target.classList.contains("delete-btn")) {
+      const index = parseInt(e.target.dataset.index, 10);
+      if (confirm("Delete this fault report?")) {
+        faults.splice(index, 1);
+        renderTable();
       }
     }
+  });
 
-    const data = {};
-    [...faultForm.elements].forEach((el) => {
-      if (el.name) data[el.name] = el.value.trim();
-    });
+  filterSelect.addEventListener("change", renderTable);
+  searchInput.addEventListener("input", renderTable);
 
-    data.DateUpdated = formatDateISO(new Date());
-
-    if (editIndex === null) {
-      faultReports.push(data);
-    } else {
-      faultReports[editIndex] = data;
-    }
-
-    saveAndRender();
-    faultModal.hide();
-  };
-
-  filterEquipmentType.onchange = renderTable;
-
-  let searchTimeout;
-  searchInput.oninput = () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(renderTable, 200);
-  };
+  // Set table min-width on load
+  setTableMinWidth();
 
   renderTable();
 });
