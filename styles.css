@@ -7,23 +7,33 @@ body {
   color: #212529;
   margin: 0;
   padding: 0;
+  width: 100%;
 }
 
-/* Navbar overrides */
+/* Navbar hover and active link color */
 .navbar-dark .navbar-nav .nav-link.active,
 .navbar-dark .navbar-nav .nav-link:hover {
   color: #ffc107 !important; /* Bootstrap warning yellow */
 }
 
-/* Container spacing */
+/* Full-width layout */
 .container {
-  max-width: 1200px;
+  max-width: none;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+/* Make table container take full width */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
 /* Table Styling */
 .inventory-table {
-  width: 200%;
+  width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .inventory-table thead th {
@@ -33,6 +43,8 @@ body {
   vertical-align: middle;
   padding: 10px;
   user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 .inventory-table tbody td {
@@ -43,7 +55,7 @@ body {
 }
 
 .inventory-table tbody tr:nth-child(even) {
-  background-color: #f2f6ff; /* Light blue alternate row */
+  background-color: #f2f6ff;
 }
 
 .inventory-table tbody tr:hover {
@@ -51,26 +63,11 @@ body {
   cursor: default;
 }
 
-/* Maximize table width */
-.inventory-table {
-  width: 100%;
-  table-layout: auto;
+/* Action buttons center */
+.inventory-table tbody td:last-child {
+  text-align: center;
+  white-space: nowrap;
 }
-
-/* Make table container take full width */
-.table-responsive {
-  width: 200%;
-  overflow-x: auto;
-}
-
-/* Remove any hard constraints */
-body,
-html {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
 
 /* Buttons */
 .btn {
@@ -126,7 +123,7 @@ html {
   gap: 0.5rem;
 }
 
-/* Responsive */
+/* Responsive Modal */
 @media (max-width: 768px) {
   .modal-dialog {
     max-width: 95vw;
@@ -138,26 +135,13 @@ html {
   }
 }
 
-/* Search input */
+/* Search input size */
 #search-inventory {
   max-width: 320px;
   margin-top: 0.25rem;
 }
 
-/* Filter select styling */
+/* Filter dropdown size */
 #filter-equipmenttype {
   max-width: 200px;
-}
-
-/* Table Actions column - center buttons */
-.inventory-table tbody td:last-child {
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* Prevent text selection on header */
-.inventory-table thead th {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
 }
