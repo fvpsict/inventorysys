@@ -23,17 +23,15 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Inventory</h1>
       <div class="d-flex gap-2">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search..." />
-        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#itemModal">
-          Add Item
-        </button>
+        <input type="text" id="searchInput" class="form-control w-auto" placeholder="Search..." />
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#itemModal">Add Item</button>
       </div>
     </div>
 
     <!-- Inventory Table -->
     <div class="table-responsive">
       <table class="table table-bordered table-striped table-hover" id="inventory-table">
-        <thead>
+        <thead class="table-primary">
           <tr>
             <th>Equipment</th>
             <th>EquipmentType</th>
@@ -139,7 +137,6 @@
               <label class="form-label">Fault</label>
               <input type="text" class="form-control" name="Fault" />
             </div>
-            <!-- DateUpdated will be automatically handled in JS -->
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Save</button>
