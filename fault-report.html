@@ -1,179 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fault Report</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    /* Add padding-top to body to prevent content hidden behind fixed navbar */
-    body {
-      padding-top: 56px; /* height of navbar */
-      background-color: #f8f9fa;
+document.addEventListener("DOMContentLoaded", () => {
+  const faultTableBody = document.querySelector("#fault-table tbody");
+  const faultForm = document.querySelector("#fault-modal-form");
+  const addFaultBtn = document.getElementById("add-fault-btn");
+  const searchInput = document.getElementById("search-fault");
+  const filterSelect = document.getElementById("filter-equipmenttype");
+
+  let editingIndex = null;
+
+  // Load and render data
+  function loadFaults() {
+    const faults = JSON.parse(localStorage.getItem("faultReports") || "[]");
+    return faults;
+  }
+
+  function saveFaults(faults) {
+    localStorage.setItem("faultReports", JSON.stringify(faults));
+  }
+
+  function renderTable() {
+    const faults = loadFaults();
+    const searchQuery = searchInput.value.toLowerCase();
+    const filterType = filterSelect.value.toLowerCase();
+    faultTableBody.innerHTML = "";
+
+    faults.forEach((fault, index) => {
+      if (
+        (filterType === "all" || fault.EquipmentType.toLowerCase() === filterType) &&
+        Object.values(fault).some(value =>
+          String(value).toLowerCase().includes(searchQuery)
+        )
+      ) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${fault.DateReported}</td>
+          <td>${fault.EquipmentType}</td>
+          <td>${fault.Equipment}</td>
+          <td>${fault.BrandModel}</td>
+          <td>${fault.SerialNumber}</td>
+          <td>${fault.Location}</td>
+          <td>${fault.RoomNumber}</td>
+          <td>${fault.FaultDescription}</td>
+          <td>
+            <select class="form-select form-select-sm status-dropdown">
+              <option value="Open"${fault.Status === "Open" ? " selected" : ""}>Open</option>
+              <option value="In Progress"${fault.Status === "In Progress" ? " selected" : ""}>In Progress</option>
+              <option value="Resolved"${fault.Status === "Resolved" ? " selected" : ""}>Resolved</option>
+              <option value="Closed"${fault.Status === "Closed" ? " selected" : ""}>Closed</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+          </td>
+        `;
+
+        faultTableBody.appendChild(row);
+      }
+    });
+
+    attachRowListeners();
+  }
+
+  function attachRowListeners() {
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const index = e.target.getAttribute("data-index");
+        openEditModal(index);
+      });
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const index = e.target.getAttribute("data-index");
+        deleteFault(index);
+      });
+    });
+
+    document.querySelectorAll(".status-dropdown").forEach((dropdown, index) => {
+      dropdown.addEventListener("change", (e) => {
+        const faults = loadFaults();
+        faults[index].Status = e.target.value;
+        saveFaults(faults);
+        renderTable();
+      });
+    });
+  }
+
+  function openEditModal(index) {
+    const faults = loadFaults();
+    const fault = faults[index];
+
+    for (let key in fault) {
+      const field = faultForm.elements[key];
+      if (field) {
+        field.value = fault[key];
+      }
     }
-  </style>
-</head>
-<body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">FVPS Inventory System</a>
-      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="index.html">View Inventory</a></li>
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="../fault-report.html">Fault Report</a></li>
-          <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
 
-  <div class="container mt-4">
-    <h2>Fault Report</h2>
+    editingIndex = index;
+    new bootstrap.Modal(document.getElementById("faultModal")).show();
+  }
 
-    <!-- Filter and Search -->
-    <div class="row mb-3 align-items-center">
-      <div class="col-md-3">
-        <label for="filter-equipmenttype" class="form-label">Filter by Equipment Type:</label>
-        <select id="filter-equipmenttype" class="form-select">
-          <option value="all">All</option>
-          <option>SSOE</option>
-          <option>Projector</option>
-          <option>Projector Screen</option>
-          <option>Touch Panel</option>
-          <option>Visualiser</option>
-          <option>SMax</option>
-          <option>Macbook</option>
-          <option>Portable HDD</option>
-          <option>TV</option>
-          <option>Monitor</option>
-          <option>OMR</option>
-          <option>AV</option>
-          <option value="desktop">Desktop</option>
-          <option value="laptop">Laptop</option>
-          <option value="ipad">iPad</option>
-          <option value="mobile cart">Mobile Cart</option>
-        </select>
-      </div>
-      <div class="col-md-4 offset-md-5">
-        <label for="search-fault" class="form-label">Search:</label>
-        <input type="text" id="search-fault" class="form-control" placeholder="Search fault reports" />
-      </div>
-    </div>
+  function deleteFault(index) {
+    if (confirm("Are you sure you want to delete this entry?")) {
+      const faults = loadFaults();
+      faults.splice(index, 1);
+      saveFaults(faults);
+      renderTable();
+    }
+  }
 
-    <!-- Add Fault Button -->
-    <button class="btn btn-success mb-3" id="add-fault-btn">Add Fault</button>
+  faultForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const formData = new FormData(faultForm);
+    const newFault = {};
 
-    <!-- Fault Table -->
-    <div class="table-responsive" style="max-width:100vw; overflow-x:auto;">
-      <table class="table table-bordered table-striped" id="fault-table" style="min-width:1200px;">
-        <thead class="table-primary">
-          <tr>
-            <th>Date Reported</th>
-            <th>Equipment Type</th>
-            <th>Equipment</th>
-            <th>Brand/Model</th>
-            <th>Serial Number</th>
-            <th>Location</th>
-            <th>Room Number</th>
-            <th>Fault Description</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+    formData.forEach((value, key) => {
+      newFault[key] = value.trim();
+    });
 
-  <!-- Modal -->
-  <div class="modal fade" id="faultModal" tabindex="-1" aria-labelledby="faultModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <form id="fault-modal-form">
-          <div class="modal-header">
-            <h5 class="modal-title" id="faultModalLabel">Add/Edit Fault Report</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-3">
-                <label for="DateReported" class="form-label">Date Reported</label>
-                <input type="date" class="form-control" name="DateReported" required />
-              </div>
-              <div class="col-md-3">
-                <label for="EquipmentType" class="form-label">Equipment Type</label>
-                <select class="form-select" name="EquipmentType" required>
-                  <option value="">Select</option>
-                  <option>SSOE</option>
-                  <option>Projector</option>
-                  <option>Projector Screen</option>
-                  <option>Touch Panel</option>
-                  <option>Visualiser</option>
-                  <option>SMax</option>
-                  <option>Macbook</option>
-                  <option>Portable HDD</option>
-                  <option>TV</option>
-                  <option>Monitor</option>
-                  <option>OMR</option>
-                  <option>AV</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label for="Equipment" class="form-label">Equipment</label>
-                <select class="form-select" name="Equipment">
-                  <option value="">Select</option>
-                  <option value="Desktop">Desktop</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="iPad">iPad</option>
-                  <option value="Mobile Cart">Mobile Cart</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label for="BrandModel" class="form-label">Brand / Model</label>
-                <input type="text" class="form-control" name="BrandModel" />
-              </div>
-              <div class="col-md-3">
-                <label for="SerialNumber" class="form-label">Serial Number</label>
-                <input type="text" class="form-control" name="SerialNumber" />
-              </div>
-              <div class="col-md-3">
-                <label for="Location" class="form-label">Location</label>
-                <input type="text" class="form-control" name="Location" />
-              </div>
-              <div class="col-md-3">
-                <label for="RoomNumber" class="form-label">Room Number</label>
-                <input type="text" class="form-control" name="RoomNumber" />
-              </div>
-              <div class="col-md-12">
-                <label for="FaultDescription" class="form-label">Fault Description</label>
-                <textarea class="form-control" name="FaultDescription" rows="3" required></textarea>
-              </div>
-              <div class="col-md-3">
-                <label for="Status" class="form-label">Status</label>
-                <select class="form-select" name="Status" required>
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Fault</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+    const faults = loadFaults();
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="fault-report.js"></script>
-</body>
-</html>
+    if (editingIndex !== null) {
+      faults[editingIndex] = newFault;
+      editingIndex = null;
+    } else {
+      faults.push(newFault);
+    }
+
+    saveFaults(faults);
+    renderTable();
+    bootstrap.Modal.getInstance(document.getElementById("faultModal")).hide();
+    faultForm.reset();
+  });
+
+  addFaultBtn.addEventListener("click", () => {
+    editingIndex = null;
+    faultForm.reset();
+    new bootstrap.Modal(document.getElementById("faultModal")).show();
+  });
+
+  searchInput.addEventListener("input", renderTable);
+  filterSelect.addEventListener("change", renderTable);
+
+  renderTable();
+});
