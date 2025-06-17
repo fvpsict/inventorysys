@@ -51,6 +51,36 @@ body {
   cursor: default;
 }
 
+/* Maximize table width */
+.inventory-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+/* Make table container take full width */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Remove any hard constraints */
+body,
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Optional: remove max-width if you're still using .container */
+.container {
+  max-width: none;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+
+
+
 /* Buttons */
 .btn {
   font-size: 0.9rem;
