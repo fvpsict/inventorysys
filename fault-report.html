@@ -1,217 +1,269 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fault Report</title>
+// fault-report.js
 
-  <!-- Bootstrap CSS (5.3) -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
+document.addEventListener("DOMContentLoaded", () => {
+  const faultTableBody = document.querySelector("#fault-table tbody");
+  const addFaultBtn = document.getElementById("add-fault-btn");
+  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
+  const faultForm = document.getElementById("fault-modal-form");
 
-  <!-- Custom Styles -->
-  <style>
-    body {
-      padding-top: 56px; /* for fixed navbar */
+  const filterEquipmentType = document.getElementById("filter-equipmenttype");
+  const searchInput = document.getElementById("search-fault");
+
+  // Storage key
+  const STORAGE_KEY = "faultReports";
+
+  // Current editing index (null if adding)
+  let editIndex = null;
+
+  // Load data from localStorage or empty array
+  let faultReports = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+  // Utility: format date as yyyy-mm-dd (for inputs)
+  function formatDateISO(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d)) return "";
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Utility: format date for display (e.g. 2025-06-17)
+  function formatDateDisplay(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d)) return "";
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Render table rows based on filtered & searched data
+  function renderTable() {
+    const filterVal = filterEquipmentType.value.toLowerCase();
+    const searchVal = searchInput.value.toLowerCase();
+
+    faultTableBody.innerHTML = "";
+
+    faultReports.forEach((item, index) => {
+      // Filter by equipment type
+      if (filterVal !== "all" && filterVal !== "all" && filterVal !== "") {
+        if (
+          !item.EquipmentType ||
+          item.EquipmentType.toLowerCase() !== filterVal
+        )
+          return;
+      }
+
+      // Search filter: check all relevant text fields
+      const searchableFields = [
+        item.DateReported,
+        item.EquipmentType,
+        item.Equipment,
+        item.AssetNo,
+        item.BrandModel,
+        item.SerialNumber,
+        item.Location,
+        item.RoomNumber,
+        item.FaultDescription,
+        item.Status,
+        item.DateUpdated,
+      ];
+      const matchesSearch = searchableFields.some((field) =>
+        field ? field.toLowerCase().includes(searchVal) : false
+      );
+      if (!matchesSearch) return;
+
+      // Create table row
+      const tr = document.createElement("tr");
+
+      // Date Reported
+      const tdDateReported = document.createElement("td");
+      tdDateReported.textContent = formatDateDisplay(item.DateReported);
+      tr.appendChild(tdDateReported);
+
+      // Equipment Type
+      const tdEquipmentType = document.createElement("td");
+      tdEquipmentType.textContent = item.EquipmentType || "";
+      tr.appendChild(tdEquipmentType);
+
+      // Equipment
+      const tdEquipment = document.createElement("td");
+      tdEquipment.textContent = item.Equipment || "";
+      tr.appendChild(tdEquipment);
+
+      // Asset No
+      const tdAssetNo = document.createElement("td");
+      tdAssetNo.textContent = item.AssetNo || "";
+      tr.appendChild(tdAssetNo);
+
+      // Brand / Model
+      const tdBrandModel = document.createElement("td");
+      tdBrandModel.textContent = item.BrandModel || "";
+      tr.appendChild(tdBrandModel);
+
+      // Serial Number
+      const tdSerialNumber = document.createElement("td");
+      tdSerialNumber.textContent = item.SerialNumber || "";
+      tr.appendChild(tdSerialNumber);
+
+      // Location
+      const tdLocation = document.createElement("td");
+      tdLocation.textContent = item.Location || "";
+      tr.appendChild(tdLocation);
+
+      // Room Number
+      const tdRoomNumber = document.createElement("td");
+      tdRoomNumber.textContent = item.RoomNumber || "";
+      tr.appendChild(tdRoomNumber);
+
+      // Fault Description
+      const tdFaultDesc = document.createElement("td");
+      tdFaultDesc.textContent = item.FaultDescription || "";
+      tr.appendChild(tdFaultDesc);
+
+      // Status
+      const tdStatus = document.createElement("td");
+      tdStatus.textContent = item.Status || "";
+      tr.appendChild(tdStatus);
+
+      // Date Updated
+      const tdDateUpdated = document.createElement("td");
+      tdDateUpdated.textContent = formatDateDisplay(item.DateUpdated);
+      tr.appendChild(tdDateUpdated);
+
+      // Actions (Edit/Delete)
+      const tdActions = document.createElement("td");
+
+      // Edit button
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-primary me-2";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => {
+        openEditModal(index);
+      });
+      tdActions.appendChild(editBtn);
+
+      // Delete button
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener("click", () => {
+        if (
+          confirm(
+            "Are you sure you want to delete this fault report?"
+          )
+        ) {
+          faultReports.splice(index, 1);
+          saveAndRender();
+        }
+      });
+      tdActions.appendChild(deleteBtn);
+
+      tr.appendChild(tdActions);
+
+      faultTableBody.appendChild(tr);
+    });
+  }
+
+  // Save to localStorage and rerender table
+  function saveAndRender() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(faultReports));
+    renderTable();
+  }
+
+  // Clear form fields
+  function clearForm() {
+    faultForm.reset();
+    document.getElementById("DateUpdated").value = "";
+    editIndex = null;
+  }
+
+  // Open modal for adding new fault
+  addFaultBtn.addEventListener("click", () => {
+    clearForm();
+    faultModal.show();
+  });
+
+  // Open modal for editing existing fault
+  function openEditModal(index) {
+    editIndex = index;
+    const item = faultReports[index];
+
+    // Fill form fields
+    document.getElementById("DateReported").value = formatDateISO(item.DateReported);
+    document.getElementById("EquipmentType").value = item.EquipmentType || "";
+    document.getElementById("Equipment").value = item.Equipment || "";
+    document.getElementById("AssetNo").value = item.AssetNo || "";
+    document.getElementById("BrandModel").value = item.BrandModel || "";
+    document.getElementById("SerialNumber").value = item.SerialNumber || "";
+    document.getElementById("Location").value = item.Location || "";
+    document.getElementById("RoomNumber").value = item.RoomNumber || "";
+    document.getElementById("FaultDescription").value = item.FaultDescription || "";
+    document.getElementById("Status").value = item.Status || "";
+    document.getElementById("DateUpdated").value = formatDateDisplay(item.DateUpdated);
+
+    faultModal.show();
+  }
+
+  // Form submit handler for add/edit
+  faultForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    // Validate required fields
+    if (!faultForm.DateReported.value) {
+      alert("Date Reported is required.");
+      return;
     }
-    .container {
-      max-width: 1200px;
+    if (!faultForm.EquipmentType.value) {
+      alert("Equipment Type is required.");
+      return;
     }
-    #fault-table th {
-      background-color: #007bff;
-      color: white;
+    if (!faultForm.FaultDescription.value.trim()) {
+      alert("Fault Description is required.");
+      return;
     }
-  </style>
-</head>
-<body>
+    if (!faultForm.Status.value) {
+      alert("Status is required.");
+      return;
+    }
 
-  <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">FVPS Inventory System</a>
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">View Inventory</a></li>
-        <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
-        <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+    // Prepare data object
+    const now = new Date();
+    const data = {
+      DateReported: faultForm.DateReported.value,
+      EquipmentType: faultForm.EquipmentType.value,
+      Equipment: faultForm.Equipment.value.trim() || "",
+      AssetNo: faultForm.AssetNo.value.trim() || "",
+      BrandModel: faultForm.BrandModel.value.trim() || "",
+      SerialNumber: faultForm.SerialNumber.value.trim() || "",
+      Location: faultForm.Location.value.trim() || "",
+      RoomNumber: faultForm.RoomNumber.value.trim() || "",
+      FaultDescription: faultForm.FaultDescription.value.trim(),
+      Status: faultForm.Status.value,
+      DateUpdated: now.toISOString().slice(0, 10),
+    };
 
-  <!-- Main Container -->
-  <div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <label for="filter-equipmenttype" class="form-label mb-0">Filter by Equipment Type:</label>
-        <select id="filter-equipmenttype" class="form-select">
-          <option value="all" selected>All</option>
-          <option value="projector">Projector</option>
-          <option value="visualiser">Visualiser</option>
-          <option value="projector screen">Projector Screen</option>
-          <option value="desktop">Desktop</option>
-          <option value="laptop">Laptop</option>
-          <option value="ipad">iPad</option>
-          <option value="mobile cart">Mobile Cart</option>
-          <!-- Add other equipment types as needed -->
-        </select>
-      </div>
+    if (editIndex === null) {
+      // Add new
+      faultReports.push(data);
+    } else {
+      // Update existing
+      faultReports[editIndex] = data;
+    }
 
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <input
-          id="search-fault"
-          type="search"
-          class="form-control"
-          placeholder="Search faults..."
-          style="min-width: 220px;"
-          aria-label="Search faults"
-        />
-        <button id="add-fault-btn" class="btn btn-success">Add Fault</button>
-      </div>
-    </div>
+    saveAndRender();
+    faultModal.hide();
+  });
 
-    <!-- Fault Table -->
-    <div class="table-responsive">
-      <table id="fault-table" class="table table-bordered table-striped align-middle">
-        <thead>
-          <tr>
-            <th>Date Reported</th>
-            <th>Equipment Type</th>
-            <th>Equipment</th>
-            <th>Asset No</th>
-            <th>Brand / Model</th>
-            <th>Serial Number</th>
-            <th>Location</th>
-            <th>Room Number</th>
-            <th>Fault Description</th>
-            <th>Status</th>
-            <th>Date Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Rows will be dynamically generated here -->
-        </tbody>
-      </table>
-    </div>
-  </div>
+  // Filter change handler
+  filterEquipmentType.addEventListener("change", renderTable);
 
-  <!-- Fault Modal -->
-  <div
-    class="modal fade"
-    id="faultModal"
-    tabindex="-1"
-    aria-labelledby="faultModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <form id="fault-modal-form" novalidate>
-          <div class="modal-header">
-            <h5 class="modal-title" id="faultModalLabel">Add / Edit Fault Report</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label for="DateReported" class="form-label">Date Reported *</label>
-                <input type="date" id="DateReported" name="DateReported" class="form-control" required />
-              </div>
-              <div class="col-md-6">
-                <label for="EquipmentType" class="form-label">Equipment Type *</label>
-                <select id="EquipmentType" name="EquipmentType" class="form-select" required>
-                  <option value="" disabled selected>Select equipment type</option>
-                  <option value="Projector">Projector</option>
-                  <option value="Visualiser">Visualiser</option>
-                  <option value="Projector Screen">Projector Screen</option>
-                  <option value="Desktop">Desktop</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="iPad">iPad</option>
-                  <option value="Mobile Cart">Mobile Cart</option>
-                  <!-- Add other equipment types as needed -->
-                </select>
-              </div>
+  // Search input handler (debounced)
+  let searchTimeout = null;
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      renderTable();
+    }, 300);
+  });
 
-              <div class="col-md-6">
-                <label for="Equipment" class="form-label">Equipment</label>
-                <input type="text" id="Equipment" name="Equipment" class="form-control" />
-              </div>
-              <div class="col-md-6">
-                <label for="AssetNo" class="form-label">Asset No</label>
-                <input type="text" id="AssetNo" name="AssetNo" class="form-control" />
-              </div>
-
-              <div class="col-md-6">
-                <label for="BrandModel" class="form-label">Brand / Model</label>
-                <input type="text" id="BrandModel" name="BrandModel" class="form-control" />
-              </div>
-              <div class="col-md-6">
-                <label for="SerialNumber" class="form-label">Serial Number</label>
-                <input type="text" id="SerialNumber" name="SerialNumber" class="form-control" />
-              </div>
-
-              <div class="col-md-6">
-                <label for="Location" class="form-label">Location</label>
-                <input type="text" id="Location" name="Location" class="form-control" />
-              </div>
-              <div class="col-md-6">
-                <label for="RoomNumber" class="form-label">Room Number</label>
-                <input type="text" id="RoomNumber" name="RoomNumber" class="form-control" />
-              </div>
-
-              <div class="col-12">
-                <label for="FaultDescription" class="form-label">Fault Description *</label>
-                <textarea id="FaultDescription" name="FaultDescription" class="form-control" rows="3" required></textarea>
-              </div>
-
-              <div class="col-md-6">
-                <label for="Status" class="form-label">Status *</label>
-                <select id="Status" name="Status" class="form-select" required>
-                  <option value="" disabled selected>Select status</option>
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label for="DateUpdated" class="form-label">Date Updated</label>
-                <input type="date" id="DateUpdated" name="DateUpdated" class="form-control" disabled />
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-primary">Save Fault</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bootstrap JS Bundle (with Popper) -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-  ></script>
-
-  <!-- Your fault-report.js script -->
-  <script src="fault-report.js"></script>
-</body>
-</html>
+  // Initial render
+  renderTable();
+});
