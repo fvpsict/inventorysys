@@ -1,137 +1,77 @@
-/* styles.css */
-
-/* Body and general font */
+/* General Body Styles */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
-  color: #212529;
   margin: 0;
-  padding: 0;
+  padding-top: 70px; /* Align with fixed-top navbar height */
 }
 
-/* Navbar fixes */
-.navbar {
-  /* Ensure navbar sticks to top */
-  position: sticky;
-  top: 0;
-  z-index: 1030;
-}
-
-/* Navbar background color (Bootstrap primary) */
-.navbar.bg-primary {
-  background-color: #0d6efd !important;
-}
-
-/* Navbar brand styling */
+/* Navbar */
 .navbar-brand {
-  font-weight: 600;
-  color: #fff !important;
+  font-weight: bold;
 }
 
-/* Navbar link styles */
-.navbar-nav .nav-link {
-  color: #e2e6ea;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  transition: color 0.2s ease-in-out;
+.nav-link.active {
+  font-weight: bold;
+  color: #ffc107 !important;
 }
 
-.navbar-nav .nav-link:hover,
-.navbar-nav .nav-link.active {
-  color: #fff;
-  text-decoration: underline;
+/* Container */
+.container {
+  max-width: 100%;
 }
 
-/* Navbar toggler button */
-.navbar-toggler {
-  border-color: rgba(255, 255, 255, 0.25);
+/* Table Styles */
+.table-responsive {
+  max-width: 100vw;
+  overflow-x: auto;
 }
 
-.navbar-toggler-icon {
-  filter: invert(100%);
-}
-
-/* Table styling */
 table {
-  width: 100%;
+  min-width: 1400px;
   border-collapse: collapse;
-  margin-bottom: 1rem;
 }
 
-table th,
-table td {
-  border: 1px solid #dee2e6;
-  padding: 0.5rem 0.75rem;
+th,
+td {
+  white-space: nowrap;
   vertical-align: middle;
-  text-align: left;
 }
 
-table thead th {
-  background-color: #0d6efd;
+thead.table-primary th {
+  background-color: #007bff;
   color: white;
-  font-weight: 600;
 }
 
 /* Buttons */
-.btn-sm {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.5rem;
+.btn {
+  min-width: 80px;
 }
 
-/* Modal fixes */
-.modal-header {
-  background-color: #0d6efd;
-  color: white;
-  font-weight: 600;
+/* Form Labels */
+.form-label {
+  font-weight: 500;
 }
 
-.modal-footer .btn-primary {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+/* Modal Styles */
+.modal-lg {
+  max-width: 90%;
 }
 
-/* Form input focus */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-  border-color: #0d6efd;
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
-/* Responsive container padding */
-.container {
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* Search and Filter Alignment */
+#search-fault {
+  max-width: 100%;
 }
 
-/* Add margin to top of content to avoid overlap with sticky navbar */
-.main-content {
-  margin-top: 60px; /* adjust based on navbar height */
-}
-
-/* Filter and Search area */
-.filter-search-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.filter-search-container select,
-.filter-search-container input {
-  max-width: 250px;
-}
-
-/* Responsive tweaks */
-@media (max-width: 575.98px) {
-  .filter-search-container {
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+  .navbar .container-fluid {
     flex-direction: column;
-    gap: 0.5rem;
-  }
-  .filter-search-container select,
-  .filter-search-container input {
-    max-width: 100%;
+    align-items: flex-start;
   }
 }
