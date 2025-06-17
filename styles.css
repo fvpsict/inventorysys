@@ -59,7 +59,7 @@ body {
 
 /* Make table container take full width */
 .table-responsive {
-  width: 100%;
+  width: 200%;
   overflow-x: auto;
 }
 
@@ -70,15 +70,6 @@ html {
   margin: 0;
   padding: 0;
 }
-
-/* Optional: remove max-width if you're still using .container */
-.container {
-  max-width: none;
-  width: 100%;
-  padding: 0 1rem;
-}
-
-
 
 
 /* Buttons */
