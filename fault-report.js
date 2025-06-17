@@ -1,146 +1,146 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const faultTable = document.getElementById("fault-table");
-  const faultTableBody = faultTable.querySelector("tbody");
-  const addFaultBtn = document.getElementById("add-fault-btn");
-  const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
-  const faultForm = document.getElementById("fault-modal-form");
-  const filterSelect = document.getElementById("filter-equipmenttype");
-  const searchInput = document.getElementById("search-fault");
+// fault-report.js
 
-  let faults = [];
-  let editingIndex = null;
+// Initialize data array
+let faultData = JSON.parse(localStorage.getItem('faultData')) || [];
+let editingIndex = null;
 
-  // Approximate column widths in pixels (adjust as needed)
-  const columnWidths = {
-    DateReported: 110,
-    EquipmentType: 130,
-    Equipment: 120,
-    AssetNo: 100,
-    BrandModel: 150,
-    SerialNumber: 130,
-    Location: 120,
-    RoomNumber: 100,
-    FaultDescription: 250,
-    Status: 120,
-    DateUpdated: 110,
-    Actions: 120
-  };
+const faultTableBody = document.querySelector('#fault-table tbody');
+const addFaultBtn = document.getElementById('add-fault-btn');
+const faultModal = new bootstrap.Modal(document.getElementById('faultModal'));
+const faultForm = document.getElementById('fault-modal-form');
 
-  // Calculate total min width based on columns present in table header
-  function setTableMinWidth() {
-    const headers = faultTable.querySelectorAll("thead th");
-    let totalWidth = 0;
-    headers.forEach((th) => {
-      const key = th.textContent.replace(/\s+/g, '');
-      totalWidth += columnWidths[key] || 120; // fallback width
+const filterSelect = document.getElementById('filter-equipmenttype');
+const searchInput = document.getElementById('search-fault');
+
+// Render the fault table rows
+function renderFaultTable() {
+  faultTableBody.innerHTML = '';
+
+  // Apply filter and search
+  const filterValue = filterSelect.value.toLowerCase();
+  const searchTerm = searchInput.value.toLowerCase();
+
+  faultData.forEach((fault, index) => {
+    // Filter by EquipmentType
+    if (filterValue !== 'all' && fault.EquipmentType.toLowerCase() !== filterValue) return;
+
+    // Search in multiple fields
+    const searchableStr = Object.values(fault).join(' ').toLowerCase();
+    if (!searchableStr.includes(searchTerm)) return;
+
+    // Create table row
+    const tr = document.createElement('tr');
+
+    // Date Reported
+    tr.appendChild(createCell(fault.DateReported));
+    tr.appendChild(createCell(fault.EquipmentType));
+    tr.appendChild(createCell(fault.Equipment));
+    tr.appendChild(createCell(fault.AssetNo));
+    tr.appendChild(createCell(fault.BrandModel));
+    tr.appendChild(createCell(fault.SerialNumber));
+    tr.appendChild(createCell(fault.Location));
+    tr.appendChild(createCell(fault.RoomNumber));
+    tr.appendChild(createCell(fault.FaultDescription));
+    tr.appendChild(createCell(fault.Status));
+    tr.appendChild(createCell(fault.DateUpdated));
+
+    // Actions cell with Edit and Delete buttons
+    const actionsTd = document.createElement('td');
+
+    // Edit button
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-primary btn-sm me-2';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => {
+      openEditModal(index);
     });
-    faultTable.style.minWidth = totalWidth + "px";
-  }
+    actionsTd.appendChild(editBtn);
 
-  // Format date as YYYY-MM-DD
-  function formatDate(date = new Date()) {
-    return date.toISOString().split("T")[0];
-  }
-
-  function renderTable() {
-    const filterValue = filterSelect.value.toLowerCase();
-    const searchValue = searchInput.value.toLowerCase();
-
-    faultTableBody.innerHTML = "";
-
-    faults.forEach((fault, index) => {
-      if (filterValue !== "all" && fault.EquipmentType.toLowerCase() !== filterValue) {
-        return;
+    // Delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-danger btn-sm delete-btn';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete this fault report?')) {
+        deleteFault(index);
       }
-
-      const combinedText = Object.values(fault).join(" ").toLowerCase();
-      if (!combinedText.includes(searchValue)) {
-        return;
-      }
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${fault.DateReported || ""}</td>
-        <td>${fault.EquipmentType || ""}</td>
-        <td>${fault.Equipment || ""}</td>
-        <td>${fault.AssetNo || ""}</td>
-        <td>${fault.BrandModel || ""}</td>
-        <td>${fault.SerialNumber || ""}</td>
-        <td>${fault.Location || ""}</td>
-        <td>${fault.RoomNumber || ""}</td>
-        <td>${fault.FaultDescription || ""}</td>
-        <td>${fault.Status || ""}</td>
-        <td>${fault.DateUpdated || ""}</td>
-        <td>
-          <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
-          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
-        </td>
-      `;
-
-      faultTableBody.appendChild(tr);
     });
-  }
+    actionsTd.appendChild(deleteBtn);
 
-  function resetForm() {
-    faultForm.reset();
-    faultForm.elements["DateUpdated"].value = "";
-    editingIndex = null;
-  }
+    tr.appendChild(actionsTd);
 
-  addFaultBtn.addEventListener("click", () => {
-    resetForm();
-    faultForm.elements["DateReported"].value = formatDate();
-    faultModal.show();
+    faultTableBody.appendChild(tr);
   });
+}
 
-  faultForm.addEventListener("submit", (e) => {
-    e.preventDefault();
+function createCell(text) {
+  const td = document.createElement('td');
+  td.textContent = text || '';
+  return td;
+}
 
-    const formData = new FormData(faultForm);
-    const faultData = {};
-    for (const [key, value] of formData.entries()) {
-      faultData[key] = value.trim();
-    }
-
-    faultData.DateUpdated = formatDate();
-
-    if (editingIndex !== null) {
-      faults[editingIndex] = faultData;
-    } else {
-      faults.push(faultData);
-    }
-
-    renderTable();
-    faultModal.hide();
-  });
-
-  faultTableBody.addEventListener("click", (e) => {
-    if (e.target.classList.contains("edit-btn")) {
-      const index = parseInt(e.target.dataset.index, 10);
-      editingIndex = index;
-
-      const fault = faults[index];
-      for (const key in fault) {
-        if (faultForm.elements[key]) {
-          faultForm.elements[key].value = fault[key];
-        }
-      }
-
-      faultModal.show();
-    } else if (e.target.classList.contains("delete-btn")) {
-      const index = parseInt(e.target.dataset.index, 10);
-      if (confirm("Delete this fault report?")) {
-        faults.splice(index, 1);
-        renderTable();
-      }
-    }
-  });
-
-  filterSelect.addEventListener("change", renderTable);
-  searchInput.addEventListener("input", renderTable);
-
-  // Set table min-width on load
-  setTableMinWidth();
-
-  renderTable();
+// Open modal for adding new fault
+addFaultBtn.addEventListener('click', () => {
+  editingIndex = null;
+  faultForm.reset();
+  faultForm.DateUpdated.value = '';
+  faultModal.show();
 });
+
+// Open modal for editing fault
+function openEditModal(index) {
+  editingIndex = index;
+  const fault = faultData[index];
+  for (const key in fault) {
+    if (faultForm.elements.namedItem(key)) {
+      faultForm.elements.namedItem(key).value = fault[key];
+    }
+  }
+  faultModal.show();
+}
+
+// Save fault (add or update)
+faultForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  // Gather form data
+  const formData = {};
+  for (const element of faultForm.elements) {
+    if (element.name) {
+      formData[element.name] = element.value;
+    }
+  }
+
+  // Set DateUpdated to today’s date
+  const todayStr = new Date().toISOString().split('T')[0];
+  formData.DateUpdated = todayStr;
+
+  if (editingIndex !== null) {
+    faultData[editingIndex] = formData;
+  } else {
+    faultData.push(formData);
+  }
+
+  saveFaultData();
+  faultModal.hide();
+  renderFaultTable();
+});
+
+// Delete fault by index
+function deleteFault(index) {
+  faultData.splice(index, 1);
+  saveFaultData();
+  renderFaultTable();
+}
+
+// Save data to localStorage
+function saveFaultData() {
+  localStorage.setItem('faultData', JSON.stringify(faultData));
+}
+
+// Filter and search events
+filterSelect.addEventListener('change', renderFaultTable);
+searchInput.addEventListener('input', renderFaultTable);
+
+// Initial render
+renderFaultTable();
