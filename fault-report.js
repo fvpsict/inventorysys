@@ -1,179 +1,168 @@
-// fault-report.js
+document.addEventListener("DOMContentLoaded", () => {
+  const faultForm = document.getElementById("faultForm");
+  const faultModalEl = document.getElementById("faultModal");
+  const faultModal = new bootstrap.Modal(faultModalEl);
+  const faultTableBody = document.querySelector("#faultTable tbody");
+  const deleteFaultBtn = document.getElementById("deleteFaultBtn");
+  const addFaultBtn = document.getElementById("addFaultBtn");
 
-const faultTableBody = document.querySelector('#fault-table tbody');
-const filterSelect = document.getElementById('filter-equipmenttype');
-const searchInput = document.getElementById('search-fault');
-const addFaultBtn = document.getElementById('add-fault-btn');
-const faultModalElement = document.getElementById('faultModal');
-const faultModal = new bootstrap.Modal(faultModalElement);
-const faultForm = document.getElementById('fault-modal-form');
+  let faults = JSON.parse(localStorage.getItem("faults")) || [];
+  let editIndex = null;
 
-let faultData = JSON.parse(localStorage.getItem('faultData')) || [];
-let editingIndex = null;
-
-// --- Date formatting helpers ---
-
-// Format date string "yyyy-mm-dd" to "DD Month YYYY"
-function formatDateDisplay(dateStr) {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (isNaN(date)) return dateStr; // fallback if invalid date
-  const options = { day: '2-digit', month: 'long', year: 'numeric' };
-  return date.toLocaleDateString('en-GB', options);
-}
-
-// Format "DD Month YYYY" or other string back to "yyyy-mm-dd" for input[type=date]
-function formatDateInput(dateStr) {
-  if (!dateStr) return '';
-  // If already ISO yyyy-mm-dd, return as is
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-
-  // Try to parse date string with Date object
-  const date = new Date(dateStr);
-  if (!isNaN(date)) {
-    return date.toISOString().split('T')[0];
+  // Format current date: dd MMMM yyyy (e.g., 25 June 2025)
+  function getCurrentDate() {
+    const now = new Date();
+    const day = now.getDate().toString().padStart(2, "0");
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    return `${day} ${month} ${year}`;
   }
 
-  // Try parsing "DD Month YYYY"
-  const parts = dateStr.split(' ');
-  if (parts.length === 3) {
-    const day = parts[0].padStart(2, '0');
-    const monthName = parts[1];
-    const year = parts[2];
-    const monthIndex = new Date(`${monthName} 1, 2000`).getMonth();
-    if (monthIndex >= 0) {
-      const monthPadded = (monthIndex + 1).toString().padStart(2, '0');
-      return `${year}-${monthPadded}-${day}`;
-    }
-  }
-  return '';
-}
-
-// --- Utility to create a table cell ---
-function createCell(text) {
-  const td = document.createElement('td');
-  td.textContent = text ?? '';
-  return td;
-}
-
-// --- Render the fault table ---
-function renderFaultTable() {
-  faultTableBody.innerHTML = '';
-
-  const filterValue = filterSelect.value.toLowerCase();
-  const searchTerm = searchInput.value.toLowerCase();
-
-  faultData.forEach((fault, index) => {
-    if (filterValue !== 'all' && fault.EquipmentType.toLowerCase() !== filterValue) return;
-
-    const searchableStr = Object.values(fault).join(' ').toLowerCase();
-    if (!searchableStr.includes(searchTerm)) return;
-
-    const tr = document.createElement('tr');
-
-    // Format dates for display
-    tr.appendChild(createCell(formatDateDisplay(fault.DateReported)));
-    tr.appendChild(createCell(fault.EquipmentType));
-    tr.appendChild(createCell(fault.Equipment));
-    tr.appendChild(createCell(fault.AssetNo));
-    tr.appendChild(createCell(fault.BrandModel));
-    tr.appendChild(createCell(fault.SerialNumber));
-    tr.appendChild(createCell(fault.Location));
-    tr.appendChild(createCell(fault.RoomNumber));
-    tr.appendChild(createCell(fault.FaultDescription));
-    tr.appendChild(createCell(fault.Status));
-    tr.appendChild(createCell(formatDateDisplay(fault.DateUpdated)));
-
-    // Actions (Edit/Delete)
-    const actionsTd = document.createElement('td');
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-primary btn-sm me-2';
-    editBtn.textContent = 'Edit';
-    editBtn.addEventListener('click', () => openEditModal(index));
-    actionsTd.appendChild(editBtn);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-danger btn-sm delete-btn';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to delete this fault report?')) deleteFault(index);
+  // Render the table rows
+  function renderTable() {
+    faultTableBody.innerHTML = "";
+    faults.forEach((fault, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${fault.EquipmentType || ""}</td>
+        <td>${fault.Vendor || ""}</td>
+        <td>${fault.BrandModel || ""}</td>
+        <td>${fault.AssetNo || ""}</td>
+        <td>${fault.SerialNumber || ""}</td>
+        <td>${fault.EndDate || ""}</td>
+        <td>${fault.StartDate || ""}</td>
+        <td>${fault.Room || ""}</td>
+        <td>${fault.RoomNumber || ""}</td>
+        <td>${fault.Level || ""}</td>
+        <td>${fault.Lamphour || ""}</td>
+        <td>${fault.Fault || ""}</td>
+        <td>${fault.Status || ""}</td>
+        <td>${fault.DateResolved || ""}</td>
+        <td>${fault.ActionTaken || ""}</td>
+        <td>${fault.DateUpdated || ""}</td>
+        <td>
+          <button class="btn btn-sm btn-primary edit-btn" data-index="${idx}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${idx}">Delete</button>
+        </td>
+      `;
+      faultTableBody.appendChild(tr);
     });
-    actionsTd.appendChild(deleteBtn);
+  }
 
-    tr.appendChild(actionsTd);
-    faultTableBody.appendChild(tr);
+  // Clear the form and reset state
+  function clearForm() {
+    faultForm.reset();
+    editIndex = null;
+    deleteFaultBtn.style.display = "none";
+    faultForm.DateUpdated.value = "";
+  }
+
+  // Fill the form with existing fault data
+  function fillForm(fault) {
+    faultForm.EquipmentType.value = fault.EquipmentType || "";
+    faultForm.Vendor.value = fault.Vendor || "";
+    faultForm.BrandModel.value = fault.BrandModel || "";
+    faultForm.AssetNo.value = fault.AssetNo || "";
+    faultForm.SerialNumber.value = fault.SerialNumber || "";
+    faultForm.EndDate.value = fault.EndDate || "";
+    faultForm.StartDate.value = fault.StartDate || "";
+    faultForm.Room.value = fault.Room || "";
+    faultForm.RoomNumber.value = fault.RoomNumber || "";
+    faultForm.Level.value = fault.Level || "";
+    faultForm.Lamphour.value = fault.Lamphour || "";
+    faultForm.Fault.value = fault.Fault || "";
+    faultForm.Status.value = fault.Status || "";
+    faultForm.DateResolved.value = fault.DateResolved || "";
+    faultForm.ActionTaken.value = fault.ActionTaken || "";
+    faultForm.DateUpdated.value = fault.DateUpdated || "";
+  }
+
+  // Save faults array to localStorage
+  function saveFaults() {
+    localStorage.setItem("faults", JSON.stringify(faults));
+  }
+
+  // Add button opens modal with empty form
+  addFaultBtn.addEventListener("click", () => {
+    clearForm();
+    // Set DateUpdated to current date when adding new
+    faultForm.DateUpdated.value = getCurrentDate();
+    faultModal.show();
   });
-}
 
-// --- Open modal for adding a new fault ---
-function openAddModal() {
-  editingIndex = null;
-  faultForm.reset();
+  // Table click handlers for Edit and Delete
+  faultTableBody.addEventListener("click", (e) => {
+    const target = e.target;
+    const idx = target.getAttribute("data-index");
+    if (!idx) return;
 
-  // Set DateReported to today by default
-  const todayStr = new Date().toISOString().split('T')[0];
-  faultForm.elements['DateReported'].value = todayStr;
-  faultForm.elements['DateUpdated'].value = todayStr;
+    if (target.classList.contains("edit-btn")) {
+      editIndex = parseInt(idx);
+      fillForm(faults[editIndex]);
+      deleteFaultBtn.style.display = "inline-block";
+      faultModal.show();
+    }
 
-  faultModal.show();
-}
-
-// --- Open modal for editing an existing fault ---
-function openEditModal(index) {
-  editingIndex = index;
-  const fault = faultData[index];
-
-  for (const key in fault) {
-    if (faultForm.elements.namedItem(key)) {
-      if (key === 'DateReported' || key === 'DateUpdated') {
-        faultForm.elements.namedItem(key).value = formatDateInput(fault[key]);
-      } else {
-        faultForm.elements.namedItem(key).value = fault[key];
+    if (target.classList.contains("delete-btn")) {
+      if (confirm("Are you sure you want to delete this fault?")) {
+        faults.splice(parseInt(idx), 1);
+        saveFaults();
+        renderTable();
       }
     }
-  }
+  });
 
-  faultModal.show();
-}
+  // Delete button in modal
+  deleteFaultBtn.addEventListener("click", () => {
+    if (editIndex !== null) {
+      if (confirm("Delete this fault?")) {
+        faults.splice(editIndex, 1);
+        saveFaults();
+        renderTable();
+        faultModal.hide();
+        clearForm();
+      }
+    }
+  });
 
-// --- Save the fault from modal form ---
-function saveFault(event) {
-  event.preventDefault();
+  // On form submit, add or update fault with updated DateUpdated
+  faultForm.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-  const formData = new FormData(faultForm);
-  const newFault = {};
+    const newFault = {
+      EquipmentType: faultForm.EquipmentType.value,
+      Vendor: faultForm.Vendor.value.trim(),
+      BrandModel: faultForm.BrandModel.value.trim(),
+      AssetNo: faultForm.AssetNo.value.trim(),
+      SerialNumber: faultForm.SerialNumber.value.trim(),
+      EndDate: faultForm.EndDate.value,
+      StartDate: faultForm.StartDate.value,
+      Room: faultForm.Room.value.trim(),
+      RoomNumber: faultForm.RoomNumber.value.trim(),
+      Level: faultForm.Level.value.trim(),
+      Lamphour: faultForm.Lamphour.value.trim(),
+      Fault: faultForm.Fault.value.trim(),
+      Status: faultForm.Status.value,
+      DateResolved: faultForm.DateResolved.value,
+      ActionTaken: faultForm.ActionTaken.value.trim(),
+      DateUpdated: getCurrentDate(),  // Automatically update date here
+    };
 
-  for (const [key, value] of formData.entries()) {
-    newFault[key] = value.trim();
-  }
+    if (editIndex === null) {
+      faults.push(newFault);
+    } else {
+      faults[editIndex] = newFault;
+    }
 
-  // Set DateUpdated to today on save
-  newFault.DateUpdated = new Date().toISOString().split('T')[0];
+    saveFaults();
+    renderTable();
+    faultModal.hide();
+    clearForm();
+  });
 
-  if (editingIndex !== null) {
-    faultData[editingIndex] = newFault;
-  } else {
-    faultData.push(newFault);
-  }
-
-  localStorage.setItem('faultData', JSON.stringify(faultData));
-  renderFaultTable();
-  faultModal.hide();
-}
-
-// --- Delete fault at index ---
-function deleteFault(index) {
-  faultData.splice(index, 1);
-  localStorage.setItem('faultData', JSON.stringify(faultData));
-  renderFaultTable();
-}
-
-// --- Event Listeners ---
-addFaultBtn.addEventListener('click', openAddModal);
-faultForm.addEventListener('submit', saveFault);
-filterSelect.addEventListener('change', renderFaultTable);
-searchInput.addEventListener('input', renderFaultTable);
-
-// Initial render
-renderFaultTable();
+  renderTable();
+});
