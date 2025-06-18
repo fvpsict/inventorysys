@@ -7,9 +7,15 @@
   <link href="../styles.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    body { padding-top: 70px; background: #f8f9fa; font-weight: bold}
+    body { padding-top: 70px; background: #f8f9fa; font-weight: bold }
     .table-responsive { max-height: 60vh; overflow-y: auto; }
-    #patchSummary { background: white; font-weight: bold; padding: 1rem; border-radius: 0.375rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    #patchSummary {
+      background: white;
+      font-weight: bold;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -17,8 +23,16 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
-      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+      <a class="navbar-brand" href="../index.html" rel="noopener noreferrer">FVPS Inventory System</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#nav"
+        aria-controls="nav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="nav">
@@ -26,7 +40,7 @@
           <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
           <li class="nav-item"><a class="nav-link" href="../view-inventory/index.html">View Inventory</a></li>
           <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
-          <li class="nav-item"><a class="nav-link active" href="patching-report.html">Patching Report</a></li>
+          <li class="nav-item"><a class="nav-link active" href="patching-report.html" aria-current="page">Patching Report</a></li>
         </ul>
       </div>
     </div>
@@ -35,7 +49,7 @@
   <main class="container-fluid mt-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Patching Report</h1>
-      <button id="loadBtn" class="btn btn-primary">Load Weekly Data</button>
+      <button id="loadBtn" class="btn btn-primary" type="button">Load Weekly Data</button>
     </div>
 
     <div class="table-responsive">
@@ -51,7 +65,6 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // URL of the published Google Sheet HTML page
     const HTML_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8dXgl3cTXv04SMY1T5K0OugNh1veaPjVaCE619s1GPgobbExe6z4sL1J0_xk1oqkNQvEV8qx8gpT4/pubhtml";
 
     async function fetchAndParseHTML(url) {
@@ -60,27 +73,21 @@
         if (!res.ok) throw new Error('Network response not OK');
         const text = await res.text();
 
-        // Create DOM parser to parse HTML string
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
 
-        // Google Sheets published HTML has tables - we grab the first one that contains data
         const sheetTables = doc.querySelectorAll('table');
         if (!sheetTables.length) throw new Error('No tables found in HTML');
 
-        // Usually the first table is the data table we want
         const sheetTable = sheetTables[0];
         const rows = sheetTable.querySelectorAll('tr');
 
-        // Extract header row and data rows into arrays
         const data = [];
         rows.forEach((row, i) => {
           const cells = row.querySelectorAll(i === 0 ? 'th' : 'td');
-          if (cells.length === 0) return; // skip empty rows
+          if (cells.length === 0) return;
           const rowData = [];
-          cells.forEach(cell => {
-            rowData.push(cell.textContent.trim());
-          });
+          cells.forEach(cell => rowData.push(cell.textContent.trim()));
           data.push(rowData);
         });
 
@@ -127,10 +134,19 @@
       tbody.innerHTML = '';
       if (!data.length) return;
 
-      data[0].forEach(h => thead.innerHTML += `<th>${h}</th>`);
+      data[0].forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        thead.appendChild(th);
+      });
+
       data.slice(1).forEach(row => {
         const tr = document.createElement('tr');
-        row.forEach(cell => tr.innerHTML += `<td>${cell}</td>`);
+        row.forEach(cell => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
         tbody.appendChild(tr);
       });
 
@@ -149,6 +165,10 @@
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('patchingData');
       if (saved) render(JSON.parse(saved));
+      else {
+        const tbody = document.querySelector('#patchTable tbody');
+        tbody.innerHTML = '<tr><td colspan="20" class="text-center">No data loaded. Click "Load Weekly Data".</td></tr>';
+      }
     });
   </script>
 </body>
