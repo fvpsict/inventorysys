@@ -4,16 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FVPS Inventory System</title>
-  <!-- Bootstrap CSS -->
+
+  <!-- Bootstrap CSS CDN -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
+  <!-- Your styles -->
   <link href="styles.css" rel="stylesheet" />
+
   <style>
     body {
-      padding-top: 70px; /* Space for fixed navbar */
-      background-color: #f8f9fa;
+      padding-top: 70px; /* space for fixed navbar */
     }
   </style>
 </head>
@@ -21,7 +23,7 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">FVPS Inventory System</a>
+      <a class="navbar-brand" href="index.html">FVPS Inventory System</a>
       <button
         class="navbar-toggler"
         type="button"
@@ -33,10 +35,11 @@
       >
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+            <a class="nav-link active" href="index.html">Home</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="view-inventory/index.html">View Inventory</a>
@@ -52,14 +55,14 @@
     </div>
   </nav>
 
-  <!-- Main content -->
+  <!-- Main Content -->
   <main class="container text-center mt-5">
-    <h1 class="mb-3">Welcome to the Inventory System</h1>
-    <p class="lead">Use the navigation bar to manage inventory, fault reports, and patching.</p>
+    <h1>Welcome to the Inventory System</h1>
+    <p>Use the navigation bar to manage inventory, fault reports, and patching.</p>
     <div class="mt-4">
-      <a href="view-inventory/index.html" class="btn btn-primary me-2 mb-2">View Inventory</a>
-      <a href="fault-report.html" class="btn btn-secondary me-2 mb-2">Fault Report</a>
-      <a href="patching/patching-report.html" class="btn btn-info mb-2">Patching Report</a>
+      <a href="view-inventory/index.html" class="btn btn-primary me-2">View Inventory</a>
+      <a href="fault-report.html" class="btn btn-secondary me-2">Fault Report</a>
+      <a href="patching/patching-report.html" class="btn btn-info">Patching Report</a>
     </div>
   </main>
 
