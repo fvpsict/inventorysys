@@ -3,102 +3,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
   const form = document.getElementById("inventory-modal-form");
 
-  // Calculate Duration in Use (years and months) from StartDate to today
+  let inventoryItems = [];
+
+  // Utility: format date as "DD Month YYYY"
+  function formatDate(date) {
+    const options = { day: "numeric", month: "long", year: "numeric" };
+    return new Date(date).toLocaleDateString("en-GB", options);
+  }
+
+  // Utility: calculate duration from StartDate to today
   function calculateDuration(startDateStr) {
     if (!startDateStr) return "";
-    const startDate = new Date(startDateStr);
+    const start = new Date(startDateStr);
     const today = new Date();
-
-    let years = today.getFullYear() - startDate.getFullYear();
-    let months = today.getMonth() - startDate.getMonth();
+    let years = today.getFullYear() - start.getFullYear();
+    let months = today.getMonth() - start.getMonth();
 
     if (months < 0) {
       years--;
       months += 12;
     }
-    if (years < 0) return ""; // future start date
+
+    if (years < 0) return "";
 
     let result = "";
-    if (years > 0) result += years + (years === 1 ? " year " : " years ");
-    if (months > 0) result += months + (months === 1 ? " month" : " months");
-
+    if (years > 0) result += `${years} year${years > 1 ? "s" : ""} `;
+    if (months > 0) result += `${months} month${months > 1 ? "s" : ""}`;
     return result.trim();
   }
 
-  // Render a single inventory item as a table row
-  function createTableRow(item) {
-    const tr = document.createElement("tr");
-
-    [
-      "EquipmentType",
-      "Vendor",
-      "BrandModel",
-      "Profile",
-      "Custodian",
-      "AssetNo",
-      "SerialNumber",
-      "Location",
-      "EndDate",
-      "StartDate",
-      "Hostname",
-      "SSOE PO Number",
-      "Cart No",
-      "SanitiseDate",
-      "DurationInUse",
-      "Lamp Hour",
-      "DateUpdated",
-    ].forEach((key) => {
-      const td = document.createElement("td");
-
-      if (key === "DurationInUse") {
-        td.textContent = calculateDuration(item.StartDate);
-      } else {
-        td.textContent = item[key] || "";
-      }
-
-      tr.appendChild(td);
-    });
-
-    // Actions cell
-    const actionTd = document.createElement("td");
-
-    // Edit button
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-sm btn-primary me-2";
-    editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", () => {
-      Object.entries(item).forEach(([key, value]) => {
-        const input = form.elements[key];
-        if (input) input.value = value;
-      });
-      form.dataset.editingAssetNo = item.AssetNo;
-      modal.show();
-    });
-
-    // Delete button
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn btn-sm btn-danger";
-    deleteBtn.textContent = "Delete";
-    deleteBtn.addEventListener("click", () => {
-      if (confirm("Are you sure you want to delete this item?")) {
-        tr.remove();
-        inventoryItems = inventoryItems.filter((i) => i.AssetNo !== item.AssetNo);
-      }
-    });
-
-    actionTd.appendChild(editBtn);
-    actionTd.appendChild(deleteBtn);
-    tr.appendChild(actionTd);
-
-    return tr;
-  }
-
-  // In-memory array to hold inventory items
-  let inventoryItems = [];
-
-  // Add or update item in inventoryItems
+  // Add or update inventory row
   function upsertItem(item) {
-    const index = inventoryItems.findIndex((i) => i.AssetNo === item.AssetNo);
+    const index = inventoryItems.findIndex(i => i.AssetNo === item.AssetNo);
     if (index >= 0) {
       inventoryItems[index] = item;
     } else {
@@ -106,30 +42,72 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Refresh the table with current inventoryItems
+  // Render table rows
   function refreshTable() {
     inventoryTableBody.innerHTML = "";
-    inventoryItems.forEach((item) => {
-      inventoryTableBody.appendChild(createTableRow(item));
+    inventoryItems.forEach(item => {
+      const tr = document.createElement("tr");
+
+      const headers = [
+        "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian",
+        "AssetNo", "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
+        "SSOE PO Number", "Cart No", "SanitiseDate", "DurationInUse",
+        "Lamp Hour", "DateUpdated", "Equipment"
+      ];
+
+      headers.forEach(header => {
+        const td = document.createElement("td");
+        if (header === "DurationInUse") {
+          td.textContent = calculateDuration(item.StartDate);
+        } else {
+          td.textContent = item[header] || "";
+        }
+        tr.appendChild(td);
+      });
+
+      const tdAction = document.createElement("td");
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-primary me-2";
+      editBtn.textContent = "Edit";
+      editBtn.onclick = () => {
+        for (const [key, value] of Object.entries(item)) {
+          const input = form.elements[key];
+          if (input) input.value = value;
+        }
+        form.dataset.editingAssetNo = item.AssetNo;
+        modal.show();
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.onclick = () => {
+        if (confirm("Delete this item?")) {
+          inventoryItems = inventoryItems.filter(i => i.AssetNo !== item.AssetNo);
+          refreshTable();
+        }
+      };
+
+      tdAction.appendChild(editBtn);
+      tdAction.appendChild(deleteBtn);
+      tr.appendChild(tdAction);
+
+      inventoryTableBody.appendChild(tr);
     });
   }
 
-  // Form submit handler
-  form.addEventListener("submit", (e) => {
+  // Handle form submission
+  form.addEventListener("submit", e => {
     e.preventDefault();
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
 
     const formData = new FormData(form);
     const item = {};
-    formData.forEach((value, key) => {
-      item[key] = value;
+    formData.forEach((val, key) => {
+      item[key] = val;
     });
 
-    item.DateUpdated = new Date().toLocaleDateString();
+    item.DateUpdated = formatDate(new Date());
+    item.DurationInUse = calculateDuration(item.StartDate);
 
     upsertItem(item);
     refreshTable();
@@ -138,11 +116,27 @@ document.addEventListener("DOMContentLoaded", () => {
     delete form.dataset.editingAssetNo;
   });
 
-  // Clear form on modal hide
-  document
-    .getElementById("inventoryModal")
-    .addEventListener("hidden.bs.modal", () => {
-      form.reset();
-      delete form.dataset.editingAssetNo;
+  // Clear form on modal close
+  document.getElementById("inventoryModal").addEventListener("hidden.bs.modal", () => {
+    form.reset();
+    delete form.dataset.editingAssetNo;
+  });
+
+  // Add Item button
+  document.getElementById("add-item-btn").addEventListener("click", () => {
+    form.reset();
+    delete form.dataset.editingAssetNo;
+    modal.show();
+  });
+
+  // Equipment dropdown setup (in case you want to dynamically populate later)
+  const equipmentField = form.querySelector('[name="Equipment"]');
+  if (equipmentField && equipmentField.options.length === 0) {
+    ["", "Desktop", "Laptop", "iPad", "Mobile Cart"].forEach(type => {
+      const opt = document.createElement("option");
+      opt.value = type;
+      opt.textContent = type;
+      equipmentField.appendChild(opt);
     });
+  }
 });
