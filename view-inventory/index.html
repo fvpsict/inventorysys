@@ -1,80 +1,157 @@
-<!-- Add/Edit Inventory Modal -->
-<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <form id="inventory-form">
-        <div class="modal-header">
-          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Inventory</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Equipment Type</label>
-              <select class="form-select" name="EquipmentType" id="equipmentType" required>
-                <option value="">Select</option>
-                <option>SSOE</option>
-                <option>Projector</option>
-                <option>Projector Screen</option>
-                <option>Visualiser</option>
-                <option>Apple TV</option>
-                <option>SMax</option>
-                <option>Portable HDD</option>
-                <option>Macbook</option>
-                <option>TV</option>
-                <option>OMR</option>
-                <option>Hansvision</option>
-              </select>
-            </div>
+document.addEventListener("DOMContentLoaded", () => {
+  const tableBody = document.querySelector("#inventory-table tbody");
+  const form = document.getElementById("inventory-form");
+  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const addBtn = document.getElementById("add-item-btn");
 
-            <div class="col-md-4">
-              <label class="form-label">Equipment</label>
-              <select class="form-select" name="Equipment" id="equipmentField">
-                <option value="">Select</option>
-                <option>Desktop</option>
-                <option>Laptop</option>
-                <option>iPad</option>
-                <option>Mobile Cart</option>
-              </select>
-              <div class="invalid-feedback">This field is required when Equipment Type is SSOE.</div>
-            </div>
+  const equipmentType = document.getElementById("equipmentType");
+  const equipmentField = document.getElementById("equipmentField");
 
-            <!-- ... other fields remain unchanged ... -->
+  let editIndex = null;
 
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+  function renderTable(data = getInventoryData()) {
+    tableBody.innerHTML = "";
+    data.forEach((item, index) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.EquipmentType}</td>
+        <td>${item.Equipment || ""}</td>
+        <td>${item.Vendor}</td>
+        <td>${item.BrandModel}</td>
+        <td>${item.Profile}</td>
+        <td>${item.Custodian}</td>
+        <td>${item.AssetNo}</td>
+        <td>${item.SerialNumber}</td>
+        <td>${item.Location}</td>
+        <td>${item.EndDate}</td>
+        <td>${item.StartDate}</td>
+        <td>${item.Hostname}</td>
+        <td>${item.SSOE_PONumber}</td>
+        <td>${item.CartNo}</td>
+        <td>${item.SanitiseDate}</td>
+        <td>${item.DateUpdated}</td>
+        <td>
+          <button class="btn btn-sm btn-primary me-1 edit-btn" data-index="${index}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("inventory-form");
-    const equipmentType = document.getElementById("equipmentType");
-    const equipmentField = document.getElementById("equipmentField");
+  function getInventoryData() {
+    return JSON.parse(localStorage.getItem("inventoryData") || "[]");
+  }
 
-    function toggleEquipmentRequirement() {
-      if (equipmentType.value === "SSOE") {
-        equipmentField.setAttribute("required", true);
-      } else {
-        equipmentField.removeAttribute("required");
-      }
+  function saveInventoryData(data) {
+    localStorage.setItem("inventoryData", JSON.stringify(data));
+  }
+
+  function clearForm() {
+    form.reset();
+    editIndex = null;
+    equipmentField.classList.remove("is-invalid");
+  }
+
+  function fillForm(data) {
+    form.EquipmentType.value = data.EquipmentType;
+    form.Equipment.value = data.Equipment || "";
+    form.Vendor.value = data.Vendor;
+    form.BrandModel.value = data.BrandModel;
+    form.Profile.value = data.Profile;
+    form.Custodian.value = data.Custodian;
+    form.AssetNo.value = data.AssetNo;
+    form.SerialNumber.value = data.SerialNumber;
+    form.Location.value = data.Location;
+    form.EndDate.value = data.EndDate;
+    form.StartDate.value = data.StartDate;
+    form.Hostname.value = data.Hostname;
+    form["SSOE_PONumber"].value = data.SSOE_PONumber;
+    form.CartNo.value = data.CartNo;
+    form.SanitiseDate.value = data.SanitiseDate;
+    form.DateUpdated.value = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  addBtn.addEventListener("click", () => {
+    clearForm();
+    modal.show();
+  });
+
+  equipmentType.addEventListener("change", () => {
+    if (equipmentType.value === "SSOE") {
+      equipmentField.setAttribute("required", true);
+    } else {
+      equipmentField.removeAttribute("required");
+      equipmentField.classList.remove("is-invalid");
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    if (equipmentType.value === "SSOE" && equipmentField.value === "") {
+      equipmentField.classList.add("is-invalid");
+      return;
     }
 
-    equipmentType.addEventListener("change", toggleEquipmentRequirement);
+    const newItem = {
+      EquipmentType: form.EquipmentType.value,
+      Equipment: form.Equipment.value,
+      Vendor: form.Vendor.value,
+      BrandModel: form.BrandModel.value,
+      Profile: form.Profile.value,
+      Custodian: form.Custodian.value,
+      AssetNo: form.AssetNo.value,
+      SerialNumber: form.SerialNumber.value,
+      Location: form.Location.value,
+      EndDate: form.EndDate.value,
+      StartDate: form.StartDate.value,
+      Hostname: form.Hostname.value,
+      SSOE_PONumber: form["SSOE_PONumber"].value,
+      CartNo: form.CartNo.value,
+      SanitiseDate: form.SanitiseDate.value,
+      DateUpdated: new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }),
+    };
 
-    form.addEventListener("submit", function (e) {
-      if (equipmentType.value === "SSOE" && equipmentField.value === "") {
-        equipmentField.classList.add("is-invalid");
-        e.preventDefault();
-      } else {
-        equipmentField.classList.remove("is-invalid");
-      }
-    });
+    const data = getInventoryData();
+
+    if (editIndex !== null) {
+      data[editIndex] = newItem;
+    } else {
+      data.push(newItem);
+    }
+
+    saveInventoryData(data);
+    renderTable();
+    modal.hide();
   });
-</script>
+
+  tableBody.addEventListener("click", (e) => {
+    const index = e.target.dataset.index;
+    const data = getInventoryData();
+
+    if (e.target.classList.contains("edit-btn")) {
+      editIndex = index;
+      fillForm(data[index]);
+      modal.show();
+    }
+
+    if (e.target.classList.contains("delete-btn")) {
+      if (confirm("Are you sure you want to delete this item?")) {
+        data.splice(index, 1);
+        saveInventoryData(data);
+        renderTable();
+      }
+    }
+  });
+
+  renderTable();
+});
