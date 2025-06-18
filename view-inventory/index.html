@@ -8,11 +8,14 @@
   <link href="../styles.css" rel="stylesheet" />
   <style>
     body {
-      padding-top: 70px; /* Account for fixed navbar */
+      padding-top: 70px; /* Space for fixed navbar */
     }
-    /* Navbar menu hover color: yellow */
     .navbar-nav .nav-link:hover {
       color: yellow !important;
+    }
+    .table thead th {
+      background-color: #0d6efd; /* Bootstrap primary blue */
+      color: white;
     }
   </style>
 </head>
@@ -22,21 +25,13 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">FVPS Inventory System</a>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#nav"
-      aria-controls="nav"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">View Inventory</a></li>
         <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
         <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
       </ul>
@@ -48,7 +43,7 @@
 <div class="container py-4">
   <h1 class="mb-4">View Inventory</h1>
 
-  <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-3">
+  <div class="d-flex flex-wrap gap-3 justify-content-between align-items-end mb-3">
     <div>
       <label for="filter-equipmenttype" class="form-label mb-1">Filter by Equipment Type</label>
       <select id="filter-equipmenttype" class="form-select">
@@ -69,7 +64,7 @@
     </div>
 
     <div class="flex-grow-1">
-      <label for="search-inventory" class="col-form-label">Search Inventory</label>
+      <label for="search-inventory" class="form-label mb-1">Search Inventory</label>
       <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
     </div>
 
@@ -80,7 +75,7 @@
 
   <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
     <table class="table table-bordered table-striped inventory-table" id="inventory-table">
-      <thead class="table-primary sticky-top">
+      <thead>
         <tr>
           <th>EquipmentType</th>
           <th>Vendor</th>
@@ -93,16 +88,18 @@
           <th>EndDate</th>
           <th>StartDate</th>
           <th>Hostname</th>
-          <th>SSOE_PONumber</th>
-          <th>CartNo</th>
+          <th>SSOE PO Number</th>
+          <th>Cart No</th>
           <th>SanitiseDate</th>
           <th>Duration in use</th>
-          <th>LampHour</th>
+          <th>Lamp Hour</th>
           <th>DateUpdated</th>
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody>
+        <!-- Inventory rows inserted by JS -->
+      </tbody>
     </table>
   </div>
 </div>
@@ -113,7 +110,7 @@
     <div class="modal-content">
       <form id="inventory-modal-form" class="p-3">
         <div class="modal-header">
-          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Inventory Item</h5>
+          <h5 class="modal-title" id="inventoryModalLabel">Add / Edit Inventory Item</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
@@ -190,7 +187,7 @@
           </div>
           <div class="col-md-3">
             <label class="form-label">Lamp Hour</label>
-            <input type="number" class="form-control" name="LampHour" />
+            <input type="number" class="form-control" name="LampHour" min="0" />
           </div>
           <div class="col-md-3">
             <label class="form-label">Date Updated</label>
@@ -199,17 +196,17 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Item</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Bootstrap Bundle JS -->
+<!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Inventory Script -->
+<!-- Inventory JS -->
 <script src="../inventory.js"></script>
 
 </body>
