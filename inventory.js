@@ -1,210 +1,244 @@
 (() => {
-  const STORAGE_KEY = "fvps_inventory_data";
+  const STORAGE_KEY = "fvpsInventoryData";
 
-  const tableBody = document.querySelector("#inventory-table tbody");
+  // Elements
+  const inventoryTableBody = document.querySelector("#inventory-table tbody");
+  const addItemBtn = document.getElementById("add-item-btn");
   const filterSelect = document.getElementById("filter-equipmenttype");
   const searchInput = document.getElementById("search-inventory");
-  const addItemBtn = document.getElementById("add-item-btn");
-  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const form = document.getElementById("inventory-modal-form");
 
-  // Current editing index (null = adding new)
+  // Modal elements
+  const modalElement = document.getElementById("inventoryModal");
+  const modalForm = document.getElementById("inventory-modal-form");
+  const modal = new bootstrap.Modal(modalElement);
+
+  // Current edited item index (null = adding new)
   let editIndex = null;
 
-  // Load data from localStorage or empty array
-  function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    try {
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+  // Load inventory data from localStorage or empty array
+  function loadInventory() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
   }
 
-  // Save data array to localStorage
-  function saveData(data) {
+  // Save inventory data to localStorage
+  function saveInventory(data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  // Calculate duration in use (years and months) from StartDate and EndDate
-  // EndDate can be empty = today
-  function calculateDuration(start, end) {
-    if (!start) return "";
-    const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
+  // Format date as YYYY-MM-DD or empty string
+  function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d)) return "";
+    return d.toISOString().split("T")[0];
+  }
 
-    if (endDate < startDate) return "";
+  // Calculate duration in use between StartDate and EndDate or today
+  function calcDuration(startDateStr, endDateStr) {
+    if (!startDateStr) return "";
+    const start = new Date(startDateStr);
+    const end = endDateStr ? new Date(endDateStr) : new Date();
+    if (isNaN(start) || isNaN(end)) return "";
 
-    let years = endDate.getFullYear() - startDate.getFullYear();
-    let months = endDate.getMonth() - startDate.getMonth();
-
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
     if (months < 0) {
       years--;
       months += 12;
     }
-    const yearPart = years > 0 ? years + (years === 1 ? " yr " : " yrs ") : "";
-    const monthPart = months > 0 ? months + (months === 1 ? " mo" : " mos") : "";
-    return (yearPart + monthPart).trim() || "<1 mo";
+    if (years < 0) return "";
+
+    let result = "";
+    if (years > 0) result += years + (years === 1 ? " year " : " years ");
+    if (months > 0) result += months + (months === 1 ? " month" : " months");
+    return result.trim();
   }
 
-  // Render the entire table based on data array, filter, and search
+  // Render the inventory table rows, applying filter and search
   function renderTable() {
-    const data = loadData();
+    const data = loadInventory();
     const filterVal = filterSelect.value.toLowerCase();
     const searchVal = searchInput.value.trim().toLowerCase();
 
-    // Clear table first
-    tableBody.innerHTML = "";
+    inventoryTableBody.innerHTML = "";
 
-    // Filter and search data
-    const filtered = data.filter((item) => {
-      const matchesFilter = filterVal === "all" || (item.EquipmentType && item.EquipmentType.toLowerCase() === filterVal);
-      if (!matchesFilter) return false;
+    data.forEach((item, index) => {
+      // Filter by EquipmentType
+      if (filterVal !== "all" && item["EquipmentType"]?.toLowerCase() !== filterVal) {
+        return;
+      }
 
-      if (!searchVal) return true;
+      // Search in any field (concatenate all values)
+      const combined = Object.values(item).join(" ").toLowerCase();
+      if (searchVal && !combined.includes(searchVal)) {
+        return;
+      }
 
-      // Search any field (case-insensitive)
-      return Object.values(item).some((v) =>
-        v && v.toString().toLowerCase().includes(searchVal)
-      );
-    });
+      // Calculate Duration in use
+      const duration = calcDuration(item["StartDate"], item["EndDate"]);
 
-    // Add rows to table
-    filtered.forEach((item, index) => {
+      // Create table row
       const tr = document.createElement("tr");
 
-      // Duration in use calculated live
-      const duration = calculateDuration(item.StartDate, item.EndDate);
+      // Create cells in order of table header columns:
+      const cols = [
+        "EquipmentType",
+        "Vendor",
+        "BrandModel",
+        "Profile",
+        "Custodian",
+        "AssetNo",
+        "SerialNumber",
+        "Location",
+        "EndDate",
+        "StartDate",
+        "Hostname",
+        "SSOE PO Number",
+        "Cart No",
+        "SanitiseDate",
+        "Duration in use", // calculated
+        "Lamp Hour",
+        "DateUpdated",
+      ];
 
-      tr.innerHTML = `
-        <td>${item.EquipmentType || ""}</td>
-        <td>${item.Vendor || ""}</td>
-        <td>${item.BrandModel || ""}</td>
-        <td>${item.Profile || ""}</td>
-        <td>${item.Custodian || ""}</td>
-        <td>${item.AssetNo || ""}</td>
-        <td>${item.SerialNumber || ""}</td>
-        <td>${item.Location || ""}</td>
-        <td>${item.EndDate || ""}</td>
-        <td>${item.StartDate || ""}</td>
-        <td>${item.Hostname || ""}</td>
-        <td>${item["SSOE PO Number"] || ""}</td>
-        <td>${item["Cart No"] || ""}</td>
-        <td>${item.SanitiseDate || ""}</td>
-        <td>${duration}</td>
-        <td>${item["Lamp Hour"] || ""}</td>
-        <td>${item.DateUpdated || ""}</td>
-        <td>
-          <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
-          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
+      cols.forEach((col) => {
+        const td = document.createElement("td");
+        if (col === "Duration in use") {
+          td.textContent = duration;
+        } else if (col === "EndDate" || col === "StartDate" || col === "SanitiseDate") {
+          td.textContent = formatDate(item[col]);
+        } else {
+          td.textContent = item[col] || "";
+        }
+        tr.appendChild(td);
+      });
+
+      // Actions cell (Edit, Delete buttons)
+      const actionsTd = document.createElement("td");
+
+      // Edit button
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-primary me-2";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => openEditModal(index));
+      actionsTd.appendChild(editBtn);
+
+      // Delete button
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn btn-sm btn-danger";
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", () => deleteItem(index));
+      actionsTd.appendChild(delBtn);
+
+      tr.appendChild(actionsTd);
+
+      inventoryTableBody.appendChild(tr);
     });
   }
 
-  // Populate modal form with item data for editing
-  function populateForm(item) {
-    // Clear previous errors if any
-    form.reset();
-    for (const [key, value] of Object.entries(item)) {
-      const input = form.elements[key];
-      if (input) input.value = value || "";
-    }
-  }
-
-  // Get form data as an object
-  function getFormData() {
-    const formData = {};
-    for (const element of form.elements) {
-      if (!element.name) continue;
-      formData[element.name] = element.value.trim();
-    }
-    return formData;
-  }
-
-  // Event handlers
-  // Add button clicked
-  addItemBtn.addEventListener("click", () => {
+  // Open modal for adding new item
+  function openAddModal() {
     editIndex = null;
-    form.reset();
-    form.elements["DateUpdated"].value = "";
-    inventoryModal.show();
-  });
+    modalForm.reset();
+    modalForm.querySelector('input[name="DateUpdated"]').value = formatDate(new Date());
+    modalForm.querySelector('input[name="AssetNo"]').removeAttribute("readonly");
+    modalForm.querySelector('select[name="EquipmentType"]').focus();
+    modal.show();
+  }
 
-  // Edit button clicked (event delegation)
-  tableBody.addEventListener("click", (e) => {
-    if (e.target.classList.contains("edit-btn")) {
-      const idx = Number(e.target.dataset.index);
-      const data = loadData();
-      if (data[idx]) {
-        editIndex = idx;
-        populateForm(data[idx]);
-        inventoryModal.show();
+  // Open modal for editing existing item at index
+  function openEditModal(index) {
+    editIndex = index;
+    const data = loadInventory();
+    const item = data[index];
+    modalForm.reset();
+
+    // Fill form fields
+    Object.entries(item).forEach(([key, value]) => {
+      const input = modalForm.querySelector(`[name="${key}"]`);
+      if (input) {
+        if (input.type === "date") {
+          input.value = formatDate(value);
+        } else {
+          input.value = value;
+        }
       }
-    } else if (e.target.classList.contains("delete-btn")) {
-      const idx = Number(e.target.dataset.index);
-      if (confirm("Are you sure you want to delete this item?")) {
-        const data = loadData();
-        data.splice(idx, 1);
-        saveData(data);
-        renderTable();
-      }
-    }
-  });
+    });
 
-  // Filter changed
-  filterSelect.addEventListener("change", renderTable);
+    // Set DateUpdated to current date (editing now)
+    modalForm.querySelector('input[name="DateUpdated"]').value = formatDate(new Date());
+    // AssetNo readonly for editing
+    modalForm.querySelector('input[name="AssetNo"]').setAttribute("readonly", true);
 
-  // Search changed (debounce for better performance)
-  let searchTimeout;
-  searchInput.addEventListener("input", () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(renderTable, 300);
-  });
+    modal.show();
+  }
 
-  // Form submitted
-  form.addEventListener("submit", (e) => {
+  // Delete item by index with confirmation
+  function deleteItem(index) {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+    const data = loadInventory();
+    data.splice(index, 1);
+    saveInventory(data);
+    renderTable();
+  }
+
+  // Handle form submit for add/edit
+  modalForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const formData = getFormData();
+    const formData = new FormData(modalForm);
+    const newItem = {};
+
+    // Convert FormData to object
+    for (const [key, value] of formData.entries()) {
+      newItem[key] = value.trim();
+    }
 
     // Validate required fields
-    if (!formData.EquipmentType) {
-      alert("Please select an Equipment Type.");
+    if (!newItem["EquipmentType"]) {
+      alert("Equipment Type is required.");
       return;
     }
-    if (!formData.AssetNo) {
+    if (!newItem["AssetNo"]) {
       alert("Asset No is required.");
       return;
     }
 
-    // Update DateUpdated to today (yyyy-mm-dd)
-    const today = new Date();
-    formData.DateUpdated = today.toISOString().split("T")[0];
+    // Load data
+    const data = loadInventory();
 
-    const data = loadData();
-
-    // Check unique AssetNo except current editing (prevent duplicates)
-    const duplicate = data.some((item, i) => item.AssetNo === formData.AssetNo && i !== editIndex);
-    if (duplicate) {
-      alert("Asset No must be unique.");
+    // Check for duplicate AssetNo if adding new or changed
+    if (
+      (editIndex === null && data.some((item) => item.AssetNo === newItem.AssetNo)) ||
+      (editIndex !== null &&
+        data.some((item, idx) => item.AssetNo === newItem.AssetNo && idx !== editIndex))
+    ) {
+      alert("Asset No must be unique. Duplicate found.");
       return;
     }
 
+    // Save DateUpdated
+    newItem["DateUpdated"] = formatDate(new Date());
+
     if (editIndex === null) {
       // Add new
-      data.push(formData);
+      data.push(newItem);
     } else {
-      // Update existing
-      data[editIndex] = formData;
+      // Edit existing
+      data[editIndex] = newItem;
     }
 
-    saveData(data);
-    inventoryModal.hide();
+    saveInventory(data);
     renderTable();
+    modal.hide();
   });
 
-  // Initial render on page load
+  // Event listeners
+  addItemBtn.addEventListener("click", openAddModal);
+  filterSelect.addEventListener("change", renderTable);
+  searchInput.addEventListener("input", renderTable);
+
+  // Initial render
   renderTable();
 })();
