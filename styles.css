@@ -1,206 +1,81 @@
-/* styles.css */
-
-/* Reset & body */
+/* General body */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
+  padding-top: 56px; /* for fixed navbar */
   color: #212529;
-  margin: 0;
-  padding: 0;
 }
 
-/* Navbar */
-.navbar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Container for main content */
-.container-fluid {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 15px;
-}
-
-/* Heading */
-h1 {
-  font-weight: 700;
-  color: #343a40;
-}
-
-/* Buttons */
-.btn {
+/* Navbar brand smaller on mobile */
+.navbar-brand {
   font-weight: 600;
+  font-size: 1.25rem;
 }
 
-.btn-primary {
+/* Table header with blue background */
+.inventory-table thead th {
   background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-  background-color: #0b5ed7;
-  border-color: #0a58ca;
-}
-
-.btn-success {
-  background-color: #198754;
-  border-color: #198754;
-}
-
-.btn-success:hover,
-.btn-success:focus {
-  background-color: #157347;
-  border-color: #146c43;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-danger:hover,
-.btn-danger:focus {
-  background-color: #bb2d3b;
-  border-color: #b02a37;
-}
-
-/* Inventory Table */
-table.inventory-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  word-wrap: break-word;
-  background: white;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
-}
-
-/* Table Header */
-table.inventory-table thead tr {
-  background-color: #0d6efd;
-  color: white;
-  font-weight: 600;
+  color: #fff;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1;
 }
 
-/* Table Header Cells */
-table.inventory-table th,
-table.inventory-table td {
-  padding: 8px 12px;
-  border: 1px solid #dee2e6;
+/* Table cell vertical alignment */
+.inventory-table td,
+.inventory-table th {
   vertical-align: middle;
-  text-align: left;
-  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
-/* Table Body Rows Hover */
-table.inventory-table tbody tr:hover {
-  background-color: #e9f1ff;
+/* Filter/Search container alignment */
+.filter-search-container label {
+  margin-bottom: 0;
+  font-weight: 600;
 }
 
-/* Actions buttons in table */
-table.inventory-table td > .btn {
-  font-size: 0.8rem;
-  padding: 4px 8px;
+/* Modal labels */
+.modal-body label {
+  font-weight: 600;
 }
 
-/* Form inputs inside modal */
-.modal-body input,
-.modal-body select {
-  width: 100%;
-  padding: 6px 10px;
-  font-size: 1rem;
-  margin-bottom: 12px;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease-in-out;
+/* Buttons spacing */
+.btn + .btn {
+  margin-left: 0.5rem;
 }
 
-.modal-body input:focus,
-.modal-body select:focus {
-  border-color: #0d6efd;
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
-}
-
-/* Form validation */
-.was-validated input:invalid,
-.was-validated select:invalid {
-  border-color: #dc3545;
-  padding-right: calc(1.5em + 0.75rem);
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23dc3545' viewBox='0 0 12 12'%3e%3cpath d='M5.255 4.566a.5.5 0 0 1 .99 0l-.346 3.482a.25.25 0 0 1-.498 0l-.346-3.482zM5.5 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 5.5 9z'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right calc(0.375em + 0.1875rem) center;
-  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-}
-
-/* Filter and search container */
-.filter-search-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-.filter-search-container select,
-.filter-search-container input[type="search"] {
-  padding: 6px 10px;
-  font-size: 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  min-width: 180px;
-}
-
-.filter-search-container select:focus,
-.filter-search-container input[type="search"]:focus {
-  border-color: #0d6efd;
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* Responsive tweaks */
+@media (max-width: 575.98px) {
   .filter-search-container {
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
   }
-
-  table.inventory-table th,
-  table.inventory-table td {
-    font-size: 0.8rem;
-    padding: 6px 8px;
+  .filter-search-container label,
+  .filter-search-container select,
+  .filter-search-container input {
+    width: 100%;
+    margin-bottom: 0.5rem;
   }
 }
 
-/* Modal header */
-.modal-header {
-  background-color: #0d6efd;
+/* Hover on buttons */
+.btn-edit {
   color: white;
-  font-weight: 700;
+  background-color: #0d6efd;
+  border: none;
 }
 
-/* Scrollbar for table */
-.table-responsive {
-  overflow-x: auto;
-  max-height: 60vh;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
-  background: white;
+.btn-edit:hover {
+  background-color: #0b5ed7;
 }
 
-/* Fix input type date width */
-input[type="date"] {
-  width: 100%;
+.btn-delete {
+  color: white;
+  background-color: #dc3545;
+  border: none;
 }
 
-/* Fix dropdown disabled style */
-select:disabled {
-  background-color: #e9ecef;
-  opacity: 1;
-  color: #6c757d;
-  cursor: not-allowed;
+.btn-delete:hover {
+  background-color: #bb2d3b;
 }
