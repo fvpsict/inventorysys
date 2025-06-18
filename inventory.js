@@ -1,222 +1,207 @@
-// inventory.js
+document.addEventListener("DOMContentLoaded", () => {
+  const addItemBtn = document.getElementById("add-item-btn");
+  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const inventoryForm = document.getElementById("inventory-form");
+  const tableBody = document.querySelector("#inventory-table tbody");
 
-const STORAGE_KEY = "fvps_inventory_data";
+  const equipmentTypeSelect = document.getElementById("equipmentType");
+  const equipmentSelect = document.getElementById("equipmentField");
 
-const inventoryTableBody = document.querySelector("#inventory-table tbody");
-const filterEquipmentType = document.getElementById("filter-equipmenttype");
-const searchInventory = document.getElementById("search-inventory");
-const addItemBtn = document.getElementById("add-item-btn");
-const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-const inventoryForm = document.getElementById("inventory-modal-form");
+  let editIndex = -1; // tracks edit row index, -1 = new entry
 
-let inventoryData = [];
-let editingIndex = null; // null means adding new
+  // Load inventory from localStorage or empty
+  let inventoryData = JSON.parse(localStorage.getItem("inventoryData") || "[]");
+  renderTable();
 
-// Format date string (ISO or YYYY-MM-DD) to "DD MMMM YYYY" e.g. "25 June 2025"
-function formatDateDisplay(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "";
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
+  // Show modal to add new item
+  addItemBtn.addEventListener("click", () => {
+    editIndex = -1;
+    clearForm();
+    inventoryModal.show();
   });
-}
 
-// Parse "DD MMMM YYYY" back to ISO "YYYY-MM-DD" (used only if needed)
-function parseDateInput(displayDateStr) {
-  // Not currently used; dates come from inputs or ISO strings
-  return displayDateStr;
-}
+  // When EquipmentType changes, toggle Equipment required
+  equipmentTypeSelect.addEventListener("change", () => {
+    if (equipmentTypeSelect.value === "SSOE") {
+      equipmentSelect.setAttribute("required", "required");
+    } else {
+      equipmentSelect.removeAttribute("required");
+      equipmentSelect.classList.remove("is-invalid");
+    }
+  });
 
-// Calculate duration between dates in years and months
-function calculateDuration(startDateStr, endDateStr = null) {
-  if (!startDateStr) return "";
+  // Clear form fields
+  function clearForm() {
+    inventoryForm.reset();
+    equipmentSelect.removeAttribute("required");
+    equipmentSelect.classList.remove("is-invalid");
 
-  const start = new Date(startDateStr);
-  const end = endDateStr ? new Date(endDateStr) : new Date();
+    // Clear validation states
+    inventoryForm.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
 
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return "";
-
-  let years = end.getFullYear() - start.getFullYear();
-  let months = end.getMonth() - start.getMonth();
-
-  if (months < 0) {
-    years--;
-    months += 12;
+    // Set Date Updated to today
+    const dateUpdatedInput = document.getElementById("dateUpdated");
+    dateUpdatedInput.value = formatDate(new Date());
   }
-  if (years < 0) return "";
 
-  let result = "";
-  if (years > 0) result += years + (years === 1 ? " year " : " years ");
-  if (months > 0) result += months + (months === 1 ? " month" : " months");
-  return result.trim();
-}
+  // Format date as dd MMM yyyy (e.g. 17 Jun 2025)
+  function formatDate(date) {
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return date.toLocaleDateString(undefined, options);
+  }
 
-// Load data from localStorage
-function loadInventory() {
-  const storedData = localStorage.getItem(STORAGE_KEY);
-  inventoryData = storedData ? JSON.parse(storedData) : [];
-}
+  // Render table from inventoryData
+  function renderTable() {
+    tableBody.innerHTML = "";
 
-// Save data to localStorage
-function saveInventory() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
-}
+    inventoryData.forEach((item, index) => {
+      const tr = document.createElement("tr");
 
-// Render the inventory table rows based on current filter and search
-function renderInventory() {
-  const filterType = filterEquipmentType.value.toLowerCase();
-  const searchText = searchInventory.value.trim().toLowerCase();
+      tr.innerHTML = `
+        <td>${item.EquipmentType || ""}</td>
+        <td>${item.Equipment || ""}</td>
+        <td>${item.Vendor || ""}</td>
+        <td>${item.BrandModel || ""}</td>
+        <td>${item.Profile || ""}</td>
+        <td>${item.Custodian || ""}</td>
+        <td>${item.AssetNo || ""}</td>
+        <td>${item.SerialNumber || ""}</td>
+        <td>${item.Location || ""}</td>
+        <td>${item.EndDate || ""}</td>
+        <td>${item.StartDate || ""}</td>
+        <td>${item.Hostname || ""}</td>
+        <td>${item.SSOE_PONumber || ""}</td>
+        <td>${item.CartNo || ""}</td>
+        <td>${item.SanitiseDate || ""}</td>
+        <td>${item.DateUpdated || ""}</td>
+        <td>
+          <button class="btn btn-sm btn-primary btn-edit" data-index="${index}">Edit</button>
+          <button class="btn btn-sm btn-danger btn-delete" data-index="${index}">Delete</button>
+        </td>
+      `;
 
-  inventoryTableBody.innerHTML = "";
+      tableBody.appendChild(tr);
+    });
 
-  const filtered = inventoryData.filter(item => {
-    const matchesType = filterType === "all" || (item.EquipmentType && item.EquipmentType.toLowerCase() === filterType);
-    const matchesSearch = Object.values(item).some(val =>
-      val && val.toString().toLowerCase().includes(searchText)
+    // Attach edit/delete listeners
+    document.querySelectorAll(".btn-edit").forEach(btn =>
+      btn.addEventListener("click", (e) => {
+        const idx = e.target.dataset.index;
+        editItem(idx);
+      })
     );
-    return matchesType && matchesSearch;
-  });
 
-  filtered.forEach((item, index) => {
-    const tr = document.createElement("tr");
+    document.querySelectorAll(".btn-delete").forEach(btn =>
+      btn.addEventListener("click", (e) => {
+        const idx = e.target.dataset.index;
+        deleteItem(idx);
+      })
+    );
+  }
 
-    tr.innerHTML = `
-      <td>${item.EquipmentType || ""}</td>
-      <td>${item.Vendor || ""}</td>
-      <td>${item.BrandModel || ""}</td>
-      <td>${item.Profile || ""}</td>
-      <td>${item.Custodian || ""}</td>
-      <td>${item.AssetNo || ""}</td>
-      <td>${item.SerialNumber || ""}</td>
-      <td>${item.Location || ""}</td>
-      <td>${formatDateDisplay(item.EndDate)}</td>
-      <td>${formatDateDisplay(item.StartDate)}</td>
-      <td>${item.Hostname || ""}</td>
-      <td>${item["SSOE PO Number"] || ""}</td>
-      <td>${item["Cart No"] || ""}</td>
-      <td>${formatDateDisplay(item.SanitiseDate)}</td>
-      <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
-      <td>${item["Lamp Hour"] || ""}</td>
-      <td>${formatDateDisplay(item.DateUpdated)}</td>
-      <td>
-        <button class="btn btn-sm btn-primary edit-btn" data-index="${index}">Edit</button>
-        <button class="btn btn-sm btn-danger delete-btn ms-1" data-index="${index}">Delete</button>
-      </td>
-    `;
+  // Edit item by index
+  function editItem(index) {
+    editIndex = index;
+    const item = inventoryData[index];
+    clearForm();
 
-    inventoryTableBody.appendChild(tr);
-  });
+    // Populate form fields
+    inventoryForm.elements["EquipmentType"].value = item.EquipmentType || "";
+    inventoryForm.elements["Equipment"].value = item.Equipment || "";
+    inventoryForm.elements["Vendor"].value = item.Vendor || "";
+    inventoryForm.elements["BrandModel"].value = item.BrandModel || "";
+    inventoryForm.elements["Profile"].value = item.Profile || "";
+    inventoryForm.elements["Custodian"].value = item.Custodian || "";
+    inventoryForm.elements["AssetNo"].value = item.AssetNo || "";
+    inventoryForm.elements["SerialNumber"].value = item.SerialNumber || "";
+    inventoryForm.elements["Location"].value = item.Location || "";
+    inventoryForm.elements["EndDate"].value = item.EndDate || "";
+    inventoryForm.elements["StartDate"].value = item.StartDate || "";
+    inventoryForm.elements["Hostname"].value = item.Hostname || "";
+    inventoryForm.elements["SSOE_PONumber"].value = item.SSOE_PONumber || "";
+    inventoryForm.elements["CartNo"].value = item.CartNo || "";
+    inventoryForm.elements["SanitiseDate"].value = item.SanitiseDate || "";
+    inventoryForm.elements["DateUpdated"].value = item.DateUpdated || "";
 
-  // Attach event listeners for edit/delete buttons
-  document.querySelectorAll(".edit-btn").forEach(btn =>
-    btn.addEventListener("click", onEditItem)
-  );
-  document.querySelectorAll(".delete-btn").forEach(btn =>
-    btn.addEventListener("click", onDeleteItem)
-  );
-}
-
-// Clear and reset modal form fields
-function resetForm() {
-  inventoryForm.reset();
-  editingIndex = null;
-  document.getElementById("inventoryModalLabel").textContent = "Add Inventory Item";
-  // Auto-fill DateUpdated with today in DD MMMM YYYY format
-  const now = new Date();
-  inventoryForm["DateUpdated"].value = now.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-// Handle Add Item button click
-addItemBtn.addEventListener("click", () => {
-  resetForm();
-  inventoryModal.show();
-});
-
-// Fill form fields with data for editing
-function fillForm(item) {
-  Object.keys(item).forEach(key => {
-    if (inventoryForm.elements[key]) {
-      // Format dates for date inputs or text inputs accordingly
-      if (
-        key === "StartDate" ||
-        key === "EndDate" ||
-        key === "SanitiseDate"
-      ) {
-        inventoryForm.elements[key].value = item[key] || "";
-      } else if (key === "DateUpdated") {
-        inventoryForm.elements[key].value = formatDateDisplay(item[key]) || "";
-      } else {
-        inventoryForm.elements[key].value = item[key] || "";
-      }
+    // Adjust Equipment required
+    if (item.EquipmentType === "SSOE") {
+      equipmentSelect.setAttribute("required", "required");
+    } else {
+      equipmentSelect.removeAttribute("required");
     }
-  });
-  document.getElementById("inventoryModalLabel").textContent = "Edit Inventory Item";
-}
 
-// Handle Edit button click
-function onEditItem(e) {
-  const index = +e.target.dataset.index;
-  editingIndex = index;
-  const item = inventoryData[index];
-  fillForm(item);
-  inventoryModal.show();
-}
-
-// Handle Delete button click
-function onDeleteItem(e) {
-  const index = +e.target.dataset.index;
-  if (confirm("Are you sure you want to delete this item?")) {
-    inventoryData.splice(index, 1);
-    saveInventory();
-    renderInventory();
-  }
-}
-
-// Handle form submission for add/edit
-inventoryForm.addEventListener("submit", e => {
-  e.preventDefault();
-
-  const formData = new FormData(inventoryForm);
-  let item = {};
-  for (let [key, value] of formData.entries()) {
-    item[key] = value.trim();
+    inventoryModal.show();
   }
 
-  // Convert date inputs to ISO strings for storage consistency
-  ["StartDate", "EndDate", "SanitiseDate"].forEach(dateKey => {
-    if (item[dateKey]) {
-      item[dateKey] = new Date(item[dateKey]).toISOString().slice(0, 10);
+  // Delete item
+  function deleteItem(index) {
+    if (confirm("Are you sure you want to delete this item?")) {
+      inventoryData.splice(index, 1);
+      saveData();
+      renderTable();
     }
-  });
-
-  // Set DateUpdated to today's date ISO string for storage
-  const now = new Date();
-  item.DateUpdated = now.toISOString().slice(0, 10);
-
-  if (editingIndex !== null) {
-    // Editing existing item
-    inventoryData[editingIndex] = item;
-  } else {
-    // Adding new item
-    inventoryData.push(item);
   }
 
-  saveInventory();
-  renderInventory();
-  inventoryModal.hide();
+  // Save data to localStorage
+  function saveData() {
+    localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
+  }
+
+  // Form submit handler
+  inventoryForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    // Reset validation states
+    inventoryForm.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+
+    // Check Equipment required when EquipmentType = SSOE
+    if (equipmentTypeSelect.value === "SSOE" && !equipmentSelect.value) {
+      equipmentSelect.classList.add("is-invalid");
+      equipmentSelect.focus();
+      return;
+    }
+
+    // Check other HTML5 validations
+    if (!inventoryForm.checkValidity()) {
+      // Show invalid fields
+      [...inventoryForm.elements].forEach(el => {
+        if (el.checkValidity() === false) {
+          el.classList.add("is-invalid");
+        }
+      });
+      return;
+    }
+
+    // Gather form data
+    const formData = {
+      EquipmentType: inventoryForm.elements["EquipmentType"].value,
+      Equipment: inventoryForm.elements["Equipment"].value,
+      Vendor: inventoryForm.elements["Vendor"].value,
+      BrandModel: inventoryForm.elements["BrandModel"].value,
+      Profile: inventoryForm.elements["Profile"].value,
+      Custodian: inventoryForm.elements["Custodian"].value,
+      AssetNo: inventoryForm.elements["AssetNo"].value,
+      SerialNumber: inventoryForm.elements["SerialNumber"].value,
+      Location: inventoryForm.elements["Location"].value,
+      EndDate: inventoryForm.elements["EndDate"].value,
+      StartDate: inventoryForm.elements["StartDate"].value,
+      Hostname: inventoryForm.elements["Hostname"].value,
+      SSOE_PONumber: inventoryForm.elements["SSOE_PONumber"].value,
+      CartNo: inventoryForm.elements["CartNo"].value,
+      SanitiseDate: inventoryForm.elements["SanitiseDate"].value,
+      DateUpdated: formatDate(new Date())
+    };
+
+    if (editIndex === -1) {
+      // New item
+      inventoryData.push(formData);
+    } else {
+      // Update existing
+      inventoryData[editIndex] = formData;
+    }
+
+    saveData();
+    renderTable();
+    inventoryModal.hide();
+  });
 });
-
-// Filter and Search handlers
-filterEquipmentType.addEventListener("change", renderInventory);
-searchInventory.addEventListener("input", renderInventory);
-
-// Initialize
-loadInventory();
-renderInventory();
