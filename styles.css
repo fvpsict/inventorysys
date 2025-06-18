@@ -5,7 +5,7 @@ body {
   background-color: #f8f9fa;
   color: #212529;
   margin: 0;
-  padding-top: 70px; /* space for fixed navbar */
+  padding: 0;
 }
 
 /* Container & Layout */
@@ -24,27 +24,15 @@ h1 {
 }
 
 /* Filter and Search Row */
-.filter-search-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.filter-search-row select,
-.filter-search-row input[type="text"] {
-  width: 200px;
-  max-width: 100%;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
+#filter-equipmenttype,
+#search-inventory {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 0.5rem;
 }
 
 /* Add Item Button */
-#addItemBtn {
+#add-item-btn {
   background-color: #198754;
   border: none;
   color: white;
@@ -55,7 +43,7 @@ h1 {
   transition: background-color 0.3s ease;
 }
 
-#addItemBtn:hover {
+#add-item-btn:hover {
   background-color: #157347;
 }
 
@@ -83,7 +71,7 @@ h1 {
   font-weight: 600;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 2;
 }
 
 /* Action Buttons */
@@ -117,7 +105,7 @@ h1 {
   background-color: #b02a37;
 }
 
-/* Modal Header */
+/* Modal Styles */
 .modal-header {
   background-color: #0d6efd;
   color: white;
@@ -127,7 +115,6 @@ h1 {
   justify-content: center;
 }
 
-/* Modal Form Inputs */
 .modal-body label {
   font-weight: 500;
   margin-bottom: 0.25rem;
@@ -137,40 +124,18 @@ h1 {
 .modal-body select {
   width: 100%;
   padding: 0.375rem 0.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   border: 1px solid #ced4da;
   border-radius: 0.25rem;
   font-size: 1rem;
   box-sizing: border-box;
 }
 
-/* Make modal wider */
-.modal-xl {
-  max-width: 95% !important;
-}
-
-/* Responsive form grid in modal */
-@media (min-width: 768px) {
-  .modal-body.row > div {
-    /* Use col-md-3 in HTML for 4 per row */
-    /* margin-bottom handled by gap in row */
-  }
-}
-
 /* Responsive */
 @media (max-width: 767.98px) {
-  .filter-search-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filter-search-row select,
-  .filter-search-row input[type="text"] {
-    width: 100%;
-  }
-
-  #addItemBtn {
-    width: 100%;
+  #filter-equipmenttype,
+  #search-inventory {
+    max-width: 100%;
   }
 
   .inventory-table th,
