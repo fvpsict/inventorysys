@@ -1,118 +1,279 @@
-/* Reset and Base */
+/* styles.css */
+
+/* Reset & base */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  margin: 0;
-  padding-top: 70px; /* Space for fixed navbar */
   background-color: #f8f9fa;
   color: #212529;
+  margin: 0;
+  padding: 0;
 }
 
 /* Navbar */
-.navbar-brand {
-  font-weight: bold;
+.navbar {
+  background-color: #343a40 !important; /* Bootstrap dark */
 }
 
-.navbar .nav-link.active {
-  font-weight: bold;
-  color: #ffffff !important;
+.navbar-brand,
+.navbar-nav .nav-link {
+  color: #f8f9fa !important;
 }
 
-.navbar .nav-link:hover {
-  text-decoration: underline;
-}
-
-/* Table Styling */
-.table thead th {
-  background-color: #007bff;
-  color: white;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.table tbody td {
-  vertical-align: middle;
-}
-
-.table-responsive {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* Form Inputs */
-.form-control,
-.form-select {
-  border-radius: 4px;
-}
-
-/* Modal */
-.modal-header {
-  background-color: #0d6efd;
-  color: white;
-}
-
-.modal-title {
+.navbar-nav .nav-link.active {
+  color: #0d6efd !important;
   font-weight: 600;
 }
 
-.modal-footer .btn {
-  min-width: 100px;
+/* Container */
+.container-fluid {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
 /* Buttons */
 .btn {
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 0.3rem;
+  transition: background-color 0.3s ease;
 }
 
-.btn-primary,
+.btn-primary:hover {
+  background-color: #0b5ed7;
+}
+
 .btn-success {
+  background-color: #198754;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+}
+
+.btn-danger:hover {
+  background-color: #a71d2a;
+}
+
+/* Filters and Search Bar */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.filters-container label {
+  margin-right: 0.5rem;
+  font-weight: 600;
+}
+
+.filters-container select,
+.filters-container input[type="search"] {
+  min-width: 150px;
+  max-width: 300px;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #ced4da;
+  font-size: 1rem;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.filters-container select:focus,
+.filters-container input[type="search"]:focus {
+  border-color: #0d6efd;
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Inventory Table */
+#inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+
+#inventory-table thead tr {
+  background-color: #007bff;
   color: white;
 }
 
-.btn-primary:hover,
-.btn-success:hover {
-  opacity: 0.9;
+#inventory-table thead th {
+  padding: 0.75rem;
+  font-weight: 600;
+  text-align: left;
+  vertical-align: middle;
+  user-select: none;
 }
 
-/* Layout & Utility */
-main.container {
-  padding-top: 20px;
+#inventory-table tbody td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 0.95rem;
 }
 
-#search-inventory, #search-patching {
-  min-width: 200px;
+/* Duration cell style */
+#inventory-table tbody td.duration {
+  font-style: italic;
+  color: #555;
+  white-space: nowrap;
+  text-align: center;
+  max-width: 120px;
 }
 
-label.form-label.fw-bold {
-  margin-right: 10px;
+/* Buttons in table */
+#inventory-table tbody td button {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.25rem;
 }
 
-.d-flex.align-items-center.gap-2 > * {
-  margin-right: 10px;
+/* Modal styles */
+.modal-content {
+  border-radius: 0.5rem;
+  padding: 1.5rem;
 }
 
-/* Custom Select Width */
-select.form-select.w-auto {
-  width: auto;
-  display: inline-block;
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.5rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .navbar .navbar-brand {
-    font-size: 1rem;
-  }
+.modal-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
 
-  #search-inventory, #search-patching {
-    min-width: 100%;
-    margin-top: 10px;
-  }
+.modal-body {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
 
-  .d-flex.justify-content-between {
+/* Form controls in modal */
+.modal-body .form-label {
+  font-weight: 600;
+}
+
+.modal-body input,
+.modal-body select {
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #ced4da;
+  font-size: 1rem;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.modal-body input:focus,
+.modal-body select:focus {
+  border-color: #0d6efd;
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Show/hide equipment select container */
+#equipment-container {
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters-container {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .table-responsive {
-    max-height: 60vh;
+  #inventory-table thead tr,
+  #inventory-table tbody tr {
+    display: block;
   }
+
+  #inventory-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  #inventory-table tbody tr {
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    background: white;
+  }
+
+  #inventory-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.375rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  #inventory-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  #inventory-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    flex-basis: 50%;
+  }
+}
+
+/* Scrollbar for table body if needed */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Alert styles */
+.alert {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+/* Tooltip helper */
+.tooltip-inner {
+  max-width: 200px;
+  padding: 0.5rem 0.75rem;
+  color: #fff;
+  text-align: center;
+  background-color: #000;
+  border-radius: 0.25rem;
+}
+
+/* Additional tweaks */
+button:focus,
+input:focus,
+select:focus {
+  outline: none !important;
+}
+
+/* Scroll to top button - if you want to add one */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: none;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1050;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+#scrollTopBtn:hover {
+  background-color: #0056b3;
 }
