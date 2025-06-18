@@ -1,244 +1,267 @@
-// inventory.js
+(() => {
+  "use strict";
 
-document.addEventListener('DOMContentLoaded', () => {
-  const inventoryTableBody = document.querySelector('#inventory-table tbody');
-  const addItemBtn = document.getElementById('add-item-btn');
-  const filterCategory = document.getElementById('filter-category');
-  const searchInput = document.getElementById('search-inventory');
+  // Elements
+  const addItemBtn = document.getElementById("addItemBtn");
+  const inventoryTableBody = document.querySelector("#inventoryTable tbody");
+  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const inventoryForm = document.getElementById("inventoryForm");
 
-  const modal = new bootstrap.Modal(document.getElementById('itemModal'));
-  const itemForm = document.getElementById('itemForm');
-  const itemModalLabel = document.getElementById('itemModalLabel');
+  const equipmentTypeSelect = document.getElementById("equipmentType");
+  const equipmentContainer = document.getElementById("equipmentContainer");
+  const equipmentSelect = document.getElementById("equipment");
 
-  // Form fields
-  const equipmentTypeInput = document.getElementById('equipmentType');
-  const equipmentInput = document.getElementById('equipment');
-  const vendorInput = document.getElementById('vendor');
-  const brandModelInput = document.getElementById('brandModel');
-  const profileInput = document.getElementById('profile');
-  const custodianInput = document.getElementById('custodian');
-  const assetNoInput = document.getElementById('assetNo');
-  const serialNumberInput = document.getElementById('serialNumber');
-  const locationInput = document.getElementById('location');
-  const startDateInput = document.getElementById('startDate');
-  const endDateInput = document.getElementById('endDate');
+  const filterEquipmentType = document.getElementById("filterEquipmentType");
+  const searchInput = document.getElementById("searchInventory");
 
-  let inventoryData = [];
-  let editIndex = -1; // -1 means adding new
+  // Data key
+  const STORAGE_KEY = "fvps_inventory";
 
-  // Load data from localStorage
-  function loadData() {
-    const saved = localStorage.getItem('inventoryData');
-    if (saved) {
-      try {
-        inventoryData = JSON.parse(saved);
-      } catch {
-        inventoryData = [];
-      }
-    }
-  }
+  // State
+  let inventory = [];
+  let editIndex = null;
 
-  // Save data to localStorage
-  function saveData() {
-    localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
-  }
+  // --- Helpers ---
 
-  // Calculate Duration in Use (years and months) from startDate and endDate
+  // Duration in use calculation: from StartDate to EndDate or today if no EndDate
   function calculateDuration(startDateStr, endDateStr) {
-    if (!startDateStr) return '';
-    const startDate = new Date(startDateStr);
-    let endDate = endDateStr ? new Date(endDateStr) : new Date();
-    if (endDate < startDate) return '';
+    if (!startDateStr) return "";
+    const start = new Date(startDateStr);
+    const end = endDateStr ? new Date(endDateStr) : new Date();
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return "";
 
-    let years = endDate.getFullYear() - startDate.getFullYear();
-    let months = endDate.getMonth() - startDate.getMonth();
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
 
     if (months < 0) {
       years--;
       months += 12;
     }
 
-    let durationStr = '';
-    if (years > 0) durationStr += years + (years === 1 ? ' yr ' : ' yrs ');
-    if (months > 0) durationStr += months + (months === 1 ? ' mo' : ' mos');
-    return durationStr.trim() || '0 mo';
+    let result = "";
+    if (years > 0) result += `${years} yr${years > 1 ? "s" : ""} `;
+    if (months > 0) result += `${months} mo${months > 1 ? "s" : ""}`;
+
+    return result.trim() || "0 mo";
   }
 
-  // Render the inventory table rows based on current data and filters/search
+  // Save to localStorage
+  function saveInventory() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+  }
+
+  // Load from localStorage
+  function loadInventory() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        inventory = JSON.parse(stored);
+      } catch {
+        inventory = [];
+      }
+    } else {
+      inventory = [];
+    }
+  }
+
+  // Clear table
+  function clearTable() {
+    inventoryTableBody.innerHTML = "";
+  }
+
+  // Render table rows based on filtered and searched inventory
   function renderTable() {
-    const filterVal = filterCategory.value.trim().toLowerCase();
-    const searchVal = searchInput.value.trim().toLowerCase();
+    clearTable();
 
-    inventoryTableBody.innerHTML = '';
+    // Get filter values
+    const filterType = filterEquipmentType.value.trim();
+    const searchTerm = searchInput.value.trim().toLowerCase();
 
-    inventoryData.forEach((item, index) => {
-      // Filter by EquipmentType if set
-      if (filterVal && item.equipmentType.toLowerCase() !== filterVal) return;
+    // Filter and search
+    const filteredItems = inventory.filter((item) => {
+      const matchesType = !filterType || item.equipmentType === filterType;
+      const searchableString = Object.values(item)
+        .map(String)
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = searchableString.includes(searchTerm);
+      return matchesType && matchesSearch;
+    });
 
-      // Search in all fields (except duration & actions)
-      const searchableFields = [
-        item.equipmentType,
-        item.equipment || '',
-        item.vendor,
-        item.brandModel,
-        item.profile,
-        item.custodian,
-        item.assetNo,
-        item.serialNumber,
-        item.location,
-        item.startDate,
-        item.endDate
-      ];
+    if (filteredItems.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="14" class="text-center text-muted">No records found</td>`;
+      inventoryTableBody.appendChild(tr);
+      return;
+    }
 
-      const matchesSearch = searchableFields.some(field =>
-        field && field.toLowerCase().includes(searchVal)
-      );
-      if (!matchesSearch) return;
+    filteredItems.forEach((item, idx) => {
+      const tr = document.createElement("tr");
 
-      const tr = document.createElement('tr');
-
-      // Calculate duration in use for this row
+      // Duration calculated live for display
       const duration = calculateDuration(item.startDate, item.endDate);
 
       tr.innerHTML = `
-        <td>${item.equipmentType}</td>
-        <td>${item.equipment || ''}</td>
-        <td>${item.vendor || ''}</td>
-        <td>${item.brandModel || ''}</td>
-        <td>${item.profile || ''}</td>
-        <td>${item.custodian || ''}</td>
-        <td>${item.assetNo || ''}</td>
-        <td>${item.serialNumber || ''}</td>
-        <td>${item.location || ''}</td>
-        <td>${item.startDate || ''}</td>
-        <td>${item.endDate || ''}</td>
+        <td>${item.equipmentType || ""}</td>
+        <td>${item.equipmentType === "SSOE" ? (item.equipment || "") : ""}</td>
+        <td>${item.vendor || ""}</td>
+        <td>${item.brandModel || ""}</td>
+        <td>${item.profile || ""}</td>
+        <td>${item.custodian || ""}</td>
+        <td>${item.assetNo || ""}</td>
+        <td>${item.serialNumber || ""}</td>
+        <td>${item.location || ""}</td>
+        <td>${item.endDate || ""}</td>
+        <td>${item.startDate || ""}</td>
         <td>${duration}</td>
+        <td>${item.hostname || ""}</td>
         <td>
-          <button class="btn btn-sm btn-primary btn-edit" data-index="${index}">Edit</button>
-          <button class="btn btn-sm btn-danger btn-delete ms-1" data-index="${index}">Delete</button>
+          <button class="btn btn-sm btn-primary btn-edit" data-index="${idx}" title="Edit">✏️</button>
+          <button class="btn btn-sm btn-danger btn-delete" data-index="${idx}" title="Delete">🗑️</button>
         </td>
       `;
 
       inventoryTableBody.appendChild(tr);
     });
+  }
 
-    // Attach event listeners to Edit and Delete buttons after render
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const idx = parseInt(e.target.getAttribute('data-index'));
-        openEditModal(idx);
-      });
-    });
+  // Reset form inputs and validation
+  function resetForm() {
+    inventoryForm.reset();
+    equipmentContainer.style.display = "none";
+    equipmentSelect.required = false;
+    inventoryForm.classList.remove("was-validated");
+    editIndex = null;
+  }
 
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const idx = parseInt(e.target.getAttribute('data-index'));
-        if (confirm('Are you sure you want to delete this item?')) {
-          inventoryData.splice(idx, 1);
-          saveData();
+  // Fill form inputs for edit
+  function fillForm(item) {
+    equipmentTypeSelect.value = item.equipmentType || "";
+    if (item.equipmentType === "SSOE") {
+      equipmentContainer.style.display = "block";
+      equipmentSelect.required = true;
+      equipmentSelect.value = item.equipment || "";
+    } else {
+      equipmentContainer.style.display = "none";
+      equipmentSelect.required = false;
+      equipmentSelect.value = "";
+    }
+
+    document.getElementById("vendor").value = item.vendor || "";
+    document.getElementById("brandModel").value = item.brandModel || "";
+    document.getElementById("profile").value = item.profile || "";
+    document.getElementById("custodian").value = item.custodian || "";
+    document.getElementById("assetNo").value = item.assetNo || "";
+    document.getElementById("serialNumber").value = item.serialNumber || "";
+    document.getElementById("location").value = item.location || "";
+    document.getElementById("startDate").value = item.startDate || "";
+    document.getElementById("endDate").value = item.endDate || "";
+    document.getElementById("hostname").value = item.hostname || "";
+  }
+
+  // Collect form data as an object
+  function getFormData() {
+    return {
+      equipmentType: equipmentTypeSelect.value.trim(),
+      equipment: equipmentTypeSelect.value === "SSOE" ? equipmentSelect.value.trim() : "",
+      vendor: document.getElementById("vendor").value.trim(),
+      brandModel: document.getElementById("brandModel").value.trim(),
+      profile: document.getElementById("profile").value.trim(),
+      custodian: document.getElementById("custodian").value.trim(),
+      assetNo: document.getElementById("assetNo").value.trim(),
+      serialNumber: document.getElementById("serialNumber").value.trim(),
+      location: document.getElementById("location").value.trim(),
+      startDate: document.getElementById("startDate").value,
+      endDate: document.getElementById("endDate").value,
+      hostname: document.getElementById("hostname").value.trim(),
+    };
+  }
+
+  // Validate uniqueness of AssetNo
+  function isAssetNoUnique(assetNo, ignoreIndex = null) {
+    return !inventory.some((item, idx) => item.assetNo === assetNo && idx !== ignoreIndex);
+  }
+
+  // Event handlers
+  function onEquipmentTypeChange() {
+    if (equipmentTypeSelect.value === "SSOE") {
+      equipmentContainer.style.display = "block";
+      equipmentSelect.required = true;
+    } else {
+      equipmentContainer.style.display = "none";
+      equipmentSelect.required = false;
+      equipmentSelect.value = "";
+    }
+  }
+
+  function onAddItemClick() {
+    resetForm();
+    inventoryModal.show();
+  }
+
+  function onTableClick(e) {
+    if (e.target.classList.contains("btn-edit")) {
+      const idx = Number(e.target.dataset.index);
+      if (Number.isInteger(idx)) {
+        editIndex = idx;
+        fillForm(inventory[idx]);
+        inventoryModal.show();
+      }
+    } else if (e.target.classList.contains("btn-delete")) {
+      const idx = Number(e.target.dataset.index);
+      if (Number.isInteger(idx)) {
+        if (confirm("Are you sure you want to delete this item?")) {
+          inventory.splice(idx, 1);
+          saveInventory();
           renderTable();
         }
-      });
-    });
-  }
-
-  // Reset modal form fields
-  function resetForm() {
-    itemForm.reset();
-    equipmentInput.disabled = true;
-    equipmentInput.value = '';
-    // Reset validation states
-    itemForm.classList.remove('was-validated');
-  }
-
-  // Open modal for adding new item
-  function openAddModal() {
-    editIndex = -1;
-    resetForm();
-    itemModalLabel.textContent = 'Add Inventory Item';
-    modal.show();
-  }
-
-  // Open modal for editing existing item
-  function openEditModal(idx) {
-    editIndex = idx;
-    resetForm();
-    itemModalLabel.textContent = 'Edit Inventory Item';
-
-    const item = inventoryData[idx];
-    equipmentTypeInput.value = item.equipmentType;
-    equipmentInput.value = item.equipment || '';
-    equipmentInput.disabled = (item.equipmentType !== 'SSOE');
-    vendorInput.value = item.vendor || '';
-    brandModelInput.value = item.brandModel || '';
-    profileInput.value = item.profile || '';
-    custodianInput.value = item.custodian || '';
-    assetNoInput.value = item.assetNo || '';
-    serialNumberInput.value = item.serialNumber || '';
-    locationInput.value = item.location || '';
-    startDateInput.value = item.startDate || '';
-    endDateInput.value = item.endDate || '';
-
-    modal.show();
-  }
-
-  // When EquipmentType changes, toggle Equipment dropdown enabled/disabled
-  equipmentTypeInput.addEventListener('change', () => {
-    if (equipmentTypeInput.value === 'SSOE') {
-      equipmentInput.disabled = false;
-      equipmentInput.required = true;
-    } else {
-      equipmentInput.disabled = true;
-      equipmentInput.value = '';
-      equipmentInput.required = false;
+      }
     }
-  });
+  }
 
-  // Form submit: add new or update existing item
-  itemForm.addEventListener('submit', e => {
+  function onFormSubmit(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    // Validate form
-    if (!itemForm.checkValidity()) {
-      itemForm.classList.add('was-validated');
+    // Bootstrap validation
+    if (!inventoryForm.checkValidity()) {
+      inventoryForm.classList.add("was-validated");
       return;
     }
 
-    const newItem = {
-      equipmentType: equipmentTypeInput.value.trim(),
-      equipment: equipmentTypeInput.value === 'SSOE' ? equipmentInput.value.trim() : '',
-      vendor: vendorInput.value.trim(),
-      brandModel: brandModelInput.value.trim(),
-      profile: profileInput.value.trim(),
-      custodian: custodianInput.value.trim(),
-      assetNo: assetNoInput.value.trim(),
-      serialNumber: serialNumberInput.value.trim(),
-      location: locationInput.value.trim(),
-      startDate: startDateInput.value,
-      endDate: endDateInput.value
-    };
+    const data = getFormData();
 
-    if (editIndex === -1) {
-      // Add new
-      inventoryData.push(newItem);
-    } else {
-      // Update existing
-      inventoryData[editIndex] = newItem;
+    // Validate AssetNo unique
+    if (!isAssetNoUnique(data.assetNo, editIndex)) {
+      alert("AssetNo must be unique.");
+      return;
     }
 
-    saveData();
+    if (editIndex === null) {
+      // Add new
+      inventory.push(data);
+    } else {
+      // Update existing
+      inventory[editIndex] = data;
+    }
+
+    saveInventory();
     renderTable();
-    modal.hide();
-  });
+    inventoryModal.hide();
+  }
 
-  // Filter and Search event handlers
-  filterCategory.addEventListener('change', renderTable);
-  searchInput.addEventListener('input', renderTable);
+  // Init
+  function init() {
+    loadInventory();
+    renderTable();
 
-  addItemBtn.addEventListener('click', openAddModal);
+    addItemBtn.addEventListener("click", onAddItemClick);
+    equipmentTypeSelect.addEventListener("change", onEquipmentTypeChange);
+    inventoryTableBody.addEventListener("click", onTableClick);
+    inventoryForm.addEventListener("submit", onFormSubmit);
+    filterEquipmentType.addEventListener("change", renderTable);
+    searchInput.addEventListener("input", renderTable);
+  }
 
-  // Initialize
-  loadData();
-  renderTable();
-});
+  init();
+})();
