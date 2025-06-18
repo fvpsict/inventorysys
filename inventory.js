@@ -1,172 +1,196 @@
-// inventory.js
+(() => {
+  const inventoryTableBody = document.querySelector("#inventory-table tbody");
+  const addItemBtn = document.getElementById("add-item-btn");
+  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const inventoryForm = document.getElementById("inventory-form");
+  const durationInput = document.getElementById("durationInUse");
 
-const inventoryTableBody = document.querySelector("#inventory-table tbody");
-const filterEquipmentType = document.getElementById("filter-equipmenttype");
-const searchInput = document.getElementById("search-inventory");
-const addItemBtn = document.getElementById("add-item-btn");
-const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-const inventoryForm = document.getElementById("inventory-form");
+  let inventoryData = [];
+  let editIndex = null;
 
-let inventoryData = [];
-let editingIndex = -1;
+  // Calculate Duration In Use from start and end date (years + months)
+  function calculateDurationInUse(startDateStr, endDateStr) {
+    if (!startDateStr) return "";
+    const startDate = new Date(startDateStr);
+    const endDate = endDateStr ? new Date(endDateStr) : new Date();
 
-// Utility: format date as "DD MMM YYYY" e.g. "15 Jun 2025"
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date)) return "";
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+    if (endDate < startDate) return "Invalid dates";
 
-// Calculate duration in use (years and months) from startDate to today
-function calculateDuration(startDateStr) {
-  if (!startDateStr) return "";
-  const start = new Date(startDateStr);
-  const now = new Date();
-  if (isNaN(start)) return "";
-  let years = now.getFullYear() - start.getFullYear();
-  let months = now.getMonth() - start.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    let months = endDate.getMonth() - startDate.getMonth();
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    let result = "";
+    if (years > 0) result += `${years} year${years > 1 ? "s" : ""}`;
+    if (months > 0) {
+      if (result) result += " ";
+      result += `${months} month${months > 1 ? "s" : ""}`;
+    }
+    if (!result) result = "0 months";
+    return result;
   }
-  if (years < 0) return "";
-  let result = "";
-  if (years > 0) result += years + (years === 1 ? " year " : " years ");
-  if (months > 0) result += months + (months === 1 ? " month" : " months");
-  return result.trim();
-}
 
-// Render inventory table rows with filters and search
-function renderTable() {
-  const filter = filterEquipmentType.value.toLowerCase();
-  const search = searchInput.value.toLowerCase();
-
-  inventoryTableBody.innerHTML = "";
-
-  inventoryData.forEach((item, index) => {
-    if (
-      (filter === "all" || item.EquipmentType.toLowerCase() === filter) &&
-      (JSON.stringify(item).toLowerCase().includes(search))
-    ) {
+  // Render inventory table rows
+  function renderTable() {
+    inventoryTableBody.innerHTML = "";
+    inventoryData.forEach((item, i) => {
       const tr = document.createElement("tr");
-
       tr.innerHTML = `
-        <td>${item.EquipmentType || ""}</td>
-        <td>${item.Equipment || ""}</td>
-        <td>${item.Vendor || ""}</td>
-        <td>${item.BrandModel || ""}</td>
-        <td>${item.Profile || ""}</td>
-        <td>${item.Custodian || ""}</td>
-        <td>${item.AssetNo || ""}</td>
-        <td>${item.SerialNumber || ""}</td>
-        <td>${item.Location || ""}</td>
-        <td>${item.StartDate ? formatDate(item.StartDate) : ""}</td>
-        <td>${calculateDuration(item.StartDate)}</td>
-        <td>${item.DateUpdated || ""}</td>
+        <td>${item.equipmentType || ""}</td>
+        <td>${item.vendor || ""}</td>
+        <td>${item.brandModel || ""}</td>
+        <td>${item.profile || ""}</td>
+        <td>${item.custodian || ""}</td>
+        <td>${item.assetNo || ""}</td>
+        <td>${item.serialNumber || ""}</td>
+        <td>${item.location || ""}</td>
+        <td>${item.startDate || ""}</td>
+        <td>${item.endDate || ""}</td>
+        <td>${calculateDurationInUse(item.startDate, item.endDate)}</td>
         <td>
-          <button class="btn btn-sm btn-primary btn-edit" data-index="${index}">Edit</button>
-          <button class="btn btn-sm btn-danger btn-delete" data-index="${index}">Delete</button>
+          <button class="btn btn-sm btn-primary edit-btn" data-index="${i}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${i}">Delete</button>
         </td>
       `;
-
       inventoryTableBody.appendChild(tr);
+    });
+  }
+
+  // Load inventory from localStorage
+  function loadInventory() {
+    const saved = localStorage.getItem("inventoryData");
+    if (saved) {
+      try {
+        inventoryData = JSON.parse(saved);
+      } catch {
+        inventoryData = [];
+      }
+    } else {
+      inventoryData = [];
     }
-  });
-}
-
-// Reset the form fields and set DateUpdated to today
-function resetForm() {
-  inventoryForm.reset();
-  document.getElementById("DateUpdated").value = formatDate(new Date());
-  editingIndex = -1;
-  document.getElementById("EquipmentType").disabled = false; // enable on add
-}
-
-// Fill the form for editing
-function fillForm(item) {
-  document.getElementById("EquipmentType").value = item.EquipmentType || "";
-  document.getElementById("Equipment").value = item.Equipment || "";
-  document.getElementById("Vendor").value = item.Vendor || "";
-  document.getElementById("BrandModel").value = item.BrandModel || "";
-  document.getElementById("Profile").value = item.Profile || "";
-  document.getElementById("Custodian").value = item.Custodian || "";
-  document.getElementById("AssetNo").value = item.AssetNo || "";
-  document.getElementById("SerialNumber").value = item.SerialNumber || "";
-  document.getElementById("Location").value = item.Location || "";
-  document.getElementById("StartDate").value = item.StartDate || "";
-  document.getElementById("DateUpdated").value = item.DateUpdated || formatDate(new Date());
-}
-
-// Save form submission
-inventoryForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const formData = new FormData(inventoryForm);
-
-  // Collect data
-  const item = {
-    EquipmentType: formData.get("EquipmentType"),
-    Equipment: formData.get("Equipment"),
-    Vendor: formData.get("Vendor").trim(),
-    BrandModel: formData.get("BrandModel").trim(),
-    Profile: formData.get("Profile").trim(),
-    Custodian: formData.get("Custodian").trim(),
-    AssetNo: formData.get("AssetNo").trim(),
-    SerialNumber: formData.get("SerialNumber").trim(),
-    Location: formData.get("Location").trim(),
-    StartDate: formData.get("StartDate"),
-    DateUpdated: formatDate(new Date()),
-  };
-
-  // Validate required dropdowns (EquipmentType and Equipment)
-  if (!item.EquipmentType || !item.Equipment) {
-    alert("Please select Equipment Type and Equipment.");
-    return;
   }
 
-  if (editingIndex >= 0) {
-    // Update existing item
-    inventoryData[editingIndex] = item;
-  } else {
-    // Add new
-    inventoryData.push(item);
+  // Save inventory to localStorage
+  function saveInventory() {
+    localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
   }
 
-  renderTable();
-  inventoryModal.hide();
-});
+  // Clear and reset form
+  function resetForm() {
+    inventoryForm.reset();
+    durationInput.value = "";
+    editIndex = null;
+  }
 
-// Handle Add Item button
-addItemBtn.addEventListener("click", () => {
-  resetForm();
-  document.getElementById("inventoryModalLabel").textContent = "Add Inventory Item";
-  inventoryModal.show();
-});
+  // Populate form for editing
+  function populateForm(item) {
+    inventoryForm.equipmentType.value = item.equipmentType || "";
+    inventoryForm.vendor.value = item.vendor || "";
+    inventoryForm.brandModel.value = item.brandModel || "";
+    inventoryForm.profile.value = item.profile || "";
+    inventoryForm.custodian.value = item.custodian || "";
+    inventoryForm.assetNo.value = item.assetNo || "";
+    inventoryForm.serialNumber.value = item.serialNumber || "";
+    inventoryForm.location.value = item.location || "";
+    inventoryForm.startDate.value = item.startDate || "";
+    inventoryForm.endDate.value = item.endDate || "";
+    durationInput.value = calculateDurationInUse(item.startDate, item.endDate);
+  }
 
-// Edit & Delete buttons in table
-inventoryTableBody.addEventListener("click", (e) => {
-  if (e.target.classList.contains("btn-edit")) {
-    editingIndex = +e.target.dataset.index;
-    fillForm(inventoryData[editingIndex]);
-    document.getElementById("inventoryModalLabel").textContent = "Edit Inventory Item";
-    inventoryModal.show();
-  } else if (e.target.classList.contains("btn-delete")) {
-    if (confirm("Are you sure you want to delete this item?")) {
-      const idx = +e.target.dataset.index;
-      inventoryData.splice(idx, 1);
+  // Handle form input change for startDate/endDate to update duration in real time
+  function onDateChange() {
+    const startDate = inventoryForm.startDate.value;
+    const endDate = inventoryForm.endDate.value;
+    durationInput.value = calculateDurationInUse(startDate, endDate);
+  }
+
+  // Search/filter table rows
+  function filterTable(searchText) {
+    const lowerText = searchText.toLowerCase();
+    inventoryTableBody.querySelectorAll("tr").forEach(tr => {
+      const rowText = tr.textContent.toLowerCase();
+      tr.style.display = rowText.includes(lowerText) ? "" : "none";
+    });
+  }
+
+  // Init
+  function init() {
+    loadInventory();
+    renderTable();
+
+    // Add item button opens modal with empty form
+    addItemBtn.addEventListener("click", () => {
+      resetForm();
+      inventoryModal.show();
+    });
+
+    // Edit buttons
+    inventoryTableBody.addEventListener("click", e => {
+      if (e.target.classList.contains("edit-btn")) {
+        const idx = Number(e.target.dataset.index);
+        if (!isNaN(idx)) {
+          editIndex = idx;
+          populateForm(inventoryData[idx]);
+          inventoryModal.show();
+        }
+      } else if (e.target.classList.contains("delete-btn")) {
+        const idx = Number(e.target.dataset.index);
+        if (!isNaN(idx)) {
+          if (confirm("Are you sure you want to delete this item?")) {
+            inventoryData.splice(idx, 1);
+            saveInventory();
+            renderTable();
+          }
+        }
+      }
+    });
+
+    // Update duration live on date change
+    inventoryForm.startDate.addEventListener("change", onDateChange);
+    inventoryForm.endDate.addEventListener("change", onDateChange);
+
+    // Form submission (add or edit)
+    inventoryForm.addEventListener("submit", e => {
+      e.preventDefault();
+      if (!inventoryForm.checkValidity()) {
+        inventoryForm.reportValidity();
+        return;
+      }
+
+      const formData = {
+        equipmentType: inventoryForm.equipmentType.value.trim(),
+        vendor: inventoryForm.vendor.value.trim(),
+        brandModel: inventoryForm.brandModel.value.trim(),
+        profile: inventoryForm.profile.value.trim(),
+        custodian: inventoryForm.custodian.value.trim(),
+        assetNo: inventoryForm.assetNo.value.trim(),
+        serialNumber: inventoryForm.serialNumber.value.trim(),
+        location: inventoryForm.location.value.trim(),
+        startDate: inventoryForm.startDate.value,
+        endDate: inventoryForm.endDate.value,
+      };
+
+      if (editIndex !== null) {
+        inventoryData[editIndex] = formData;
+      } else {
+        inventoryData.push(formData);
+      }
+
+      saveInventory();
       renderTable();
-    }
+      inventoryModal.hide();
+    });
+
+    // Search input
+    document.getElementById("search-inventory").addEventListener("input", e => {
+      filterTable(e.target.value);
+    });
   }
-});
 
-// Filter and Search
-filterEquipmentType.addEventListener("change", renderTable);
-searchInput.addEventListener("input", renderTable);
-
-// Initial render
-renderTable();
+  // Run init on DOM ready
+  document.addEventListener("DOMContentLoaded", init);
+})();
