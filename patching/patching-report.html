@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Patching Report</title>
+  <link href="../styles.css" rel="stylesheet" />
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
-  <link href="../styles.css" rel="stylesheet" />
 </head>
 <body>
   <!-- Navbar -->
@@ -27,7 +27,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav me-auto">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
             <a class="nav-link" href="../index.html">Home</a>
           </li>
@@ -35,10 +35,10 @@
             <a class="nav-link" href="../view-inventory/index.html">View Inventory</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="../fault-report.html">Fault Report</a>
+            <a class="nav-link" href="../fault-report/fault-report.html">Fault Report</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link active" href="patching-report.html">Patching Report</a>
+            <a class="nav-link active" aria-current="page" href="patching-report.html">Patching Report</a>
           </li>
         </ul>
       </div>
@@ -46,26 +46,18 @@
   </nav>
 
   <main class="container mt-5 pt-3">
-    <h1 class="mb-4">Patching Report</h1>
-
-    <p>
-      <!-- Placeholder for instructions or summary -->
-      Paste weekly patching data below.
-    </p>
-
-    <div class="mb-3">
-      <textarea
-        id="patchingDataInput"
-        class="form-control"
-        rows="10"
-        placeholder="Paste patching data here (e.g. CSV or tabular text)"
-      ></textarea>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <input
+        type="search"
+        id="search-patching"
+        class="form-control w-auto"
+        placeholder="Search patching data..."
+      />
+      <!-- Optional: Add button or filters here -->
     </div>
 
-    <button class="btn btn-primary mb-4" id="processPatchingBtn">Process Data</button>
-
     <div class="table-responsive">
-      <table class="table table-bordered table-striped" id="patchingTable">
+      <table class="table table-bordered table-striped" id="patching-table">
         <thead>
           <tr>
             <th>Asset Tag</th>
@@ -82,71 +74,84 @@
           </tr>
         </thead>
         <tbody>
-          <!-- dynamically filled -->
+          <!-- Data rows inserted dynamically -->
         </tbody>
       </table>
     </div>
-
   </main>
 
-  <script>
-    document.getElementById("processPatchingBtn").addEventListener("click", () => {
-      const input = document.getElementById("patchingDataInput").value.trim();
-      const tbody = document.querySelector("#patchingTable tbody");
-      tbody.innerHTML = "";
-
-      if (!input) {
-        alert("Please paste patching data before processing.");
-        return;
-      }
-
-      // Simple CSV or tab-delimited parse:
-      // Assume first line is header, skip it
-      const lines = input.split(/\r?\n/).filter(line => line.trim() !== "");
-      if (lines.length < 2) {
-        alert("No data rows found.");
-        return;
-      }
-
-      // Extract header columns
-      const headers = lines[0].split(/,|\t/).map(h => h.trim());
-
-      // Mapping known headers to table columns
-      const expectedHeaders = [
-        "Asset Tag",
-        "Serial Number",
-        "School",
-        "Hostname",
-        "Device Type",
-        "BrandModel",
-        "Profile",
-        "CustodianName",
-        "CSM",
-        "SSOE Location",
-        "Status"
-      ];
-
-      // Validate header count
-      if (headers.length < expectedHeaders.length) {
-        alert("Input data columns do not match expected columns.");
-        return;
-      }
-
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(/,|\t/).map(c => c.trim());
-        if (cols.length < expectedHeaders.length) continue; // skip incomplete row
-
-        const tr = document.createElement("tr");
-        expectedHeaders.forEach((header, idx) => {
-          const td = document.createElement("td");
-          td.textContent = cols[idx] || "";
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      }
-    });
-  </script>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Example patching data - Replace with your own loading mechanism
+    const patchingData = [
+      {
+        assetTag: "AT001",
+        serialNumber: "SN12345",
+        school: "School A",
+        hostname: "host1",
+        deviceType: "Laptop",
+        brandModel: "Dell Latitude",
+        profile: "Admin",
+        custodianName: "John Doe",
+        csm: "CSM1",
+        ssoeLocation: "Room 101",
+        status: "Installed"
+      },
+      {
+        assetTag: "AT002",
+        serialNumber: "SN67890",
+        school: "School B",
+        hostname: "host2",
+        deviceType: "Desktop",
+        brandModel: "HP EliteDesk",
+        profile: "Academic",
+        custodianName: "Jane Smith",
+        csm: "CSM2",
+        ssoeLocation: "Room 202",
+        status: "Pending"
+      }
+      // Add more records or fetch from API/Google Sheet
+    ];
+
+    const tableBody = document.querySelector("#patching-table tbody");
+    const searchInput = document.getElementById("search-patching");
+
+    function renderTable(data) {
+      tableBody.innerHTML = "";
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.assetTag || ""}</td>
+          <td>${item.serialNumber || ""}</td>
+          <td>${item.school || ""}</td>
+          <td>${item.hostname || ""}</td>
+          <td>${item.deviceType || ""}</td>
+          <td>${item.brandModel || ""}</td>
+          <td>${item.profile || ""}</td>
+          <td>${item.custodianName || ""}</td>
+          <td>${item.csm || ""}</td>
+          <td>${item.ssoeLocation || ""}</td>
+          <td>${item.status || ""}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function filterTable() {
+      const query = searchInput.value.toLowerCase();
+      const filtered = patchingData.filter(item =>
+        Object.values(item).some(val =>
+          val.toString().toLowerCase().includes(query)
+        )
+      );
+      renderTable(filtered);
+    }
+
+    // Initialize table
+    renderTable(patchingData);
+
+    // Add search event
+    searchInput.addEventListener("input", filterTable);
+  </script>
 </body>
 </html>
