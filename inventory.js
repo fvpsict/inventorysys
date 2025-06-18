@@ -1,162 +1,273 @@
 // inventory.js
 
-// Elements
-const tableBody = document.querySelector('#inventory-table tbody');
-const addItemBtn = document.getElementById('add-item-btn');
-const itemModalEl = document.getElementById('itemModal');
-const itemModal = new bootstrap.Modal(itemModalEl);
-const itemForm = document.getElementById('itemForm');
-const modalTitle = document.getElementById('itemModalLabel');
-const editIndexInput = document.getElementById('editIndex');
+(() => {
+  const STORAGE_KEY = 'fvpsInventoryData';
 
-// Storage Key
-const STORAGE_KEY = 'fvpsInventory';
+  // DOM elements
+  const inventoryTableBody = document.querySelector('#inventory-table tbody');
+  const filterEquipmentType = document.getElementById('filterEquipmentType');
+  const searchInput = document.getElementById('searchInventory');
 
-// Load saved data or empty array
-let inventory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  // Modal and form elements
+  const itemModalEl = document.getElementById('itemModal');
+  const itemModal = new bootstrap.Modal(itemModalEl);
+  const itemForm = document.getElementById('itemForm');
+  const modalTitle = document.getElementById('itemModalLabel');
 
-// Utility: Calculate Duration In Use (years + months)
-function calculateDuration(startDateStr, endDateStr) {
-  if (!startDateStr) return '';
-  const startDate = new Date(startDateStr);
-  const endDate = endDateStr ? new Date(endDateStr) : new Date();
-  if (endDate < startDate) return 'Invalid dates';
+  const equipmentTypeSelect = document.getElementById('equipmentType');
+  const equipmentSelect = document.getElementById('equipment');
 
-  let years = endDate.getFullYear() - startDate.getFullYear();
-  let months = endDate.getMonth() - startDate.getMonth();
+  const editIndexInput = document.getElementById('editIndex');
 
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-
-  let durationStr = '';
-  if (years > 0) durationStr += years + (years === 1 ? ' yr ' : ' yrs ');
-  if (months > 0) durationStr += months + (months === 1 ? ' mo' : ' mos');
-  if (durationStr === '') durationStr = 'Less than 1 month';
-
-  return durationStr.trim();
-}
-
-// Render inventory table
-function renderTable() {
-  tableBody.innerHTML = '';
-  if (inventory.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="12" class="text-center">No inventory items found.</td></tr>`;
-    return;
-  }
-  inventory.forEach((item, idx) => {
-    const tr = document.createElement('tr');
-
-    tr.innerHTML = `
-      <td>${item.equipmentType || ''}</td>
-      <td>${item.vendor || ''}</td>
-      <td>${item.brandModel || ''}</td>
-      <td>${item.profile || ''}</td>
-      <td>${item.custodian || ''}</td>
-      <td>${item.assetNo || ''}</td>
-      <td>${item.serialNumber || ''}</td>
-      <td>${item.location || ''}</td>
-      <td>${item.startDate || ''}</td>
-      <td>${item.endDate || ''}</td>
-      <td class="duration">${calculateDuration(item.startDate, item.endDate)}</td>
-      <td>
-        <button class="btn btn-sm btn-primary btn-edit" data-index="${idx}">Edit</button>
-        <button class="btn btn-sm btn-danger btn-delete" data-index="${idx}">Delete</button>
-      </td>
-    `;
-
-    tableBody.appendChild(tr);
-  });
-
-  // Attach event listeners for edit/delete buttons
-  document.querySelectorAll('.btn-edit').forEach(btn =>
-    btn.addEventListener('click', e => openEditModal(e.target.dataset.index))
-  );
-  document.querySelectorAll('.btn-delete').forEach(btn =>
-    btn.addEventListener('click', e => deleteItem(e.target.dataset.index))
-  );
-}
-
-// Open modal for editing an item
-function openEditModal(index) {
-  const item = inventory[index];
-  if (!item) return;
-
-  modalTitle.textContent = 'Edit Inventory Item';
-  editIndexInput.value = index;
-
-  itemForm.equipmentType.value = item.equipmentType || '';
-  itemForm.vendor.value = item.vendor || '';
-  itemForm.brandModel.value = item.brandModel || '';
-  itemForm.profile.value = item.profile || '';
-  itemForm.custodian.value = item.custodian || '';
-  itemForm.assetNo.value = item.assetNo || '';
-  itemForm.serialNumber.value = item.serialNumber || '';
-  itemForm.location.value = item.location || '';
-  itemForm.startDate.value = item.startDate || '';
-  itemForm.endDate.value = item.endDate || '';
-
-  itemModal.show();
-}
-
-// Delete item
-function deleteItem(index) {
-  if (confirm('Are you sure you want to delete this item?')) {
-    inventory.splice(index, 1);
-    saveAndRender();
-  }
-}
-
-// Save and render data
-function saveAndRender() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-  renderTable();
-}
-
-// Reset and open modal for new item
-addItemBtn.addEventListener('click', () => {
-  modalTitle.textContent = 'Add Inventory Item';
-  editIndexInput.value = '';
-  itemForm.reset();
-});
-
-// Handle form submit
-itemForm.addEventListener('submit', e => {
-  e.preventDefault();
-
-  // Validate required fields (HTML5 validation)
-  if (!itemForm.checkValidity()) {
-    itemForm.reportValidity();
-    return;
-  }
-
-  const newItem = {
-    equipmentType: itemForm.equipmentType.value.trim(),
-    vendor: itemForm.vendor.value.trim(),
-    brandModel: itemForm.brandModel.value.trim(),
-    profile: itemForm.profile.value.trim(),
-    custodian: itemForm.custodian.value.trim(),
-    assetNo: itemForm.assetNo.value.trim(),
-    serialNumber: itemForm.serialNumber.value.trim(),
-    location: itemForm.location.value.trim(),
-    startDate: itemForm.startDate.value,
-    endDate: itemForm.endDate.value || ''
+  // Other form fields
+  const fields = {
+    vendor: document.getElementById('vendor'),
+    brandModel: document.getElementById('brandModel'),
+    profile: document.getElementById('profile'),
+    custodian: document.getElementById('custodian'),
+    assetNo: document.getElementById('assetNo'),
+    serialNumber: document.getElementById('serialNumber'),
+    location: document.getElementById('location'),
+    startDate: document.getElementById('startDate'),
+    endDate: document.getElementById('endDate'),
   };
 
-  const editIndex = editIndexInput.value;
+  let inventoryData = [];
 
-  if (editIndex === '') {
-    // Add new
-    inventory.push(newItem);
-  } else {
-    // Update existing
-    inventory[editIndex] = newItem;
+  // Utility: Calculate duration in years and months between two dates
+  function calculateDuration(start, end) {
+    if (!start) return '';
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+
+    if (endDate < startDate) return '';
+
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    let months = endDate.getMonth() - startDate.getMonth();
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    let result = '';
+    if (years > 0) result += `${years} year${years > 1 ? 's' : ''} `;
+    if (months > 0) result += `${months} month${months > 1 ? 's' : ''}`;
+    return result.trim() || '0 months';
   }
 
-  saveAndRender();
-  itemModal.hide();
-});
+  // Load inventory from localStorage
+  function loadInventory() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        inventoryData = JSON.parse(stored);
+      } catch {
+        inventoryData = [];
+      }
+    } else {
+      inventoryData = [];
+    }
+  }
 
-// Initial render
-renderTable();
+  // Save inventory to localStorage
+  function saveInventory() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryData));
+  }
+
+  // Clear table body
+  function clearTable() {
+    inventoryTableBody.innerHTML = '';
+  }
+
+  // Render the inventory table applying current filter and search
+  function renderTable() {
+    clearTable();
+
+    const filterVal = filterEquipmentType.value;
+    const searchVal = searchInput.value.toLowerCase();
+
+    // Filter and search
+    const filteredData = inventoryData.filter(item => {
+      if (filterVal !== 'All' && item.equipmentType !== filterVal) return false;
+
+      // Search across multiple fields
+      const searchFields = [
+        item.equipmentType,
+        item.equipment || '',
+        item.vendor,
+        item.brandModel,
+        item.profile,
+        item.custodian,
+        item.assetNo,
+        item.serialNumber,
+        item.location
+      ];
+      return searchFields.some(f => f.toLowerCase().includes(searchVal));
+    });
+
+    if (filteredData.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 13;
+      td.className = 'text-center fst-italic';
+      td.textContent = 'No inventory items found.';
+      tr.appendChild(td);
+      inventoryTableBody.appendChild(tr);
+      return;
+    }
+
+    filteredData.forEach((item, index) => {
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>${item.equipmentType}</td>
+        <td>${item.equipment || ''}</td>
+        <td>${item.vendor}</td>
+        <td>${item.brandModel}</td>
+        <td>${item.profile}</td>
+        <td>${item.custodian}</td>
+        <td>${item.assetNo}</td>
+        <td>${item.serialNumber}</td>
+        <td>${item.location}</td>
+        <td>${item.startDate || ''}</td>
+        <td>${item.endDate || ''}</td>
+        <td class="duration">${calculateDuration(item.startDate, item.endDate)}</td>
+        <td>
+          <button class="btn btn-sm btn-primary me-1 edit-btn" data-index="${index}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+        </td>
+      `;
+
+      inventoryTableBody.appendChild(tr);
+    });
+  }
+
+  // Show or hide Equipment select depending on EquipmentType
+  function toggleEquipmentDropdown() {
+    if (equipmentTypeSelect.value === 'SSOE') {
+      equipmentSelect.parentElement.style.display = 'block';
+      equipmentSelect.setAttribute('required', 'required');
+    } else {
+      equipmentSelect.parentElement.style.display = 'none';
+      equipmentSelect.removeAttribute('required');
+      equipmentSelect.value = '';
+    }
+  }
+
+  // Reset and open modal for add or edit
+  function openModal(editIndex = null) {
+    itemForm.reset();
+    editIndexInput.value = '';
+
+    toggleEquipmentDropdown();
+
+    if (editIndex !== null) {
+      modalTitle.textContent = 'Edit Inventory Item';
+      const item = inventoryData[editIndex];
+
+      equipmentTypeSelect.value = item.equipmentType || '';
+      equipmentSelect.value = item.equipment || '';
+      fields.vendor.value = item.vendor || '';
+      fields.brandModel.value = item.brandModel || '';
+      fields.profile.value = item.profile || '';
+      fields.custodian.value = item.custodian || '';
+      fields.assetNo.value = item.assetNo || '';
+      fields.serialNumber.value = item.serialNumber || '';
+      fields.location.value = item.location || '';
+      fields.startDate.value = item.startDate || '';
+      fields.endDate.value = item.endDate || '';
+
+      editIndexInput.value = editIndex;
+
+      toggleEquipmentDropdown();
+    } else {
+      modalTitle.textContent = 'Add Inventory Item';
+    }
+
+    itemModal.show();
+  }
+
+  // Validate form (bootstrap custom validation)
+  function validateForm() {
+    // Use built-in checkValidity
+    if (!itemForm.checkValidity()) {
+      itemForm.classList.add('was-validated');
+      return false;
+    }
+    return true;
+  }
+
+  // Handle form submit
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    if (!validateForm()) return;
+
+    const newItem = {
+      equipmentType: equipmentTypeSelect.value,
+      equipment: equipmentSelect.value,
+      vendor: fields.vendor.value.trim(),
+      brandModel: fields.brandModel.value.trim(),
+      profile: fields.profile.value.trim(),
+      custodian: fields.custodian.value.trim(),
+      assetNo: fields.assetNo.value.trim(),
+      serialNumber: fields.serialNumber.value.trim(),
+      location: fields.location.value.trim(),
+      startDate: fields.startDate.value,
+      endDate: fields.endDate.value,
+    };
+
+    const editIndex = editIndexInput.value;
+
+    if (editIndex) {
+      inventoryData[editIndex] = newItem;
+    } else {
+      inventoryData.push(newItem);
+    }
+
+    saveInventory();
+    renderTable();
+    itemModal.hide();
+  }
+
+  // Handle click on edit or delete buttons in table
+  function handleTableClick(e) {
+    if (e.target.classList.contains('edit-btn')) {
+      const index = e.target.dataset.index;
+      openModal(parseInt(index, 10));
+    } else if (e.target.classList.contains('delete-btn')) {
+      const index = e.target.dataset.index;
+      if (confirm('Are you sure you want to delete this item?')) {
+        inventoryData.splice(index, 1);
+        saveInventory();
+        renderTable();
+      }
+    }
+  }
+
+  // Initialization
+  function init() {
+    loadInventory();
+    renderTable();
+
+    // Event listeners
+    filterEquipmentType.addEventListener('change', renderTable);
+    searchInput.addEventListener('input', renderTable);
+
+    equipmentTypeSelect.addEventListener('change', toggleEquipmentDropdown);
+
+    document.getElementById('add-item-btn').addEventListener('click', () => openModal());
+
+    inventoryTableBody.addEventListener('click', handleTableClick);
+
+    itemForm.addEventListener('submit', handleFormSubmit);
+
+    // Remove validation class on modal hide
+    itemModalEl.addEventListener('hidden.bs.modal', () => {
+      itemForm.classList.remove('was-validated');
+    });
+  }
+
+  // Run init on DOM ready
+  document.addEventListener('DOMContentLoaded', init);
+})();
