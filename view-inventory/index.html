@@ -4,18 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>View Inventory</title>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Your custom styles -->
   <link href="../styles.css" rel="stylesheet" />
   <style>
     body {
-      padding-top: 70px; /* Space for fixed navbar */
+      padding-top: 70px; /* account for fixed navbar */
     }
     .navbar-nav .nav-link:hover {
       color: yellow !important;
     }
-    .table thead th {
-      background-color: #0d6efd; /* Bootstrap primary blue */
-      color: white;
+    /* Make table fill horizontal space */
+    .table-responsive {
+      max-height: 70vh;
+      overflow-y: auto;
     }
   </style>
 </head>
@@ -25,10 +28,18 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">FVPS Inventory System</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="nav">
+    <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
         <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">View Inventory</a></li>
@@ -39,11 +50,11 @@
   </div>
 </nav>
 
-<!-- Main Container -->
+<!-- Main content -->
 <div class="container py-4">
   <h1 class="mb-4">View Inventory</h1>
 
-  <div class="d-flex flex-wrap gap-3 justify-content-between align-items-end mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-3">
     <div>
       <label for="filter-equipmenttype" class="form-label mb-1">Filter by Equipment Type</label>
       <select id="filter-equipmenttype" class="form-select">
@@ -69,13 +80,16 @@
     </div>
 
     <div>
-      <button class="btn btn-success" id="add-item-btn">Add Item</button>
+      <!-- Button with data-bs attributes to trigger modal -->
+      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+        Add Item
+      </button>
     </div>
   </div>
 
-  <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+  <div class="table-responsive">
     <table class="table table-bordered table-striped inventory-table" id="inventory-table">
-      <thead>
+      <thead class="table-primary">
         <tr>
           <th>EquipmentType</th>
           <th>Vendor</th>
@@ -98,19 +112,25 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Inventory rows inserted by JS -->
+        <!-- Rows will be dynamically inserted here -->
       </tbody>
     </table>
   </div>
 </div>
 
 <!-- Inventory Modal -->
-<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="inventoryModal"
+  tabindex="-1"
+  aria-labelledby="inventoryModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <form id="inventory-modal-form" class="p-3">
         <div class="modal-header">
-          <h5 class="modal-title" id="inventoryModalLabel">Add / Edit Inventory Item</h5>
+          <h5 class="modal-title" id="inventoryModalLabel">Add/Edit Inventory Item</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
@@ -133,62 +153,77 @@
               <option>AV</option>
             </select>
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Vendor</label>
             <input type="text" class="form-control" name="Vendor" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">BrandModel</label>
             <input type="text" class="form-control" name="BrandModel" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Profile</label>
             <input type="text" class="form-control" name="Profile" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Custodian</label>
             <input type="text" class="form-control" name="Custodian" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Asset No *</label>
             <input type="text" class="form-control" name="AssetNo" required />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Serial Number</label>
             <input type="text" class="form-control" name="SerialNumber" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Location</label>
             <input type="text" class="form-control" name="Location" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">End Date</label>
             <input type="date" class="form-control" name="EndDate" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Start Date</label>
             <input type="date" class="form-control" name="StartDate" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Hostname</label>
             <input type="text" class="form-control" name="Hostname" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">SSOE PO Number</label>
-            <input type="text" class="form-control" name="SSOE_PONumber" />
+            <input type="text" class="form-control" name="SSOE PO Number" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Cart No</label>
-            <input type="text" class="form-control" name="CartNo" />
+            <input type="text" class="form-control" name="Cart No" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Sanitise Date</label>
             <input type="date" class="form-control" name="SanitiseDate" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Lamp Hour</label>
-            <input type="number" class="form-control" name="LampHour" min="0" />
+            <input type="number" class="form-control" name="Lamp Hour" />
           </div>
+
           <div class="col-md-3">
             <label class="form-label">Date Updated</label>
             <input type="text" class="form-control" name="DateUpdated" readonly />
@@ -196,8 +231,8 @@
         </div>
 
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save Item</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Item</button>
         </div>
       </form>
     </div>
@@ -206,8 +241,163 @@
 
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Inventory JS -->
-<script src="../inventory.js"></script>
+
+<!-- Inventory script -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const inventoryTableBody = document.querySelector("#inventory-table tbody");
+    const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+    const form = document.getElementById("inventory-modal-form");
+
+    // Utility: Calculate Duration in Use (years and months) from StartDate to today
+    function calculateDuration(startDateStr) {
+      if (!startDateStr) return "";
+      const startDate = new Date(startDateStr);
+      const today = new Date();
+
+      let years = today.getFullYear() - startDate.getFullYear();
+      let months = today.getMonth() - startDate.getMonth();
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      if (years < 0) return ""; // future start date
+
+      let result = "";
+      if (years > 0) result += years + (years === 1 ? " year " : " years ");
+      if (months > 0) result += months + (months === 1 ? " month" : " months");
+
+      return result.trim();
+    }
+
+    // Render an inventory row object into table row HTML
+    function createTableRow(item) {
+      const tr = document.createElement("tr");
+
+      // Create each cell
+      [
+        "EquipmentType",
+        "Vendor",
+        "BrandModel",
+        "Profile",
+        "Custodian",
+        "AssetNo",
+        "SerialNumber",
+        "Location",
+        "EndDate",
+        "StartDate",
+        "Hostname",
+        "SSOE PO Number",
+        "Cart No",
+        "SanitiseDate",
+        "DurationInUse",
+        "Lamp Hour",
+        "DateUpdated",
+      ].forEach((key) => {
+        const td = document.createElement("td");
+
+        if (key === "DurationInUse") {
+          td.textContent = calculateDuration(item.StartDate);
+        } else {
+          td.textContent = item[key] || "";
+        }
+
+        tr.appendChild(td);
+      });
+
+      // Actions (Edit / Delete)
+      const actionTd = document.createElement("td");
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-primary me-2";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => {
+        // Fill form with this item's data
+        Object.entries(item).forEach(([key, value]) => {
+          const input = form.elements[key];
+          if (input) input.value = value;
+        });
+        form.dataset.editingAssetNo = item.AssetNo; // store editing key
+        modal.show();
+      });
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete this item?")) {
+          tr.remove();
+        }
+      });
+
+      actionTd.appendChild(editBtn);
+      actionTd.appendChild(deleteBtn);
+      tr.appendChild(actionTd);
+
+      return tr;
+    }
+
+    // Keep inventory items in memory
+    let inventoryItems = [];
+
+    // Add or update item in inventoryItems array
+    function upsertItem(item) {
+      const index = inventoryItems.findIndex(
+        (i) => i.AssetNo === item.AssetNo
+      );
+      if (index >= 0) {
+        inventoryItems[index] = item;
+      } else {
+        inventoryItems.push(item);
+      }
+    }
+
+    // Refresh the table body
+    function refreshTable() {
+      inventoryTableBody.innerHTML = "";
+      inventoryItems.forEach((item) => {
+        inventoryTableBody.appendChild(createTableRow(item));
+      });
+    }
+
+    // Form submit handler (Add or Edit)
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // Validate required fields via HTML5 required attribute
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const formData = new FormData(form);
+      const item = {};
+      formData.forEach((value, key) => {
+        item[key] = value;
+      });
+
+      // Update DateUpdated to today string
+      item.DateUpdated = new Date().toLocaleDateString();
+
+      upsertItem(item);
+      refreshTable();
+      modal.hide();
+      form.reset();
+      delete form.dataset.editingAssetNo;
+    });
+
+    // Optional: clear form on modal hide (reset)
+    document
+      .getElementById("inventoryModal")
+      .addEventListener("hidden.bs.modal", () => {
+        form.reset();
+        delete form.dataset.editingAssetNo;
+      });
+
+    // Filter and Search logic (optional, you can implement later)
+  });
+</script>
 
 </body>
 </html>
