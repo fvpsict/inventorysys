@@ -1,157 +1,286 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const tableBody = document.querySelector("#inventory-table tbody");
-  const form = document.getElementById("inventory-form");
-  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const addBtn = document.getElementById("add-item-btn");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory Management</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container my-4">
+    <h1>Inventory Management</h1>
+    <button class="btn btn-success mb-3" id="add-item-btn">Add Item</button>
 
-  const equipmentType = document.getElementById("equipmentType");
-  const equipmentField = document.getElementById("equipmentField");
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="inventory-table">
+        <thead class="table-primary">
+          <tr>
+            <th>Equipment Type</th>
+            <th>Equipment</th>
+            <th>Vendor</th>
+            <th>Brand/Model</th>
+            <th>Profile</th>
+            <th>Custodian</th>
+            <th>Asset No</th>
+            <th>Serial Number</th>
+            <th>Location</th>
+            <th>End Date</th>
+            <th>Start Date</th>
+            <th>Hostname</th>
+            <th>SSOE PO Number</th>
+            <th>Cart No</th>
+            <th>Sanitise Date</th>
+            <th>Date Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows inserted dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-  let editIndex = null;
+  <!-- Modal for Add/Edit -->
+  <div
+    class="modal fade"
+    id="inventoryModal"
+    tabindex="-1"
+    aria-labelledby="inventoryModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="inventory-form" novalidate>
+          <div class="modal-header">
+            <h5 class="modal-title" id="inventoryModalLabel">Add / Edit Inventory</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="equipmentType" class="form-label">Equipment Type</label>
+                <select
+                  class="form-select"
+                  name="EquipmentType"
+                  id="equipmentType"
+                  required
+                >
+                  <option value="">Select</option>
+                  <option>SSOE</option>
+                  <option>Projector</option>
+                  <option>Projector Screen</option>
+                  <option>Visualiser</option>
+                  <option>Apple TV</option>
+                  <option>SMax</option>
+                  <option>Portable HDD</option>
+                  <option>Macbook</option>
+                  <option>TV</option>
+                  <option>OMR</option>
+                  <option>Hansvision</option>
+                </select>
+                <div class="invalid-feedback">Please select an Equipment Type.</div>
+              </div>
 
-  function renderTable(data = getInventoryData()) {
-    tableBody.innerHTML = "";
-    data.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${item.EquipmentType}</td>
-        <td>${item.Equipment || ""}</td>
-        <td>${item.Vendor}</td>
-        <td>${item.BrandModel}</td>
-        <td>${item.Profile}</td>
-        <td>${item.Custodian}</td>
-        <td>${item.AssetNo}</td>
-        <td>${item.SerialNumber}</td>
-        <td>${item.Location}</td>
-        <td>${item.EndDate}</td>
-        <td>${item.StartDate}</td>
-        <td>${item.Hostname}</td>
-        <td>${item.SSOE_PONumber}</td>
-        <td>${item.CartNo}</td>
-        <td>${item.SanitiseDate}</td>
-        <td>${item.DateUpdated}</td>
-        <td>
-          <button class="btn btn-sm btn-primary me-1 edit-btn" data-index="${index}">Edit</button>
-          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
-        </td>
-      `;
-      tableBody.appendChild(row);
-    });
-  }
+              <div class="col-md-4">
+                <label for="equipmentField" class="form-label">Equipment</label>
+                <select
+                  class="form-select"
+                  name="Equipment"
+                  id="equipmentField"
+                >
+                  <option value="">Select</option>
+                  <option>Desktop</option>
+                  <option>Laptop</option>
+                  <option>iPad</option>
+                  <option>Mobile Cart</option>
+                </select>
+                <div class="invalid-feedback">
+                  This field is required when Equipment Type is SSOE.
+                </div>
+              </div>
 
-  function getInventoryData() {
-    return JSON.parse(localStorage.getItem("inventoryData") || "[]");
-  }
+              <div class="col-md-4">
+                <label for="vendor" class="form-label">Vendor</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="Vendor"
+                  id="vendor"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Vendor.</div>
+              </div>
 
-  function saveInventoryData(data) {
-    localStorage.setItem("inventoryData", JSON.stringify(data));
-  }
+              <div class="col-md-4">
+                <label for="brandModel" class="form-label">Brand/Model</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="BrandModel"
+                  id="brandModel"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Brand/Model.</div>
+              </div>
 
-  function clearForm() {
-    form.reset();
-    editIndex = null;
-    equipmentField.classList.remove("is-invalid");
-  }
+              <div class="col-md-4">
+                <label for="profile" class="form-label">Profile</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="Profile"
+                  id="profile"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Profile.</div>
+              </div>
 
-  function fillForm(data) {
-    form.EquipmentType.value = data.EquipmentType;
-    form.Equipment.value = data.Equipment || "";
-    form.Vendor.value = data.Vendor;
-    form.BrandModel.value = data.BrandModel;
-    form.Profile.value = data.Profile;
-    form.Custodian.value = data.Custodian;
-    form.AssetNo.value = data.AssetNo;
-    form.SerialNumber.value = data.SerialNumber;
-    form.Location.value = data.Location;
-    form.EndDate.value = data.EndDate;
-    form.StartDate.value = data.StartDate;
-    form.Hostname.value = data.Hostname;
-    form["SSOE_PONumber"].value = data.SSOE_PONumber;
-    form.CartNo.value = data.CartNo;
-    form.SanitiseDate.value = data.SanitiseDate;
-    form.DateUpdated.value = new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  }
+              <div class="col-md-4">
+                <label for="custodian" class="form-label">Custodian</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="Custodian"
+                  id="custodian"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Custodian.</div>
+              </div>
 
-  addBtn.addEventListener("click", () => {
-    clearForm();
-    modal.show();
-  });
+              <div class="col-md-4">
+                <label for="assetNo" class="form-label">Asset No</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="AssetNo"
+                  id="assetNo"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Asset No.</div>
+              </div>
 
-  equipmentType.addEventListener("change", () => {
-    if (equipmentType.value === "SSOE") {
-      equipmentField.setAttribute("required", true);
-    } else {
-      equipmentField.removeAttribute("required");
-      equipmentField.classList.remove("is-invalid");
-    }
-  });
+              <div class="col-md-4">
+                <label for="serialNumber" class="form-label">Serial Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="SerialNumber"
+                  id="serialNumber"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Serial Number.</div>
+              </div>
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
+              <div class="col-md-4">
+                <label for="location" class="form-label">Location</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="Location"
+                  id="location"
+                  required
+                />
+                <div class="invalid-feedback">Please enter Location.</div>
+              </div>
 
-    if (equipmentType.value === "SSOE" && equipmentField.value === "") {
-      equipmentField.classList.add("is-invalid");
-      return;
-    }
+              <div class="col-md-4">
+                <label for="endDate" class="form-label">End Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="EndDate"
+                  id="endDate"
+                />
+              </div>
 
-    const newItem = {
-      EquipmentType: form.EquipmentType.value,
-      Equipment: form.Equipment.value,
-      Vendor: form.Vendor.value,
-      BrandModel: form.BrandModel.value,
-      Profile: form.Profile.value,
-      Custodian: form.Custodian.value,
-      AssetNo: form.AssetNo.value,
-      SerialNumber: form.SerialNumber.value,
-      Location: form.Location.value,
-      EndDate: form.EndDate.value,
-      StartDate: form.StartDate.value,
-      Hostname: form.Hostname.value,
-      SSOE_PONumber: form["SSOE_PONumber"].value,
-      CartNo: form.CartNo.value,
-      SanitiseDate: form.SanitiseDate.value,
-      DateUpdated: new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }),
-    };
+              <div class="col-md-4">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="StartDate"
+                  id="startDate"
+                />
+              </div>
 
-    const data = getInventoryData();
+              <div class="col-md-4">
+                <label for="hostname" class="form-label">Hostname</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="Hostname"
+                  id="hostname"
+                />
+              </div>
 
-    if (editIndex !== null) {
-      data[editIndex] = newItem;
-    } else {
-      data.push(newItem);
-    }
+              <div class="col-md-4">
+                <label for="ssoepoNumber" class="form-label">SSOE PO Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="SSOE_PONumber"
+                  id="ssoepoNumber"
+                />
+              </div>
 
-    saveInventoryData(data);
-    renderTable();
-    modal.hide();
-  });
+              <div class="col-md-4">
+                <label for="cartNo" class="form-label">Cart No</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="CartNo"
+                  id="cartNo"
+                />
+              </div>
 
-  tableBody.addEventListener("click", (e) => {
-    const index = e.target.dataset.index;
-    const data = getInventoryData();
+              <div class="col-md-4">
+                <label for="sanitiseDate" class="form-label">Sanitise Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="SanitiseDate"
+                  id="sanitiseDate"
+                />
+              </div>
 
-    if (e.target.classList.contains("edit-btn")) {
-      editIndex = index;
-      fillForm(data[index]);
-      modal.show();
-    }
+              <div class="col-md-4">
+                <label for="dateUpdated" class="form-label">Date Updated</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="DateUpdated"
+                  id="dateUpdated"
+                  readonly
+                />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    if (e.target.classList.contains("delete-btn")) {
-      if (confirm("Are you sure you want to delete this item?")) {
-        data.splice(index, 1);
-        saveInventoryData(data);
-        renderTable();
-      }
-    }
-  });
-
-  renderTable();
-});
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="inventory.js"></script>
+</body>
+</html>
