@@ -6,6 +6,7 @@ body {
   color: #212529;
   margin: 0;
   padding: 0;
+  padding-top: 100px; /* Space below fixed navbar */
 }
 
 /* Container & Layout */
