@@ -1,174 +1,147 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const inventoryTable = document.getElementById("inventory-table").querySelector("tbody");
+document.addEventListener("DOMContentLoaded", function () {
+  const tableBody = document.querySelector("#inventory-table tbody");
   const addItemBtn = document.getElementById("add-item-btn");
-  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
   const form = document.getElementById("inventory-modal-form");
-  let editingRow = null;
 
-  // Load existing inventory from localStorage
-  const loadInventory = () => {
+  let editingIndex = -1;
+
+  function loadInventory() {
     const data = JSON.parse(localStorage.getItem("inventoryData") || "[]");
-    data.forEach(item => addRow(item));
-  };
-
-  // Save inventory data to localStorage
-  const saveInventory = () => {
-    const rows = [...inventoryTable.rows].map(row => {
-      const cells = row.querySelectorAll("td");
-      return {
-        EquipmentType: cells[0].textContent,
-        Vendor: cells[1].textContent,
-        BrandModel: cells[2].textContent,
-        Profile: cells[3].textContent,
-        Custodian: cells[4].textContent,
-        AssetNo: cells[5].textContent,
-        SerialNumber: cells[6].textContent,
-        Location: cells[7].textContent,
-        EndDate: cells[8].textContent,
-        StartDate: cells[9].textContent,
-        Hostname: cells[10].textContent,
-        ["SSOE PO Number"]: cells[11].textContent,
-        ["Cart No"]: cells[12].textContent,
-        SanitiseDate: cells[13].textContent,
-        DurationInUse: cells[14].textContent,
-        ["Lamp Hour"]: cells[15].textContent,
-        DateUpdated: cells[16].textContent,
-      };
+    tableBody.innerHTML = "";
+    data.forEach((item, index) => {
+      tableBody.appendChild(createRow(item, index));
     });
-    localStorage.setItem("inventoryData", JSON.stringify(rows));
-  };
+  }
 
-  // Calculate Duration in use
-  const calculateDuration = (startDateStr) => {
-    if (!startDateStr) return "";
-    const start = new Date(startDateStr);
-    const now = new Date();
-    let years = now.getFullYear() - start.getFullYear();
-    let months = now.getMonth() - start.getMonth();
+  function saveInventory(data) {
+    localStorage.setItem("inventoryData", JSON.stringify(data));
+  }
+
+  function getFormData() {
+    const formData = new FormData(form);
+    const item = {};
+    formData.forEach((value, key) => {
+      item[key] = value;
+    });
+
+    item["DateUpdated"] = new Date().toISOString().split("T")[0];
+    item["Duration in use"] = calculateDuration(item["StartDate"], item["EndDate"]);
+    return item;
+  }
+
+  function fillForm(data) {
+    Object.entries(data).forEach(([key, value]) => {
+      const input = form.elements[key];
+      if (input) input.value = value;
+    });
+  }
+
+  function clearForm() {
+    form.reset();
+    editingIndex = -1;
+    form.elements["DateUpdated"].value = "";
+  }
+
+  function calculateDuration(start, end) {
+    if (!start || !end) return "";
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    let months = endDate.getMonth() - startDate.getMonth();
     if (months < 0) {
       years--;
       months += 12;
     }
-    return `${years} yr ${months} mth`;
-  };
+    return `${years}y ${months}m`;
+  }
 
-  // Add a row to the table
-  const addRow = (item) => {
-    const row = inventoryTable.insertRow();
-    const fields = [
-      "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
+  function createRow(data, index) {
+    const tr = document.createElement("tr");
+    const headers = [
+      "EquipmentType", "Equipment", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
       "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
-      "SSOE PO Number", "Cart No", "SanitiseDate", "DurationInUse", "Lamp Hour", "DateUpdated"
+      "SSOE PO Number", "Cart No", "SanitiseDate", "Duration in use", "Lamp Hour", "DateUpdated"
     ];
-    fields.forEach(field => {
-      const cell = row.insertCell();
-      cell.textContent = item[field] || "";
+
+    headers.forEach((field) => {
+      const td = document.createElement("td");
+      td.textContent = data[field] || "";
+      tr.appendChild(td);
     });
 
-    // Actions column
-    const actionCell = row.insertCell();
+    const actionTd = document.createElement("td");
     const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
     editBtn.className = "btn btn-sm btn-primary me-2";
-    editBtn.onclick = () => editItem(row);
+    editBtn.textContent = "Edit";
+    editBtn.onclick = () => {
+      editingIndex = index;
+      fillForm(data);
+      modal.show();
+    };
+
     const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Delete";
     deleteBtn.className = "btn btn-sm btn-danger";
+    deleteBtn.textContent = "Delete";
     deleteBtn.onclick = () => {
-      if (confirm("Delete this item?")) {
-        row.remove();
-        saveInventory();
+      if (confirm("Delete this entry?")) {
+        const all = JSON.parse(localStorage.getItem("inventoryData") || "[]");
+        all.splice(index, 1);
+        saveInventory(all);
+        loadInventory();
       }
     };
-    actionCell.appendChild(editBtn);
-    actionCell.appendChild(deleteBtn);
-  };
 
-  // Populate form with row data for editing
-  const editItem = (row) => {
-    editingRow = row;
-    const cells = row.querySelectorAll("td");
-    const formData = [
-      "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
-      "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
-      "SSOE PO Number", "Cart No", "SanitiseDate", "Lamp Hour", "DateUpdated"
-    ];
-    formData.forEach((field, i) => {
-      const input = form[field];
-      if (input) input.value = cells[i].textContent;
-    });
-    inventoryModal.show();
-  };
+    actionTd.appendChild(editBtn);
+    actionTd.appendChild(deleteBtn);
+    tr.appendChild(actionTd);
 
-  // Open modal to add new item
-  addItemBtn.addEventListener("click", () => {
-    editingRow = null;
-    form.reset();
-    form["DateUpdated"].value = new Date().toLocaleDateString();
-    inventoryModal.show();
-  });
+    return tr;
+  }
 
-  // Submit modal form
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const startDate = form["StartDate"].value;
-    const duration = calculateDuration(startDate);
-    const updatedDate = new Date().toLocaleDateString();
+    const newItem = getFormData();
+    const allItems = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-    const item = {
-      EquipmentType: form["EquipmentType"].value,
-      Vendor: form["Vendor"].value,
-      BrandModel: form["BrandModel"].value,
-      Profile: form["Profile"].value,
-      Custodian: form["Custodian"].value,
-      AssetNo: form["AssetNo"].value,
-      SerialNumber: form["SerialNumber"].value,
-      Location: form["Location"].value,
-      EndDate: form["EndDate"].value,
-      StartDate: startDate,
-      Hostname: form["Hostname"].value,
-      ["SSOE PO Number"]: form["SSOE PO Number"].value,
-      ["Cart No"]: form["Cart No"].value,
-      SanitiseDate: form["SanitiseDate"].value,
-      ["Lamp Hour"]: form["Lamp Hour"].value,
-      DurationInUse: duration,
-      DateUpdated: updatedDate
-    };
-
-    if (editingRow) {
-      // Update existing row
-      const cells = editingRow.querySelectorAll("td");
-      const values = [
-        "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
-        "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
-        "SSOE PO Number", "Cart No", "SanitiseDate", "DurationInUse", "Lamp Hour", "DateUpdated"
-      ];
-      values.forEach((field, i) => {
-        cells[i].textContent = item[field];
-      });
+    if (editingIndex > -1) {
+      allItems[editingIndex] = newItem;
     } else {
-      addRow(item);
+      allItems.push(newItem);
     }
 
-    saveInventory();
-    inventoryModal.hide();
+    saveInventory(allItems);
+    loadInventory();
+    modal.hide();
+    clearForm();
   });
 
-  // Filter by EquipmentType
-  document.getElementById("filter-equipmenttype").addEventListener("change", function () {
-    const selected = this.value.toLowerCase();
-    [...inventoryTable.rows].forEach(row => {
-      const type = row.cells[0].textContent.toLowerCase();
-      row.style.display = (selected === "all" || type === selected) ? "" : "none";
+  addItemBtn.addEventListener("click", () => {
+    clearForm();
+    modal.show();
+  });
+
+  // Filter functionality
+  const filterSelect = document.getElementById("filter-equipmenttype");
+  filterSelect.addEventListener("change", () => {
+    const selected = filterSelect.value;
+    const all = JSON.parse(localStorage.getItem("inventoryData") || "[]");
+    const filtered = selected === "all" ? all : all.filter(d => d.EquipmentType === selected);
+    tableBody.innerHTML = "";
+    filtered.forEach((item, idx) => {
+      tableBody.appendChild(createRow(item, idx));
     });
   });
 
-  // Search box
-  document.getElementById("search-inventory").addEventListener("input", function () {
-    const search = this.value.toLowerCase();
-    [...inventoryTable.rows].forEach(row => {
-      const match = [...row.cells].some(cell => cell.textContent.toLowerCase().includes(search));
-      row.style.display = match ? "" : "none";
+  // Search functionality
+  const searchBox = document.getElementById("search-inventory");
+  searchBox.addEventListener("input", () => {
+    const term = searchBox.value.toLowerCase();
+    const all = JSON.parse(localStorage.getItem("inventoryData") || "[]");
+    const filtered = all.filter(obj => Object.values(obj).some(v => (v || "").toLowerCase().includes(term)));
+    tableBody.innerHTML = "";
+    filtered.forEach((item, idx) => {
+      tableBody.appendChild(createRow(item, idx));
     });
   });
 
