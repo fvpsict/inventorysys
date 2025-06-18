@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventory Management</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="styles.css" rel="stylesheet" />
 </head>
 <body>
@@ -31,7 +29,7 @@
           <li class="nav-item">
             <a class="nav-link active" href="#">Inventory</a>
           </li>
-          <!-- Add other nav links if needed -->
+          <!-- Other nav items can go here -->
         </ul>
       </div>
     </div>
@@ -40,7 +38,7 @@
   <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2>Inventory</h2>
-      <button class="btn btn-success" id="add-item-btn">Add Item</button>
+      <button class="btn btn-success" id="add-item-btn" type="button">Add Item</button>
     </div>
 
     <div class="table-responsive" style="max-height: 75vh; overflow-y: auto;">
@@ -69,7 +67,7 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Table rows inserted here by inventory.js -->
+          <!-- Inventory rows will be dynamically inserted here -->
         </tbody>
       </table>
     </div>
@@ -117,9 +115,9 @@
               </div>
 
               <div class="col-md-3">
-                <label for="equipment" class="form-label">
-                  Equipment <span id="equipment-required-star" class="text-danger d-none">*</span>
-                </label>
+                <label for="equipment" class="form-label"
+                  >Equipment <span id="equipment-required-star" class="text-danger d-none">*</span></label
+                >
                 <select class="form-select" id="equipment">
                   <option value="">Select Equipment</option>
                   <option value="Desktop">Desktop</option>
@@ -200,14 +198,14 @@
                   type="text"
                   class="form-control"
                   id="durationInUse"
-                  readonly
                   placeholder="Auto calculated"
+                  readonly
                 />
               </div>
 
               <div class="col-md-3">
                 <label for="lampHour" class="form-label">Lamp Hour</label>
-                <input type="number" class="form-control" id="lampHour" min="0" />
+                <input type="number" min="0" class="form-control" id="lampHour" />
               </div>
 
               <div class="col-md-3 d-none">
@@ -216,6 +214,7 @@
               </div>
             </div>
           </div>
+
           <div class="modal-footer">
             <button
               type="button"
@@ -231,9 +230,10 @@
     </div>
   </div>
 
+  <!-- Bootstrap JS Bundle (Popper.js included) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Your inventory.js script -->
   <script src="inventory.js"></script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-  ></script>
 </body>
 </html>
