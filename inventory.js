@@ -1,149 +1,218 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const tableBody = document.querySelector("#inventory-table tbody");
-  const addItemBtn = document.getElementById("add-item-btn");
-  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const form = document.getElementById("inventory-modal-form");
+// Elements
+const inventoryTableBody = document.querySelector('#inventoryTable tbody');
+const addItemBtn = document.getElementById('addItemBtn');
+const inventoryModal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+const inventoryForm = document.getElementById('inventoryForm');
+const filterEquipmentType = document.getElementById('filterEquipmentType');
+const searchInventory = document.getElementById('searchInventory');
 
-  let editingIndex = -1;
+const fields = [
+  "equipmentType","equipment","vendor","brandModel","profile","custodian","assetNo","serialNumber",
+  "location","startDate","endDate","hostname","ssoePoNumber","cartNo","sanitiseDate","lampHour","dateUpdated"
+];
 
-  function loadInventory() {
-    const data = JSON.parse(localStorage.getItem("inventoryData") || "[]");
-    tableBody.innerHTML = "";
-    data.forEach((item, index) => {
-      tableBody.appendChild(createRow(item, index));
-    });
+// Load inventory data from localStorage or empty array
+let inventory = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+let editingIndex = null;
+
+// Utility: format date yyyy-mm-dd to readable
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString();
+}
+
+// Calculate duration in use (years, months) based on StartDate to today or EndDate
+function calculateDuration(startDateStr, endDateStr) {
+  if (!startDateStr) return "";
+  const start = new Date(startDateStr);
+  if (isNaN(start)) return "";
+  const end = endDateStr && new Date(endDateStr) || new Date();
+
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  if (years < 0) return "";
+
+  let result = "";
+  if (years > 0) result += years + " yr" + (years > 1 ? "s" : "");
+  if (months > 0) result += (result ? " " : "") + months + " mo" + (months > 1 ? "s" : "");
+  return result || "<1 mo";
+}
+
+// Render the inventory table rows with filter and search applied
+function renderTable() {
+  const filterVal = filterEquipmentType.value.toLowerCase();
+  const searchVal = searchInventory.value.toLowerCase();
+
+  inventoryTableBody.innerHTML = '';
+
+  inventory.forEach((item, index) => {
+    // Filter by EquipmentType if not "all"
+    if (filterVal !== 'all' && item.equipmentType.toLowerCase() !== filterVal) return;
+
+    // Search in all string fields
+    const searchableString = fields.map(f => (item[f] || "").toString().toLowerCase()).join(' ');
+    if (!searchableString.includes(searchVal)) return;
+
+    const tr = document.createElement('tr');
+
+    // Add table cells
+    tr.innerHTML = `
+      <td>${item.equipmentType || ""}</td>
+      <td>${item.equipment || ""}</td>
+      <td>${item.vendor || ""}</td>
+      <td>${item.brandModel || ""}</td>
+      <td>${item.profile || ""}</td>
+      <td>${item.custodian || ""}</td>
+      <td>${item.assetNo || ""}</td>
+      <td>${item.serialNumber || ""}</td>
+      <td>${item.location || ""}</td>
+      <td>${formatDate(item.startDate)}</td>
+      <td>${formatDate(item.endDate)}</td>
+      <td>${calculateDuration(item.startDate, item.endDate)}</td>
+      <td>${item.hostname || ""}</td>
+      <td>${item.ssoePoNumber || ""}</td>
+      <td>${item.cartNo || ""}</td>
+      <td>${formatDate(item.sanitiseDate)}</td>
+      <td>${item.lampHour || ""}</td>
+      <td>${item.dateUpdated || ""}</td>
+      <td>
+        <button class="btn-edit btn btn-sm btn-primary" data-index="${index}">Edit</button>
+        <button class="btn-delete btn btn-sm btn-danger" data-index="${index}">Delete</button>
+      </td>
+    `;
+
+    inventoryTableBody.appendChild(tr);
+  });
+}
+
+// Reset form inputs
+function resetForm() {
+  inventoryForm.reset();
+  editingIndex = null;
+  document.getElementById('dateUpdated').value = "";
+  inventoryForm.classList.remove('was-validated');
+  document.getElementById('equipmentType').focus();
+}
+
+// Populate form fields for editing
+function populateForm(index) {
+  const item = inventory[index];
+  if (!item) return;
+
+  editingIndex = index;
+  document.getElementById('equipmentType').value = item.equipmentType || "";
+  document.getElementById('equipment').value = item.equipment || "";
+  document.getElementById('vendor').value = item.vendor || "";
+  document.getElementById('brandModel').value = item.brandModel || "";
+  document.getElementById('profile').value = item.profile || "";
+  document.getElementById('custodian').value = item.custodian || "";
+  document.getElementById('assetNo').value = item.assetNo || "";
+  document.getElementById('serialNumber').value = item.serialNumber || "";
+  document.getElementById('location').value = item.location || "";
+  document.getElementById('startDate').value = item.startDate || "";
+  document.getElementById('endDate').value = item.endDate || "";
+  document.getElementById('hostname').value = item.hostname || "";
+  document.getElementById('ssoePoNumber').value = item.ssoePoNumber || "";
+  document.getElementById('cartNo').value = item.cartNo || "";
+  document.getElementById('sanitiseDate').value = item.sanitiseDate || "";
+  document.getElementById('lampHour').value = item.lampHour || "";
+  document.getElementById('dateUpdated').value = item.dateUpdated || "";
+}
+
+// Save or update inventory item from form data
+function saveItem(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!inventoryForm.checkValidity()) {
+    inventoryForm.classList.add('was-validated');
+    return;
   }
 
-  function saveInventory(data) {
-    localStorage.setItem("inventoryData", JSON.stringify(data));
-  }
+  const now = new Date();
+  const dateUpdatedStr = now.toLocaleDateString();
 
-  function getFormData() {
-    const formData = new FormData(form);
-    const item = {};
-    formData.forEach((value, key) => {
-      item[key] = value;
-    });
+  const newItem = {
+    equipmentType: document.getElementById('equipmentType').value.trim(),
+    equipment: document.getElementById('equipment').value.trim(),
+    vendor: document.getElementById('vendor').value.trim(),
+    brandModel: document.getElementById('brandModel').value.trim(),
+    profile: document.getElementById('profile').value.trim(),
+    custodian: document.getElementById('custodian').value.trim(),
+    assetNo: document.getElementById('assetNo').value.trim(),
+    serialNumber: document.getElementById('serialNumber').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    startDate: document.getElementById('startDate').value,
+    endDate: document.getElementById('endDate').value,
+    hostname: document.getElementById('hostname').value.trim(),
+    ssoePoNumber: document.getElementById('ssoePoNumber').value.trim(),
+    cartNo: document.getElementById('cartNo').value.trim(),
+    sanitiseDate: document.getElementById('sanitiseDate').value,
+    lampHour: document.getElementById('lampHour').value.trim(),
+    dateUpdated: dateUpdatedStr
+  };
 
-    item["DateUpdated"] = new Date().toISOString().split("T")[0];
-    item["Duration in use"] = calculateDuration(item["StartDate"], item["EndDate"]);
-    return item;
-  }
-
-  function fillForm(data) {
-    Object.entries(data).forEach(([key, value]) => {
-      const input = form.elements[key];
-      if (input) input.value = value;
-    });
-  }
-
-  function clearForm() {
-    form.reset();
-    editingIndex = -1;
-    form.elements["DateUpdated"].value = "";
-  }
-
-  function calculateDuration(start, end) {
-    if (!start || !end) return "";
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    let years = endDate.getFullYear() - startDate.getFullYear();
-    let months = endDate.getMonth() - startDate.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
+  if (editingIndex !== null) {
+    // Update existing item
+    inventory[editingIndex] = newItem;
+  } else {
+    // Prevent duplicate AssetNo
+    if (inventory.some(item => item.assetNo.toLowerCase() === newItem.assetNo.toLowerCase())) {
+      alert('AssetNo must be unique. This AssetNo already exists.');
+      return;
     }
-    return `${years}y ${months}m`;
+    inventory.push(newItem);
   }
 
-  function createRow(data, index) {
-    const tr = document.createElement("tr");
-    const headers = [
-      "EquipmentType", "Equipment", "Vendor", "BrandModel", "Profile", "Custodian", "AssetNo",
-      "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
-      "SSOE PO Number", "Cart No", "SanitiseDate", "Duration in use", "Lamp Hour", "DateUpdated"
-    ];
+  localStorage.setItem('inventoryData', JSON.stringify(inventory));
+  renderTable();
+  inventoryModal.hide();
+  resetForm();
+}
 
-    headers.forEach((field) => {
-      const td = document.createElement("td");
-      td.textContent = data[field] || "";
-      tr.appendChild(td);
-    });
-
-    const actionTd = document.createElement("td");
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-sm btn-primary me-2";
-    editBtn.textContent = "Edit";
-    editBtn.onclick = () => {
-      editingIndex = index;
-      fillForm(data);
-      modal.show();
-    };
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn btn-sm btn-danger";
-    deleteBtn.textContent = "Delete";
-    deleteBtn.onclick = () => {
-      if (confirm("Delete this entry?")) {
-        const all = JSON.parse(localStorage.getItem("inventoryData") || "[]");
-        all.splice(index, 1);
-        saveInventory(all);
-        loadInventory();
-      }
-    };
-
-    actionTd.appendChild(editBtn);
-    actionTd.appendChild(deleteBtn);
-    tr.appendChild(actionTd);
-
-    return tr;
+// Delete item from inventory
+function deleteItem(index) {
+  if (confirm('Are you sure you want to delete this item?')) {
+    inventory.splice(index, 1);
+    localStorage.setItem('inventoryData', JSON.stringify(inventory));
+    renderTable();
   }
+}
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const newItem = getFormData();
-    const allItems = JSON.parse(localStorage.getItem("inventoryData") || "[]");
+// Event listeners
 
-    if (editingIndex > -1) {
-      allItems[editingIndex] = newItem;
-    } else {
-      allItems.push(newItem);
-    }
-
-    saveInventory(allItems);
-    loadInventory();
-    modal.hide();
-    clearForm();
-  });
-
-  addItemBtn.addEventListener("click", () => {
-    clearForm();
-    modal.show();
-  });
-
-  // Filter functionality
-  const filterSelect = document.getElementById("filter-equipmenttype");
-  filterSelect.addEventListener("change", () => {
-    const selected = filterSelect.value;
-    const all = JSON.parse(localStorage.getItem("inventoryData") || "[]");
-    const filtered = selected === "all" ? all : all.filter(d => d.EquipmentType === selected);
-    tableBody.innerHTML = "";
-    filtered.forEach((item, idx) => {
-      tableBody.appendChild(createRow(item, idx));
-    });
-  });
-
-  // Search functionality
-  const searchBox = document.getElementById("search-inventory");
-  searchBox.addEventListener("input", () => {
-    const term = searchBox.value.toLowerCase();
-    const all = JSON.parse(localStorage.getItem("inventoryData") || "[]");
-    const filtered = all.filter(obj => Object.values(obj).some(v => (v || "").toLowerCase().includes(term)));
-    tableBody.innerHTML = "";
-    filtered.forEach((item, idx) => {
-      tableBody.appendChild(createRow(item, idx));
-    });
-  });
-
-  loadInventory();
+// Add Item button resets form and opens modal
+addItemBtn.addEventListener('click', () => {
+  resetForm();
+  inventoryModal.show();
 });
+
+// Edit button clicks
+inventoryTableBody.addEventListener('click', e => {
+  if (e.target.classList.contains('btn-edit')) {
+    const idx = parseInt(e.target.getAttribute('data-index'), 10);
+    populateForm(idx);
+    inventoryModal.show();
+  }
+  if (e.target.classList.contains('btn-delete')) {
+    const idx = parseInt(e.target.getAttribute('data-index'), 10);
+    deleteItem(idx);
+  }
+});
+
+// Save form submission
+inventoryForm.addEventListener('submit', saveItem);
+
+// Filter and Search
+filterEquipmentType.addEventListener('change', renderTable);
+searchInventory.addEventListener('input', renderTable);
+
+// Initial render
+renderTable();
