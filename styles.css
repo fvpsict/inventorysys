@@ -1,81 +1,149 @@
-/* General body */
+/* Reset */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding-top: 70px; /* Space for fixed navbar */
   background-color: #f8f9fa;
-  padding-top: 56px; /* for fixed navbar */
   color: #212529;
 }
 
-/* Navbar brand smaller on mobile */
+/* Navbar */
 .navbar-brand {
-  font-weight: 600;
-  font-size: 1.25rem;
+  font-weight: bold;
 }
 
-/* Table header with blue background */
-.inventory-table thead th {
-  background-color: #0d6efd;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+.navbar .nav-link.active {
+  font-weight: bold;
+  color: #ffffff !important;
 }
 
-/* Table cell vertical alignment */
-.inventory-table td,
-.inventory-table th {
+.navbar .nav-link:hover {
+  text-decoration: underline;
+}
+
+/* Table Styling */
+.table thead th {
+  background-color: #007bff;
+  color: white;
   vertical-align: middle;
-  white-space: nowrap;
+  text-align: center;
 }
 
-/* Filter/Search container alignment */
-.filter-search-container label {
-  margin-bottom: 0;
+.table tbody td {
+  vertical-align: middle;
+}
+
+.table-responsive {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Form Inputs */
+.form-control,
+.form-select {
+  border-radius: 4px;
+}
+
+label.form-label.fw-bold {
+  margin-right: 10px;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 4px;
+}
+
+.btn-primary,
+.btn-success {
+  color: white;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+  opacity: 0.9;
+}
+
+/* Layout & Utility */
+main.container,
+main.container-fluid {
+  padding-top: 20px;
+}
+
+#search-inventory {
+  min-width: 200px;
+}
+
+.d-flex.align-items-center.gap-2 > * {
+  margin-right: 10px;
+}
+
+select.form-select.w-auto {
+  width: auto;
+  display: inline-block;
+}
+
+/* Modal */
+.modal-header {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.modal-title {
   font-weight: 600;
 }
 
-/* Modal labels */
-.modal-body label {
-  font-weight: 600;
+.modal-footer .btn {
+  min-width: 100px;
 }
 
-/* Buttons spacing */
-.btn + .btn {
-  margin-left: 0.5rem;
+/* Horizontal Form Layout in Modal */
+.modal-body .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-/* Responsive tweaks */
-@media (max-width: 575.98px) {
-  .filter-search-container {
+.modal-body .col-md-6 {
+  flex: 1 1 48%;
+}
+
+@media (max-width: 768px) {
+  .modal-body .col-md-6 {
+    flex: 1 1 100%;
+  }
+}
+
+/* Scrollable Modal */
+.modal-dialog {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.modal-content {
+  overflow-y: auto;
+  max-height: 85vh;
+  padding-right: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .navbar .navbar-brand {
+    font-size: 1rem;
+  }
+
+  #search-inventory {
+    min-width: 100%;
+    margin-top: 10px;
+  }
+
+  .d-flex.justify-content-between {
     flex-direction: column;
     align-items: stretch;
   }
-  .filter-search-container label,
-  .filter-search-container select,
-  .filter-search-container input {
-    width: 100%;
-    margin-bottom: 0.5rem;
+
+  .table-responsive {
+    max-height: 60vh;
   }
-}
-
-/* Hover on buttons */
-.btn-edit {
-  color: white;
-  background-color: #0d6efd;
-  border: none;
-}
-
-.btn-edit:hover {
-  background-color: #0b5ed7;
-}
-
-.btn-delete {
-  color: white;
-  background-color: #dc3545;
-  border: none;
-}
-
-.btn-delete:hover {
-  background-color: #bb2d3b;
 }
