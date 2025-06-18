@@ -1,75 +1,71 @@
-/* General Body and Layout */
+/* Base font and background */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
-  padding-top: 70px; /* space for fixed navbar */
 }
 
-/* Headings */
-h2 {
-  margin-bottom: 20px;
-  font-weight: 600;
+/* Navbar hover - yellow */
+.navbar-nav .nav-link:hover {
+  color: yellow !important;
 }
 
-/* Table Styling */
+/* Table full width and responsive */
 .table {
-  min-width: 1400px;
-  width: 100%;
+  width: 100% !important;
+  table-layout: auto;
+  white-space: nowrap;
 }
 
-.table th {
-  background-color: #007bff;
-  color: white;
-  text-align: center;
-  vertical-align: middle;
-}
-
+.table th,
 .table td {
   vertical-align: middle;
 }
 
-/* Table Container */
-.table-responsive {
-  overflow-x: auto;
+/* Bold table header specifically for patching-report */
+#patchTable thead th {
+  font-weight: 700 !important;
 }
 
-/* Filter/Search Row */
-#add-fault-btn {
-  margin-bottom: 15px;
+
+/* Table header blue background */
+.inventory-table thead th {
+  background-color: #007bff !important;
+  color: white;
 }
 
-#search-fault {
-  width: 100%;
+/* Responsive modal scroll */
+.modal-dialog-scrollable .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
-/* Form Elements */
-.form-label {
-  font-weight: 500;
+/* Buttons and inputs spacing */
+input[type="search"],
+select.form-select {
+  min-width: 200px;
 }
 
-.modal .form-control,
-.modal .form-select {
-  font-size: 14px;
+button,
+input,
+select {
+  border-radius: 0.375rem !important;
 }
 
-/* Action Buttons */
-.actions-column button {
-  margin-right: 5px;
+/* Patching Report Header Bold */
+#patchTable thead th {
+  font-weight: bold;
 }
 
-/* Modal Dialog */
-.modal-lg {
-  max-width: 90%;
-}
-
-/* Responsive Adjustments */
+/* Filter/search/add row spacing on small screens */
 @media (max-width: 768px) {
-  .modal-lg {
-    max-width: 95%;
+  .d-flex.flex-wrap.gap-3 {
+    flex-direction: column;
+    align-items: stretch;
   }
+}
 
-  #search-fault {
-    margin-top: 10px;
-  }
+#searchInput {
+  max-width: 100px;  /* or any width you prefer */
+  display: inline-block;
 }
