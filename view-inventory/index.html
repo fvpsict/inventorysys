@@ -10,12 +10,9 @@
     body {
       padding-top: 70px; /* Account for fixed navbar */
     }
+    /* Navbar menu hover color: yellow */
     .navbar-nav .nav-link:hover {
       color: yellow !important;
-    }
-    /* Shorter search input */
-    #search-inventory {
-      max-width: 300px;
     }
   </style>
 </head>
@@ -30,8 +27,8 @@
     </button>
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="https://fvpsict.github.io/inventorysys/index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">View Inventory</a></li>
+        <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">View Inventory</a></li>
         <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
         <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
       </ul>
@@ -41,7 +38,7 @@
 
 <!-- Main Container -->
 <div class="container py-4">
-  <h1 class="mb-3">View Inventory</h1>
+  <h1 class="mb-4">View Inventory</h1>
 
   <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-3">
     <div>
@@ -64,7 +61,7 @@
     </div>
 
     <div class="flex-grow-1">
-      <label for="search-inventory" class="col-form-label">Search Inventory</label>
+      <label for="search-inventory" class="col-sm-2 col-form-label">Search Inventory</label>
       <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
     </div>
 
@@ -79,7 +76,6 @@
         <tr>
           <th>EquipmentType</th>
           <th>Vendor</th>
-          <th>Equipment</th>
           <th>BrandModel</th>
           <th>Profile</th>
           <th>Custodian</th>
@@ -132,18 +128,6 @@
               <option>AV</option>
             </select>
           </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Equipment</label>
-            <select class="form-select" name="Equipment">
-              <option value="">Select</option>
-              <option value="Desktop">Desktop</option>
-              <option value="Laptop">Laptop</option>
-              <option value="iPad">iPad</option>
-              <option value="Mobile Cart">Mobile Cart</option>
-            </select>
-          </div>
-
           <div class="col-md-3">
             <label class="form-label">Vendor</label>
             <input type="text" class="form-control" name="Vendor" />
