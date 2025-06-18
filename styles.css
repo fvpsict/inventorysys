@@ -1,132 +1,113 @@
 /* styles.css */
 
-/* General body and font */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
   margin: 0;
   padding: 0;
 }
 
-/* Container padding */
-.container {
-  padding-top: 1rem;
-  padding-bottom: 2rem;
+/* Navbar */
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #ffc107 !important; /* amber/yellow highlight */
 }
 
-/* Inventory table styles */
-#inventory-table {
+/* Container spacing */
+.container {
+  max-width: 1200px;
+}
+
+/* Inventory Table */
+.inventory-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-/* Table header with blue background */
-#inventory-table thead th {
-  background-color: #007bff;
-  color: white;
-  text-align: center;
-  vertical-align: middle;
-  padding: 10px;
+.inventory-table thead th {
+  background-color: #0d6efd; /* Bootstrap primary blue */
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
   user-select: none;
 }
 
-/* Table body cells */
-#inventory-table tbody td {
-  padding: 8px 10px;
+.inventory-table tbody tr:hover {
+  background-color: #e9f5ff;
+}
+
+.inventory-table th,
+.inventory-table td {
   vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid #dee2e6;
   text-align: center;
-  word-break: break-word;
 }
 
-/* Zebra striping on table rows */
-#inventory-table tbody tr:nth-child(even) {
-  background-color: #f2f2f2;
+/* Buttons in table */
+.inventory-table .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
 }
 
-/* Buttons consistent size in table */
-#inventory-table button.btn-sm {
-  min-width: 65px;
+/* Responsive Table Wrapper */
+.table-responsive {
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  background-color: #fff;
 }
 
-/* Form inside modal styling */
-.modal-body form label {
+/* Modal Form */
+.modal-body .form-label {
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.modal-body form input,
-.modal-body form select {
-  width: 100%;
+.modal-body input,
+.modal-body select {
+  font-size: 0.9rem;
   padding: 6px 8px;
-  margin-top: 4px;
-  margin-bottom: 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  box-sizing: border-box;
-  font-size: 1rem;
 }
 
-/* Modal header styling */
-.modal-header {
-  background-color: #007bff;
-  color: white;
-  border-bottom: 2px solid #0056b3;
+/* Modal */
+.modal-content {
+  border-radius: 0.5rem;
+}
+
+/* Form feedback and errors (if needed) */
+.is-invalid {
+  border-color: #dc3545 !important;
+  padding-right: calc(1.5em + 0.75rem);
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Filter and Search Inputs */
+#filter-equipmenttype,
+#search-inventory {
+  max-width: 300px;
 }
 
 /* Buttons */
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-  background-color: #0056b3;
-  border-color: #0056b3;
-}
-
-.btn-success {
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-.btn-success:hover,
-.btn-success:focus {
-  background-color: #1e7e34;
-  border-color: #1e7e34;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-danger:hover,
-.btn-danger:focus {
-  background-color: #b02a37;
-  border-color: #b02a37;
-}
-
-/* Filter and search bar container */
-#filter-equipmenttype,
-#search-inventory {
-  max-width: 250px;
-  margin-left: 10px;
-  display: inline-block;
+#add-item-btn {
+  min-width: 120px;
+  font-weight: 600;
 }
 
 /* Responsive adjustments */
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
+  .modal-xl {
+    max-width: 90vw;
+  }
+
   #filter-equipmenttype,
   #search-inventory {
     max-width: 100%;
-    margin-left: 0;
-    margin-bottom: 10px;
-  }
-
-  #add-item-btn {
-    width: 100%;
-    margin-top: 10px;
   }
 }
