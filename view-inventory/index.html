@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-category="Inventory">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FVPS Inventory System - View Inventory</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="../styles.css" rel="stylesheet" />
 </head>
 <body>
@@ -13,13 +13,21 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
   <div class="container-fluid">
     <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#nav"
+      aria-controls="nav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">View Inventory</a></li>
         <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
         <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
       </ul>
@@ -30,14 +38,13 @@
 <main class="container-fluid mt-4">
 
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <label for="filter-category" class="form-label fw-bold mb-0">Filter by Equipment Type:</label>
-      <select id="filter-category" class="form-select w-auto">
+    <div class="filter-search-container d-flex align-items-center gap-2 flex-wrap">
+      <label for="filterEquipmentType" class="form-label fw-bold mb-0 me-2">Filter EquipmentType:</label>
+      <select id="filterEquipmentType" class="form-select w-auto">
         <option value="">All</option>
         <option value="SSOE">SSOE</option>
         <option value="Projector">Projector</option>
         <option value="Projector Screen">Projector Screen</option>
-        <option value="Visualiser">Visualiser</option>
         <option value="Patch Panel">Patch Panel</option>
         <option value="Macbook">Macbook</option>
         <option value="Speaker">Speaker</option>
@@ -48,18 +55,19 @@
         <option value="OMR">OMR</option>
         <option value="Hansvision">Hansvision</option>
       </select>
+      <input
+        id="searchInventory"
+        type="search"
+        placeholder="Search Inventory..."
+        class="form-control"
+        style="min-width: 200px;"
+      />
     </div>
-
-    <div class="d-flex align-items-center gap-2">
-      <label for="search-inventory" class="form-label fw-bold mb-0">Search:</label>
-      <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
-    </div>
-
-    <button id="add-item-btn" class="btn btn-success">Add Item</button>
+    <button id="addItemBtn" class="btn btn-success">Add Item</button>
   </div>
 
   <div class="table-responsive">
-    <table id="inventory-table" class="table table-striped table-bordered align-middle text-center">
+    <table id="inventoryTable" class="table inventory-table table-striped table-bordered">
       <thead>
         <tr>
           <th>EquipmentType</th>
@@ -71,9 +79,10 @@
           <th>AssetNo</th>
           <th>SerialNumber</th>
           <th>Location</th>
-          <th>StartDate</th>
           <th>EndDate</th>
-          <th>Duration in Use</th>
+          <th>StartDate</th>
+          <th>Duration in use</th>
+          <th>Hostname</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -81,110 +90,190 @@
     </table>
   </div>
 
-</main>
-
-<!-- Modal -->
-<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <form id="itemForm" novalidate>
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="itemModalLabel">Add Inventory Item</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+  <!-- Modal -->
+  <div
+    class="modal fade"
+    id="inventoryModal"
+    tabindex="-1"
+    aria-labelledby="inventoryModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg">
+      <form id="inventoryForm" class="modal-content needs-validation" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title" id="inventoryModalLabel">Add / Edit Inventory Item</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
-
         <div class="modal-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label for="equipmentType" class="form-label fw-bold">Equipment Type <span class="text-danger">*</span></label>
-              <select id="equipmentType" name="equipmentType" class="form-select" required>
-                <option value="" selected disabled>Select Equipment Type</option>
-                <option>SSOE</option>
-                <option>Projector</option>
-                <option>Projector Screen</option>
-                <option>Visualiser</option>
-                <option>Patch Panel</option>
-                <option>Macbook</option>
-                <option>Speaker</option>
-                <option>Apple TV</option>
-                <option>SMax</option>
-                <option>Portable HDD</option>
-                <option>TV</option>
-                <option>OMR</option>
-                <option>Hansvision</option>
+              <label for="equipmentType" class="form-label fw-bold">EquipmentType *</label>
+              <select
+                class="form-select"
+                id="equipmentType"
+                name="equipmentType"
+                required
+              >
+                <option value="" selected disabled>Select EquipmentType</option>
+                <option value="SSOE">SSOE</option>
+                <option value="Projector">Projector</option>
+                <option value="Projector Screen">Projector Screen</option>
+                <option value="Patch Panel">Patch Panel</option>
+                <option value="Macbook">Macbook</option>
+                <option value="Speaker">Speaker</option>
+                <option value="Apple TV">Apple TV</option>
+                <option value="SMax">SMax</option>
+                <option value="Portable HDD">Portable HDD</option>
+                <option value="TV">TV</option>
+                <option value="OMR">OMR</option>
+                <option value="Hansvision">Hansvision</option>
               </select>
-              <div class="invalid-feedback">Please select Equipment Type</div>
+              <div class="invalid-feedback">
+                Please select EquipmentType.
+              </div>
             </div>
-
-            <div class="col-md-6">
-              <label for="equipment" class="form-label fw-bold">Equipment</label>
-              <select id="equipment" name="equipment" class="form-select" disabled>
-                <option value="" selected>Select Equipment</option>
-                <option>Desktop</option>
-                <option>Laptop</option>
-                <option>iPad</option>
-                <option>Mobile Cart</option>
+            <div class="col-md-6" id="equipmentContainer" style="display:none;">
+              <label for="equipment" class="form-label fw-bold">Equipment *</label>
+              <select class="form-select" id="equipment" name="equipment">
+                <option value="" selected disabled>Select Equipment</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Laptop">Laptop</option>
+                <option value="iPad">iPad</option>
+                <option value="Mobile Cart">Mobile Cart</option>
               </select>
+              <div class="invalid-feedback">
+                Please select Equipment.
+              </div>
             </div>
 
             <div class="col-md-6">
               <label for="vendor" class="form-label fw-bold">Vendor</label>
-              <input type="text" id="vendor" name="vendor" class="form-control" />
+              <input
+                type="text"
+                class="form-control"
+                id="vendor"
+                name="vendor"
+                maxlength="100"
+              />
             </div>
-
             <div class="col-md-6">
-              <label for="brandModel" class="form-label fw-bold">Brand / Model</label>
-              <input type="text" id="brandModel" name="brandModel" class="form-control" />
+              <label for="brandModel" class="form-label fw-bold">BrandModel</label>
+              <input
+                type="text"
+                class="form-control"
+                id="brandModel"
+                name="brandModel"
+                maxlength="100"
+              />
             </div>
-
             <div class="col-md-6">
               <label for="profile" class="form-label fw-bold">Profile</label>
-              <input type="text" id="profile" name="profile" class="form-control" />
+              <input
+                type="text"
+                class="form-control"
+                id="profile"
+                name="profile"
+                maxlength="100"
+              />
             </div>
-
             <div class="col-md-6">
               <label for="custodian" class="form-label fw-bold">Custodian</label>
-              <input type="text" id="custodian" name="custodian" class="form-control" />
+              <input
+                type="text"
+                class="form-control"
+                id="custodian"
+                name="custodian"
+                maxlength="100"
+              />
             </div>
-
             <div class="col-md-6">
-              <label for="assetNo" class="form-label fw-bold">Asset No</label>
-              <input type="text" id="assetNo" name="assetNo" class="form-control" />
+              <label for="assetNo" class="form-label fw-bold">AssetNo *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="assetNo"
+                name="assetNo"
+                maxlength="50"
+                required
+              />
+              <div class="invalid-feedback">
+                AssetNo is required.
+              </div>
             </div>
-
             <div class="col-md-6">
-              <label for="serialNumber" class="form-label fw-bold">Serial Number</label>
-              <input type="text" id="serialNumber" name="serialNumber" class="form-control" />
+              <label for="serialNumber" class="form-label fw-bold">SerialNumber</label>
+              <input
+                type="text"
+                class="form-control"
+                id="serialNumber"
+                name="serialNumber"
+                maxlength="100"
+              />
             </div>
-
             <div class="col-md-6">
               <label for="location" class="form-label fw-bold">Location</label>
-              <input type="text" id="location" name="location" class="form-control" />
+              <input
+                type="text"
+                class="form-control"
+                id="location"
+                name="location"
+                maxlength="100"
+              />
             </div>
-
             <div class="col-md-6">
-              <label for="startDate" class="form-label fw-bold">Start Date</label>
-              <input type="date" id="startDate" name="startDate" class="form-control" />
+              <label for="startDate" class="form-label fw-bold">StartDate</label>
+              <input
+                type="date"
+                class="form-control"
+                id="startDate"
+                name="startDate"
+              />
             </div>
-
             <div class="col-md-6">
-              <label for="endDate" class="form-label fw-bold">End Date</label>
-              <input type="date" id="endDate" name="endDate" class="form-control" />
+              <label for="endDate" class="form-label fw-bold">EndDate</label>
+              <input
+                type="date"
+                class="form-control"
+                id="endDate"
+                name="endDate"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="hostname" class="form-label fw-bold">Hostname</label>
+              <input
+                type="text"
+                class="form-control"
+                id="hostname"
+                name="hostname"
+                maxlength="100"
+              />
             </div>
           </div>
         </div>
-
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save Item</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">
+            Save Item
+          </button>
         </div>
       </form>
     </div>
   </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../inventory.js"></script>
+<script src="inventory.js"></script>
 
 </body>
 </html>
