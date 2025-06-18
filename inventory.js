@@ -100,21 +100,27 @@ function renderTable() {
 // Attach edit and delete button listeners
 function attachRowListeners() {
   document.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const idx = Number(e.target.dataset.index);
-      openEditModal(idx);
-    });
+    btn.removeEventListener('click', editHandler);
+    btn.addEventListener('click', editHandler);
   });
 
   document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const idx = Number(e.target.dataset.index);
-      if (confirm('Are you sure you want to delete this item?')) {
-        inventory.splice(idx, 1);
-        saveAndRender();
-      }
-    });
+    btn.removeEventListener('click', deleteHandler);
+    btn.addEventListener('click', deleteHandler);
   });
+}
+
+function editHandler(e) {
+  const idx = Number(e.target.dataset.index);
+  openEditModal(idx);
+}
+
+function deleteHandler(e) {
+  const idx = Number(e.target.dataset.index);
+  if (confirm('Are you sure you want to delete this item?')) {
+    inventory.splice(idx, 1);
+    saveAndRender();
+  }
 }
 
 // Open modal for add or edit
