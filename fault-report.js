@@ -1,130 +1,135 @@
-// fault-report.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fault Report</title>
 
-document.addEventListener('DOMContentLoaded', () => {
-  const faultTableBody = document.querySelector('#faultTable tbody');
-  const faultForm = document.getElementById('faultForm');
-  const faultModal = new bootstrap.Modal(document.getElementById('faultModal'));
-  const modalTitle = document.getElementById('faultModalLabel');
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-  let faults = JSON.parse(localStorage.getItem('faults')) || [];
-  let editingIndex = null;
+  <!-- Your custom styles -->
+  <link href="../styles.css" rel="stylesheet" />
+</head>
+<body>
+  <!-- Navbar (optional, update links as needed) -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">FVPS Inventory System</a>
+      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">View Inventory</a></li>
+          <li class="nav-item"><a class="nav-link active" href="fault-report.html">Fault Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="patching/patching-report.html">Patching Report</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    const options = { day: '2-digit', month: 'long', year: 'numeric' };
-    return d.toLocaleDateString(undefined, options);
-  }
+  <main class="container my-5 pt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Fault Report</h2>
+      <button class="btn btn-primary" id="addFaultBtn" data-bs-toggle="modal" data-bs-target="#faultModal">Add Fault</button>
+    </div>
 
-  // Render the table rows from faults array
-  function renderTable() {
-    faultTableBody.innerHTML = '';
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="faultTable">
+        <thead class="table-primary">
+          <tr>
+            <th>Equipment</th>
+            <th>Equipment Type</th>
+            <th>Asset No</th>
+            <th>Fault Description</th>
+            <th>Status</th>
+            <th>Date Reported</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows injected by fault-report.js -->
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-    faults.forEach((fault, index) => {
-      const tr = document.createElement('tr');
+  <!-- Modal for Add/Edit Fault -->
+  <div class="modal fade" id="faultModal" tabindex="-1" aria-labelledby="faultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="faultForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="faultModalLabel">Add Fault</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="faultEquipment" class="form-label">Equipment</label>
+                <select id="faultEquipment" name="faultEquipment" class="form-select" required>
+                  <option value="">Select Equipment</option>
+                  <option>Desktop</option>
+                  <option>Laptop</option>
+                  <option>iPad</option>
+                  <option>Mobile Cart</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="faultEquipmentType" class="form-label">Equipment Type</label>
+                <select id="faultEquipmentType" name="faultEquipmentType" class="form-select" required>
+                  <option value="">Select Equipment Type</option>
+                  <option>SSOE</option>
+                  <option>Projector</option>
+                  <option>Projector Screen</option>
+                  <option>Touch Panel</option>
+                  <option>Visualiser</option>
+                  <option>SMax</option>
+                  <option>Macbook</option>
+                  <option>Portable HDD</option>
+                  <option>TV</option>
+                  <option>Monitor</option>
+                  <option>OMR</option>
+                  <option>AV</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="faultAssetNo" class="form-label">Asset No</label>
+                <input type="text" id="faultAssetNo" name="faultAssetNo" class="form-control" placeholder="Optional" />
+              </div>
+              <div class="col-md-6">
+                <label for="faultDescription" class="form-label">Fault Description</label>
+                <textarea id="faultDescription" name="faultDescription" class="form-control" rows="3" required></textarea>
+              </div>
+              <div class="col-md-6">
+                <label for="faultStatus" class="form-label">Status</label>
+                <select id="faultStatus" name="faultStatus" class="form-select" required>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="faultDateReported" class="form-label">Date Reported</label>
+                <input type="date" id="faultDateReported" name="faultDateReported" class="form-control" required />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Fault</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-      tr.innerHTML = `
-        <td>${fault.equipment}</td>
-        <td>${fault.equipmentType}</td>
-        <td>${fault.assetNo || ''}</td>
-        <td>${fault.description}</td>
-        <td>${fault.status}</td>
-        <td>${formatDate(fault.dateReported)}</td>
-        <td>
-          <button class="btn btn-sm btn-primary me-2 edit-btn">Edit</button>
-          <button class="btn btn-sm btn-danger delete-btn">Delete</button>
-        </td>
-      `;
-
-      // Edit button handler
-      tr.querySelector('.edit-btn').addEventListener('click', () => {
-        editingIndex = index;
-        modalTitle.textContent = 'Edit Fault';
-        fillForm(fault);
-        faultModal.show();
-      });
-
-      // Delete button handler
-      tr.querySelector('.delete-btn').addEventListener('click', () => {
-        if (confirm('Are you sure you want to delete this fault report?')) {
-          faults.splice(index, 1);
-          saveFaults();
-          renderTable();
-        }
-      });
-
-      faultTableBody.appendChild(tr);
-    });
-  }
-
-  // Fill form inputs with fault data for editing
-  function fillForm(fault) {
-    faultForm.faultEquipment.value = fault.equipment;
-    faultForm.faultEquipmentType.value = fault.equipmentType;
-    faultForm.faultAssetNo.value = fault.assetNo || '';
-    faultForm.faultDescription.value = fault.description;
-    faultForm.faultStatus.value = fault.status;
-    faultForm.faultDateReported.value = fault.dateReported;
-  }
-
-  // Clear form inputs for adding new fault
-  function clearForm() {
-    faultForm.reset();
-    editingIndex = null;
-    modalTitle.textContent = 'Add Fault';
-  }
-
-  // Save faults array to localStorage
-  function saveFaults() {
-    localStorage.setItem('faults', JSON.stringify(faults));
-  }
-
-  // Handle form submit
-  faultForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    // Validate required fields
-    const equipment = faultForm.faultEquipment.value.trim();
-    const equipmentType = faultForm.faultEquipmentType.value.trim();
-    const description = faultForm.faultDescription.value.trim();
-    const status = faultForm.faultStatus.value;
-    const dateReported = faultForm.faultDateReported.value;
-
-    if (!equipment || !equipmentType || !description || !status || !dateReported) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    const assetNo = faultForm.faultAssetNo.value.trim();
-
-    const faultData = {
-      equipment,
-      equipmentType,
-      assetNo,
-      description,
-      status,
-      dateReported,
-    };
-
-    if (editingIndex !== null) {
-      // Update existing
-      faults[editingIndex] = faultData;
-    } else {
-      // Add new
-      faults.push(faultData);
-    }
-
-    saveFaults();
-    renderTable();
-    faultModal.hide();
-    clearForm();
-  });
-
-  // Clear form on modal hidden (optional)
-  document.getElementById('faultModal').addEventListener('hidden.bs.modal', () => {
-    clearForm();
-  });
-
-  // Initial render
-  renderTable();
-});
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Your fault-report.js -->
+  <script src="fault-report.js"></script>
+</body>
+</html>
