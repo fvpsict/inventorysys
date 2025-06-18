@@ -1,142 +1,157 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const inventoryTableBody = document.querySelector("#inventory-table tbody");
-  const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const form = document.getElementById("inventory-modal-form");
-
-  let inventoryItems = [];
-
-  // Utility: format date as "DD Month YYYY"
-  function formatDate(date) {
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    return new Date(date).toLocaleDateString("en-GB", options);
-  }
-
-  // Utility: calculate duration from StartDate to today
-  function calculateDuration(startDateStr) {
-    if (!startDateStr) return "";
-    const start = new Date(startDateStr);
-    const today = new Date();
-    let years = today.getFullYear() - start.getFullYear();
-    let months = today.getMonth() - start.getMonth();
-
-    if (months < 0) {
-      years--;
-      months += 12;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>View Inventory</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="../styles.css" rel="stylesheet" />
+  <style>
+    body {
+      padding-top: 70px;
     }
+  </style>
+</head>
+<body>
 
-    if (years < 0) return "";
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
+        <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
+        <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
 
-    let result = "";
-    if (years > 0) result += `${years} year${years > 1 ? "s" : ""} `;
-    if (months > 0) result += `${months} month${months > 1 ? "s" : ""}`;
-    return result.trim();
-  }
+<!-- Main Content -->
+<div class="container py-4">
+  <h1 class="mb-4">View Inventory</h1>
 
-  // Add or update inventory row
-  function upsertItem(item) {
-    const index = inventoryItems.findIndex(i => i.AssetNo === item.AssetNo);
-    if (index >= 0) {
-      inventoryItems[index] = item;
-    } else {
-      inventoryItems.push(item);
-    }
-  }
+  <div class="d-flex justify-content-between flex-wrap gap-3 mb-3">
+    <div>
+      <label for="filter-equipmenttype" class="form-label mb-1">Filter by Equipment Type</label>
+      <select id="filter-equipmenttype" class="form-select">
+        <option value="all">All</option>
+        <option>Desktop</option>
+        <option>Laptop</option>
+        <option>iPad</option>
+        <option>Mobile Cart</option>
+      </select>
+    </div>
 
-  // Render table rows
-  function refreshTable() {
-    inventoryTableBody.innerHTML = "";
-    inventoryItems.forEach(item => {
-      const tr = document.createElement("tr");
+    <div class="flex-grow-1">
+      <label for="search-inventory" class="form-label">Search Inventory</label>
+      <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
+    </div>
 
-      const headers = [
-        "EquipmentType", "Vendor", "BrandModel", "Profile", "Custodian",
-        "AssetNo", "SerialNumber", "Location", "EndDate", "StartDate", "Hostname",
-        "SSOE PO Number", "Cart No", "SanitiseDate", "DurationInUse",
-        "Lamp Hour", "DateUpdated", "Equipment"
-      ];
+    <div>
+      <button class="btn btn-success" id="add-item-btn">Add Item</button>
+    </div>
+  </div>
 
-      headers.forEach(header => {
-        const td = document.createElement("td");
-        if (header === "DurationInUse") {
-          td.textContent = calculateDuration(item.StartDate);
-        } else {
-          td.textContent = item[header] || "";
-        }
-        tr.appendChild(td);
-      });
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped" id="inventory-table">
+      <thead class="table-primary">
+        <tr>
+          <th>Equipment</th>
+          <th>Vendor</th>
+          <th>BrandModel</th>
+          <th>Profile</th>
+          <th>Custodian</th>
+          <th>AssetNo</th>
+          <th>SerialNumber</th>
+          <th>Location</th>
+          <th>StartDate</th>
+          <th>Duration</th>
+          <th>DateUpdated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 
-      const tdAction = document.createElement("td");
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn btn-sm btn-primary me-2";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = () => {
-        for (const [key, value] of Object.entries(item)) {
-          const input = form.elements[key];
-          if (input) input.value = value;
-        }
-        form.dataset.editingAssetNo = item.AssetNo;
-        modal.show();
-      };
+<!-- Modal -->
+<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form id="inventory-form" class="p-3">
+        <div class="modal-header">
+          <h5 class="modal-title" id="inventoryModalLabel">Add Inventory Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "btn btn-sm btn-danger";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = () => {
-        if (confirm("Delete this item?")) {
-          inventoryItems = inventoryItems.filter(i => i.AssetNo !== item.AssetNo);
-          refreshTable();
-        }
-      };
+        <div class="modal-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Equipment *</label>
+            <select name="Equipment" class="form-select" required>
+              <option value="">Select</option>
+              <option>Desktop</option>
+              <option>Laptop</option>
+              <option>iPad</option>
+              <option>Mobile Cart</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Vendor</label>
+            <input type="text" name="Vendor" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">BrandModel</label>
+            <input type="text" name="BrandModel" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Profile</label>
+            <input type="text" name="Profile" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Custodian</label>
+            <input type="text" name="Custodian" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Asset No</label>
+            <input type="text" name="AssetNo" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Serial Number</label>
+            <input type="text" name="SerialNumber" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Location</label>
+            <input type="text" name="Location" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Start Date</label>
+            <input type="date" name="StartDate" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Date Updated</label>
+            <input type="text" name="DateUpdated" class="form-control" readonly />
+          </div>
+        </div>
 
-      tdAction.appendChild(editBtn);
-      tdAction.appendChild(deleteBtn);
-      tr.appendChild(tdAction);
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
-      inventoryTableBody.appendChild(tr);
-    });
-  }
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../inventory.js"></script>
 
-  // Handle form submission
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-    const item = {};
-    formData.forEach((val, key) => {
-      item[key] = val;
-    });
-
-    item.DateUpdated = formatDate(new Date());
-    item.DurationInUse = calculateDuration(item.StartDate);
-
-    upsertItem(item);
-    refreshTable();
-    modal.hide();
-    form.reset();
-    delete form.dataset.editingAssetNo;
-  });
-
-  // Clear form on modal close
-  document.getElementById("inventoryModal").addEventListener("hidden.bs.modal", () => {
-    form.reset();
-    delete form.dataset.editingAssetNo;
-  });
-
-  // Add Item button
-  document.getElementById("add-item-btn").addEventListener("click", () => {
-    form.reset();
-    delete form.dataset.editingAssetNo;
-    modal.show();
-  });
-
-  // Equipment dropdown setup (in case you want to dynamically populate later)
-  const equipmentField = form.querySelector('[name="Equipment"]');
-  if (equipmentField && equipmentField.options.length === 0) {
-    ["", "Desktop", "Laptop", "iPad", "Mobile Cart"].forEach(type => {
-      const opt = document.createElement("option");
-      opt.value = type;
-      opt.textContent = type;
-      equipmentField.appendChild(opt);
-    });
-  }
-});
+</body>
+</html>
