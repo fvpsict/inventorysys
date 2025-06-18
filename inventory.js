@@ -1,251 +1,152 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FVPS Inventory System - View Inventory</title>
+// Initialize table from localStorage on load
+document.addEventListener('DOMContentLoaded', () => {
+  loadInventory();
+  document.getElementById('inventory-form').addEventListener('submit', saveItem);
+  document.getElementById('add-item-btn').addEventListener('click', () => openModal());
+  document.getElementById('search-inventory').addEventListener('input', filterTable);
+  document.getElementById('filter-equipmenttype').addEventListener('change', filterTable);
+});
 
-  <!-- Bootstrap CSS -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <link href="../styles.css" rel="stylesheet" />
+let editIndex = null;
 
-  <style>
-    /* Add padding to avoid content hidden under fixed navbar */
-    body {
-      padding-top: 56px;
-    }
-  </style>
-</head>
-<body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">FVPS Inventory System</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#nav"
-        aria-controls="nav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="../index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="index.html">View Inventory</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../fault-report.html">Fault Report</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../patching/patching-report.html">Patching Report</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+// Load inventory from localStorage
+function loadInventory() {
+  const data = JSON.parse(localStorage.getItem('inventoryData')) || [];
+  const tbody = document.querySelector('#inventory-table tbody');
+  tbody.innerHTML = '';
+  data.forEach((item, index) => {
+    const row = tbody.insertRow();
+    row.innerHTML = `
+      <td>${item.EquipmentType}</td>
+      <td>${item.Equipment || ''}</td>
+      <td>${item.Vendor}</td>
+      <td>${item.BrandModel}</td>
+      <td>${item.Profile}</td>
+      <td>${item.Custodian}</td>
+      <td>${item.AssetNo}</td>
+      <td>${item.SerialNumber}</td>
+      <td>${item.Location}</td>
+      <td>${item.StartDate}</td>
+      <td>${calculateDuration(item.StartDate)}</td>
+      <td>${item.DateUpdated}</td>
+      <td>
+        <button class="btn btn-sm btn-primary me-1" onclick="editItem(${index})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
+      </td>
+    `;
+  });
+}
 
-  <main class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div>
-        <label for="filter-equipmenttype" class="form-label me-2 fw-bold">Filter by Equipment:</label>
-        <select id="filter-equipmenttype" class="form-select d-inline-block w-auto">
-          <option value="all">All</option>
-          <option value="Desktop">Desktop</option>
-          <option value="Laptop">Laptop</option>
-          <option value="iPad">iPad</option>
-          <option value="Mobile Cart">Mobile Cart</option>
-        </select>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <input
-          type="search"
-          id="search-inventory"
-          class="form-control"
-          placeholder="Search inventory..."
-          style="min-width: 200px"
-        />
-        <button id="add-item-btn" class="btn btn-success">Add Item</button>
-      </div>
-    </div>
+// Save or update inventory item
+function saveItem(event) {
+  event.preventDefault();
+  const form = event.target;
+  const newItem = {
+    EquipmentType: form.EquipmentType.value,
+    Equipment: form.Equipment.value || '',
+    Vendor: form.Vendor.value,
+    BrandModel: form.BrandModel.value,
+    Profile: form.Profile.value,
+    Custodian: form.Custodian.value,
+    AssetNo: form.AssetNo.value,
+    SerialNumber: form.SerialNumber.value,
+    Location: form.Location.value,
+    StartDate: form.StartDate.value,
+    DateUpdated: new Date().toISOString().split('T')[0]
+  };
 
-    <div class="table-responsive">
-      <table
-        class="table table-bordered table-striped"
-        id="inventory-table"
-      >
-        <thead class="table-primary">
-          <tr>
-            <th>Equipment</th>
-            <th>Vendor</th>
-            <th>Brand/Model</th>
-            <th>Profile</th>
-            <th>Custodian</th>
-            <th>Asset No</th>
-            <th>Serial No</th>
-            <th>Location</th>
-            <th>Start Date</th>
-            <th>Duration in use</th>
-            <th>Date Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Inventory rows will be injected here by JS -->
-        </tbody>
-      </table>
-    </div>
-  </main>
+  const data = JSON.parse(localStorage.getItem('inventoryData')) || [];
 
-  <!-- Modal -->
-  <div
-    class="modal fade"
-    id="inventoryModal"
-    tabindex="-1"
-    aria-labelledby="inventoryModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <form id="inventory-form">
-          <div class="modal-header">
-            <h5 class="modal-title" id="inventoryModalLabel">Add Inventory Item</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label for="Equipment" class="form-label">Equipment *</label>
-                <select
-                  id="Equipment"
-                  name="Equipment"
-                  class="form-select"
-                  required
-                >
-                  <option value="">Select Equipment</option>
-                  <option value="Desktop">Desktop</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="iPad">iPad</option>
-                  <option value="Mobile Cart">Mobile Cart</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label for="Vendor" class="form-label">Vendor</label>
-                <input
-                  type="text"
-                  id="Vendor"
-                  name="Vendor"
-                  class="form-control"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="BrandModel" class="form-label">Brand/Model</label>
-                <input
-                  type="text"
-                  id="BrandModel"
-                  name="BrandModel"
-                  class="form-control"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="Profile" class="form-label">Profile</label>
-                <input
-                  type="text"
-                  id="Profile"
-                  name="Profile"
-                  class="form-control"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="Custodian" class="form-label">Custodian</label>
-                <input
-                  type="text"
-                  id="Custodian"
-                  name="Custodian"
-                  class="form-control"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="AssetNo" class="form-label">Asset No</label>
-                <input
-                  type="text"
-                  id="AssetNo"
-                  name="AssetNo"
-                  class="form-control"
-                  placeholder="Optional"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="SerialNumber" class="form-label">Serial No</label>
-                <input
-                  type="text"
-                  id="SerialNumber"
-                  name="SerialNumber"
-                  class="form-control"
-                  placeholder="Optional"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="Location" class="form-label">Location</label>
-                <input
-                  type="text"
-                  id="Location"
-                  name="Location"
-                  class="form-control"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="StartDate" class="form-label">Start Date</label>
-                <input
-                  type="date"
-                  id="StartDate"
-                  name="StartDate"
-                  class="form-control"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="DateUpdated" class="form-label">Date Updated</label>
-                <input
-                  type="text"
-                  id="DateUpdated"
-                  name="DateUpdated"
-                  class="form-control"
-                  readonly
-                />
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-primary">Save Item</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  if (editIndex !== null) {
+    data[editIndex] = newItem;
+    editIndex = null;
+  } else {
+    data.push(newItem);
+  }
 
-  <!-- Bootstrap JS bundle (Popper.js included) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../inventory.js"></script>
-</body>
-</html>
+  localStorage.setItem('inventoryData', JSON.stringify(data));
+  form.reset();
+  bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
+  loadInventory();
+}
+
+// Open modal to add new item
+function openModal() {
+  editIndex = null;
+  document.getElementById('inventory-form').reset();
+  document.getElementById('inventoryModalLabel').innerText = 'Add Inventory Item';
+  document.getElementById('equipment-wrapper').style.display = 'none';
+  document.getElementById('Equipment').removeAttribute('required');
+  document.getElementById('DateUpdated').value = new Date().toISOString().split('T')[0];
+  new bootstrap.Modal(document.getElementById('inventoryModal')).show();
+}
+
+// Edit an existing item
+function editItem(index) {
+  const data = JSON.parse(localStorage.getItem('inventoryData')) || [];
+  const item = data[index];
+  editIndex = index;
+
+  document.getElementById('EquipmentType').value = item.EquipmentType;
+  document.getElementById('Vendor').value = item.Vendor;
+  document.getElementById('BrandModel').value = item.BrandModel;
+  document.getElementById('Profile').value = item.Profile;
+  document.getElementById('Custodian').value = item.Custodian;
+  document.getElementById('AssetNo').value = item.AssetNo;
+  document.getElementById('SerialNumber').value = item.SerialNumber;
+  document.getElementById('Location').value = item.Location;
+  document.getElementById('StartDate').value = item.StartDate;
+  document.getElementById('DateUpdated').value = new Date().toISOString().split('T')[0];
+
+  // Show equipment if SSOE
+  if (item.EquipmentType === 'SSOE') {
+    document.getElementById('equipment-wrapper').style.display = 'block';
+    document.getElementById('Equipment').setAttribute('required', 'required');
+    document.getElementById('Equipment').value = item.Equipment || '';
+  } else {
+    document.getElementById('equipment-wrapper').style.display = 'none';
+    document.getElementById('Equipment').removeAttribute('required');
+    document.getElementById('Equipment').value = '';
+  }
+
+  document.getElementById('inventoryModalLabel').innerText = 'Edit Inventory Item';
+  new bootstrap.Modal(document.getElementById('inventoryModal')).show();
+}
+
+// Delete an item
+function deleteItem(index) {
+  if (!confirm('Are you sure you want to delete this item?')) return;
+  const data = JSON.parse(localStorage.getItem('inventoryData')) || [];
+  data.splice(index, 1);
+  localStorage.setItem('inventoryData', JSON.stringify(data));
+  loadInventory();
+}
+
+// Calculate duration in years and months
+function calculateDuration(startDate) {
+  if (!startDate) return '';
+  const start = new Date(startDate);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  return `${years}y ${months}m`;
+}
+
+// Filter table
+function filterTable() {
+  const search = document.getElementById('search-inventory').value.toLowerCase();
+  const filter = document.getElementById('filter-equipmenttype').value;
+  const rows = document.querySelectorAll('#inventory-table tbody tr');
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    const equipment = row.cells[1].innerText;
+    const matchesSearch = text.includes(search);
+    const matchesFilter = filter === 'all' || equipment === filter;
+    row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+  });
+}
