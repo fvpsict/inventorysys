@@ -3,12 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Patching Report</title>
-  <link href="../styles.css" rel="stylesheet" />
+  <title>Patching Report - FVPS Inventory System</title>
+
+  <!-- Bootstrap CSS CDN -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
+  <link href="../styles.css" rel="stylesheet" />
+
+  <style>
+    body {
+      padding-top: 70px; /* space for fixed navbar */
+    }
+    .table-responsive {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
   <!-- Navbar -->
@@ -35,25 +47,25 @@
             <a class="nav-link" href="../view-inventory/index.html">View Inventory</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="../fault-report/fault-report.html">Fault Report</a>
+            <a class="nav-link" href="../fault-report.html">Fault Report</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="patching-report.html">Patching Report</a>
+            <a class="nav-link active" href="patching-report.html">Patching Report</a>
           </li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <main class="container mt-5 pt-3">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <input
-        type="search"
-        id="search-patching"
-        class="form-control w-auto"
-        placeholder="Search patching data..."
-      />
-    </div>
+  <main class="container mt-4">
+    <h2 class="mb-4">Patching Report</h2>
+
+    <input
+      type="search"
+      id="search-patching"
+      placeholder="Search patching data..."
+      class="form-control w-auto mb-3"
+    />
 
     <div class="table-responsive">
       <table class="table table-bordered table-striped" id="patching-table">
@@ -66,165 +78,117 @@
             <th>Device Type</th>
             <th>BrandModel</th>
             <th>Profile</th>
-            <th>CustodianName</th>
+            <th>Custodian Name</th>
             <th>CSM</th>
             <th>SSOE Location</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Rows loaded dynamically -->
+          <!-- Rows injected by JS -->
         </tbody>
       </table>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    const SHEET_URL =
+    // URL of published Google Sheets HTML page
+    const sheetURL =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8dXgl3cTXv04SMY1T5K0OugNh1veaPjVaCE619s1GPgobbExe6z4sL1J0_xk1oqkNQvEV8qx8gpT4/pubhtml?gid=0&single=true";
 
     const tableBody = document.querySelector("#patching-table tbody");
     const searchInput = document.getElementById("search-patching");
-    let patchingData = [];
 
-    // Fetch published Google Sheet HTML and parse data table rows
     async function fetchSheetData() {
       try {
-        const response = await fetch(SHEET_URL);
-        if (!response.ok) throw new Error("Failed to fetch sheet");
-
+        const response = await fetch(sheetURL);
         const htmlText = await response.text();
 
-        // Parse the HTML text as DOM
+        // Parse the HTML response to extract the table inside Google Sheets publish page
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
 
-        // The published Google Sheet puts the sheet table inside <table class="waffle">
-        const sheetTable = doc.querySelector("table.waffle");
-        if (!sheetTable) throw new Error("Sheet table not found");
+        // Google Sheets publish page has the data in a table with class 'waffle'
+        const waffleTable = doc.querySelector("table.waffle");
 
-        const rows = Array.from(sheetTable.querySelectorAll("tr"));
-        if (rows.length < 2) throw new Error("No data rows found");
+        if (!waffleTable) {
+          console.error("Could not find data table in Google Sheets HTML.");
+          tableBody.innerHTML =
+            "<tr><td colspan='11'>No data found in the source spreadsheet.</td></tr>";
+          return;
+        }
 
-        // First row = headers; read header text
-        const headers = Array.from(rows[0].querySelectorAll("td,th")).map(th =>
-          th.textContent.trim()
-        );
+        // Extract all rows except the header (first row)
+        const rows = Array.from(waffleTable.querySelectorAll("tr")).slice(1);
 
-        // Map headers to your column keys (adjust if sheet headers differ)
-        // Expected sheet headers (case-insensitive): Asset Tag, Serial Number, School, Hostname, Device Type, BrandModel, Profile, CustodianName, CSM, SSOE Location, Status
-        // Defensive: lowercase keys
-        const keyMap = headers.map(h =>
-          h
-            .toLowerCase()
-            .replace(/\s/g, "")
-            .replace(/[^a-z]/g, "")
-        );
+        // Clear table body first
+        tableBody.innerHTML = "";
 
-        // Rows: parse all data rows after header
-        patchingData = rows.slice(1).map(row => {
-          const cells = Array.from(row.querySelectorAll("td"));
-          const item = {};
-          cells.forEach((cell, i) => {
-            if (keyMap[i]) {
-              // Map to your keys exactly:
-              // assetTag, serialNumber, school, hostname, deviceType, brandModel, profile, custodianName, csm, ssoeLocation, status
-              switch (keyMap[i]) {
-                case "assettag":
-                  item.assetTag = cell.textContent.trim();
-                  break;
-                case "serialnumber":
-                  item.serialNumber = cell.textContent.trim();
-                  break;
-                case "school":
-                  item.school = cell.textContent.trim();
-                  break;
-                case "hostname":
-                  item.hostname = cell.textContent.trim();
-                  break;
-                case "devicetype":
-                  item.deviceType = cell.textContent.trim();
-                  break;
-                case "brandmodel":
-                  item.brandModel = cell.textContent.trim();
-                  break;
-                case "profile":
-                  item.profile = cell.textContent.trim();
-                  break;
-                case "custodianname":
-                  item.custodianName = cell.textContent.trim();
-                  break;
-                case "csm":
-                  item.csm = cell.textContent.trim();
-                  break;
-                case "ssoelocation":
-                  item.ssoeLocation = cell.textContent.trim();
-                  break;
-                case "status":
-                  item.status = cell.textContent.trim();
-                  break;
-                default:
-                  // ignore extra columns
-                  break;
-              }
-            }
-          });
-          return item;
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+
+          // Some rows might be empty or incomplete - check number of cells
+          if (cells.length < 11) return;
+
+          // Extract each cell text trimmed
+          const [
+            assetTag,
+            serialNumber,
+            school,
+            hostname,
+            deviceType,
+            brandModel,
+            profile,
+            custodianName,
+            csm,
+            ssoeLocation,
+            status,
+          ] = Array.from(cells).map((c) => c.textContent.trim());
+
+          const tr = document.createElement("tr");
+
+          // Build row HTML cells
+          tr.innerHTML = `
+            <td>${assetTag}</td>
+            <td>${serialNumber}</td>
+            <td>${school}</td>
+            <td>${hostname}</td>
+            <td>${deviceType}</td>
+            <td>${brandModel}</td>
+            <td>${profile}</td>
+            <td>${custodianName}</td>
+            <td>${csm}</td>
+            <td>${ssoeLocation}</td>
+            <td>${status}</td>
+          `;
+
+          tableBody.appendChild(tr);
         });
-
-        renderTable(patchingData);
-      } catch (err) {
+      } catch (error) {
+        console.error("Error fetching or parsing Google Sheets data:", error);
         tableBody.innerHTML =
-          `<tr><td colspan="11" class="text-center text-danger">Error loading data: ${err.message}</td></tr>`;
-        console.error(err);
+          "<tr><td colspan='11'>Error loading data from spreadsheet.</td></tr>";
       }
     }
 
-    function renderTable(data) {
-      tableBody.innerHTML = "";
-      if (!data.length) {
-        tableBody.innerHTML =
-          '<tr><td colspan="11" class="text-center">No matching records found</td></tr>';
-        return;
-      }
-      data.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.assetTag || ""}</td>
-          <td>${item.serialNumber || ""}</td>
-          <td>${item.school || ""}</td>
-          <td>${item.hostname || ""}</td>
-          <td>${item.deviceType || ""}</td>
-          <td>${item.brandModel || ""}</td>
-          <td>${item.profile || ""}</td>
-          <td>${item.custodianName || ""}</td>
-          <td>${item.csm || ""}</td>
-          <td>${item.ssoeLocation || ""}</td>
-          <td>${item.status || ""}</td>
-        `;
-        tableBody.appendChild(tr);
+    // Filter table rows by search input
+    function filterTable() {
+      const filter = searchInput.value.toLowerCase();
+      const rows = tableBody.querySelectorAll("tr");
+
+      rows.forEach((row) => {
+        const rowText = row.textContent.toLowerCase();
+        row.style.display = rowText.includes(filter) ? "" : "none";
       });
     }
 
-    function filterTable() {
-      const query = searchInput.value.trim().toLowerCase();
-      if (!query) {
-        renderTable(patchingData);
-        return;
-      }
-      const filtered = patchingData.filter(item =>
-        Object.values(item).some(val =>
-          val.toLowerCase().includes(query)
-        )
-      );
-      renderTable(filtered);
-    }
-
-    searchInput.addEventListener("input", filterTable);
-
-    // Load data on page load
+    // Initialize
     fetchSheetData();
+
+    // Add search filter listener
+    searchInput.addEventListener("input", filterTable);
   </script>
 </body>
 </html>
