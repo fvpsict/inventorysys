@@ -1,132 +1,251 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const addItemBtn = document.getElementById("add-item-btn");
-  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-  const inventoryForm = document.getElementById("inventory-form");
-  const dateUpdatedInput = document.getElementById("DateUpdated");
-  const inventoryTableBody = document.querySelector("#inventory-table tbody");
-  const filterEquipment = document.getElementById("filter-equipmenttype");
-  const searchInput = document.getElementById("search-inventory");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FVPS Inventory System - View Inventory</title>
 
-  // Format date as "DD MMM YYYY" e.g. "15 Jun 2025"
-  function formatDateDDMMMYYYY(date) {
-    const options = { day: "2-digit", month: "short", year: "numeric" };
-    return date.toLocaleDateString("en-GB", options);
-  }
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link href="../styles.css" rel="stylesheet" />
 
-  // Calculate duration between two dates as "X years Y months"
-  function calculateDuration(startDateStr) {
-    if (!startDateStr) return "";
-    const startDate = new Date(startDateStr);
-    if (isNaN(startDate)) return "";
-    const now = new Date();
-
-    let years = now.getFullYear() - startDate.getFullYear();
-    let months = now.getMonth() - startDate.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
+  <style>
+    /* Add padding to avoid content hidden under fixed navbar */
+    body {
+      padding-top: 56px;
     }
-    if (years < 0) return "";
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">FVPS Inventory System</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#nav"
+        aria-controls="nav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="index.html">View Inventory</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../fault-report.html">Fault Report</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../patching/patching-report.html">Patching Report</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-    let result = "";
-    if (years > 0) result += years + (years === 1 ? " year " : " years ");
-    if (months > 0) result += months + (months === 1 ? " month" : " months");
+  <main class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <label for="filter-equipmenttype" class="form-label me-2 fw-bold">Filter by Equipment:</label>
+        <select id="filter-equipmenttype" class="form-select d-inline-block w-auto">
+          <option value="all">All</option>
+          <option value="Desktop">Desktop</option>
+          <option value="Laptop">Laptop</option>
+          <option value="iPad">iPad</option>
+          <option value="Mobile Cart">Mobile Cart</option>
+        </select>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <input
+          type="search"
+          id="search-inventory"
+          class="form-control"
+          placeholder="Search inventory..."
+          style="min-width: 200px"
+        />
+        <button id="add-item-btn" class="btn btn-success">Add Item</button>
+      </div>
+    </div>
 
-    return result.trim() || "0 month";
-  }
+    <div class="table-responsive">
+      <table
+        class="table table-bordered table-striped"
+        id="inventory-table"
+      >
+        <thead class="table-primary">
+          <tr>
+            <th>Equipment</th>
+            <th>Vendor</th>
+            <th>Brand/Model</th>
+            <th>Profile</th>
+            <th>Custodian</th>
+            <th>Asset No</th>
+            <th>Serial No</th>
+            <th>Location</th>
+            <th>Start Date</th>
+            <th>Duration in use</th>
+            <th>Date Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Inventory rows will be injected here by JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-  // Add a row to the inventory table
-  function addInventoryRow(item) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${item.Equipment}</td>
-      <td>${item.Vendor}</td>
-      <td>${item.BrandModel}</td>
-      <td>${item.Profile}</td>
-      <td>${item.Custodian}</td>
-      <td>${item.AssetNo || ""}</td>
-      <td>${item.SerialNumber || ""}</td>
-      <td>${item.Location}</td>
-      <td>${item.StartDate || ""}</td>
-      <td>${calculateDuration(item.StartDate)}</td>
-      <td>${item.DateUpdated}</td>
-      <td>
-        <button class="btn btn-sm btn-danger delete-btn">Delete</button>
-      </td>
-    `;
-    inventoryTableBody.appendChild(tr);
-  }
+  <!-- Modal -->
+  <div
+    class="modal fade"
+    id="inventoryModal"
+    tabindex="-1"
+    aria-labelledby="inventoryModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="inventory-form">
+          <div class="modal-header">
+            <h5 class="modal-title" id="inventoryModalLabel">Add Inventory Item</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="Equipment" class="form-label">Equipment *</label>
+                <select
+                  id="Equipment"
+                  name="Equipment"
+                  class="form-select"
+                  required
+                >
+                  <option value="">Select Equipment</option>
+                  <option value="Desktop">Desktop</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="iPad">iPad</option>
+                  <option value="Mobile Cart">Mobile Cart</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="Vendor" class="form-label">Vendor</label>
+                <input
+                  type="text"
+                  id="Vendor"
+                  name="Vendor"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="BrandModel" class="form-label">Brand/Model</label>
+                <input
+                  type="text"
+                  id="BrandModel"
+                  name="BrandModel"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="Profile" class="form-label">Profile</label>
+                <input
+                  type="text"
+                  id="Profile"
+                  name="Profile"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="Custodian" class="form-label">Custodian</label>
+                <input
+                  type="text"
+                  id="Custodian"
+                  name="Custodian"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="AssetNo" class="form-label">Asset No</label>
+                <input
+                  type="text"
+                  id="AssetNo"
+                  name="AssetNo"
+                  class="form-control"
+                  placeholder="Optional"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="SerialNumber" class="form-label">Serial No</label>
+                <input
+                  type="text"
+                  id="SerialNumber"
+                  name="SerialNumber"
+                  class="form-control"
+                  placeholder="Optional"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="Location" class="form-label">Location</label>
+                <input
+                  type="text"
+                  id="Location"
+                  name="Location"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="StartDate" class="form-label">Start Date</label>
+                <input
+                  type="date"
+                  id="StartDate"
+                  name="StartDate"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="DateUpdated" class="form-label">Date Updated</label>
+                <input
+                  type="text"
+                  id="DateUpdated"
+                  name="DateUpdated"
+                  class="form-control"
+                  readonly
+                />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save Item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-  // Clear form fields
-  function clearForm() {
-    inventoryForm.reset();
-    // Reset DateUpdated manually after reset
-    dateUpdatedInput.value = formatDateDDMMMYYYY(new Date());
-  }
-
-  // Filter inventory table by Equipment dropdown and Search input
-  function filterTable() {
-    const equipmentFilter = filterEquipment.value.toLowerCase();
-    const searchTerm = searchInput.value.toLowerCase();
-
-    Array.from(inventoryTableBody.rows).forEach((row) => {
-      const equipmentCell = row.cells[0].textContent.toLowerCase();
-
-      const matchesEquipment =
-        equipmentFilter === "all" || equipmentCell === equipmentFilter;
-
-      // Check if any cell text contains the search term
-      const matchesSearch = Array.from(row.cells).some((cell) =>
-        cell.textContent.toLowerCase().includes(searchTerm)
-      );
-
-      row.style.display = matchesEquipment && matchesSearch ? "" : "none";
-    });
-  }
-
-  // Event: Open modal and set DateUpdated
-  addItemBtn.addEventListener("click", () => {
-    clearForm();
-    inventoryModal.show();
-  });
-
-  // Event: Form submit to add inventory item
-  inventoryForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(inventoryForm);
-    const item = {
-      Equipment: formData.get("Equipment").trim(),
-      Vendor: formData.get("Vendor").trim(),
-      BrandModel: formData.get("BrandModel").trim(),
-      Profile: formData.get("Profile").trim(),
-      Custodian: formData.get("Custodian").trim(),
-      AssetNo: formData.get("AssetNo")?.trim() || "",
-      SerialNumber: formData.get("SerialNumber")?.trim() || "",
-      Location: formData.get("Location").trim(),
-      StartDate: formData.get("StartDate"),
-      DateUpdated: formData.get("DateUpdated"),
-    };
-
-    if (!item.Equipment) {
-      alert("Please select Equipment.");
-      return;
-    }
-
-    addInventoryRow(item);
-    inventoryModal.hide();
-  });
-
-  // Event: Delete button
-  inventoryTableBody.addEventListener("click", (e) => {
-    if (e.target.classList.contains("delete-btn")) {
-      if (confirm("Are you sure you want to delete this item?")) {
-        e.target.closest("tr").remove();
-      }
-    }
-  });
-
-  // Filter events
-  filterEquipment.addEventListener("change", filterTable);
-  searchInput.addEventListener("input", filterTable);
-});
+  <!-- Bootstrap JS bundle (Popper.js included) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../inventory.js"></script>
+</body>
+</html>
