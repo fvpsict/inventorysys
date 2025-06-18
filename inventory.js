@@ -1,157 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>View Inventory</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="../styles.css" rel="stylesheet" />
-  <style>
-    body {
-      padding-top: 70px;
+document.addEventListener("DOMContentLoaded", () => {
+  const modalEl = document.getElementById("inventoryModal");
+  const modal = new bootstrap.Modal(modalEl);
+  const addItemBtn = document.getElementById("add-item-btn");
+  const form = document.getElementById("inventory-form");
+  const tbody = document.querySelector("#inventory-table tbody");
+  const filterEquipment = document.getElementById("filter-equipmenttype");
+  const searchInput = document.getElementById("search-inventory");
+
+  let inventoryData = [];
+
+  // Show modal when Add button clicked
+  addItemBtn.addEventListener("click", () => {
+    form.reset();
+    form.DateUpdated.value = formatDate(new Date());
+    modal.show();
+  });
+
+  // Format date as "DD MMM YYYY" e.g. "15 Jun 2025"
+  function formatDate(date) {
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return date.toLocaleDateString("en-GB", options);
+  }
+
+  // Render table rows from inventoryData array
+  function renderTable() {
+    tbody.innerHTML = "";
+
+    let filtered = inventoryData;
+
+    // Filter by equipment
+    if (filterEquipment.value !== "all") {
+      filtered = filtered.filter(
+        (item) => item.Equipment === filterEquipment.value
+      );
     }
-  </style>
-</head>
-<body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link active" href="index.html">View Inventory</a></li>
-        <li class="nav-item"><a class="nav-link" href="../fault-report.html">Fault Report</a></li>
-        <li class="nav-item"><a class="nav-link" href="../patching/patching-report.html">Patching Report</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+    // Search filter (case insensitive)
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    if (searchTerm) {
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (val) =>
+            val &&
+            val.toString().toLowerCase().includes(searchTerm)
+        )
+      );
+    }
 
-<!-- Main Content -->
-<div class="container py-4">
-  <h1 class="mb-4">View Inventory</h1>
+    // Create rows
+    filtered.forEach((item, index) => {
+      const tr = document.createElement("tr");
 
-  <div class="d-flex justify-content-between flex-wrap gap-3 mb-3">
-    <div>
-      <label for="filter-equipmenttype" class="form-label mb-1">Filter by Equipment Type</label>
-      <select id="filter-equipmenttype" class="form-select">
-        <option value="all">All</option>
-        <option>Desktop</option>
-        <option>Laptop</option>
-        <option>iPad</option>
-        <option>Mobile Cart</option>
-      </select>
-    </div>
+      // Calculate duration in years and months from StartDate to today
+      let durationText = "";
+      if (item.StartDate) {
+        const start = new Date(item.StartDate);
+        const now = new Date();
+        let years = now.getFullYear() - start.getFullYear();
+        let months = now.getMonth() - start.getMonth();
+        if (months < 0) {
+          years--;
+          months += 12;
+        }
+        if (years > 0) durationText += `${years} yr${years > 1 ? "s" : ""} `;
+        if (months > 0) durationText += `${months} mo${months > 1 ? "s" : ""}`;
+      }
 
-    <div class="flex-grow-1">
-      <label for="search-inventory" class="form-label">Search Inventory</label>
-      <input type="search" id="search-inventory" class="form-control" placeholder="Search inventory..." />
-    </div>
+      tr.innerHTML = `
+        <td>${item.Equipment || ""}</td>
+        <td>${item.Vendor || ""}</td>
+        <td>${item.BrandModel || ""}</td>
+        <td>${item.Profile || ""}</td>
+        <td>${item.Custodian || ""}</td>
+        <td>${item.AssetNo || ""}</td>
+        <td>${item.SerialNumber || ""}</td>
+        <td>${item.Location || ""}</td>
+        <td>${item.StartDate || ""}</td>
+        <td>${durationText}</td>
+        <td>${item.DateUpdated || ""}</td>
+        <td>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
 
-    <div>
-      <button class="btn btn-success" id="add-item-btn">Add Item</button>
-    </div>
-  </div>
+    // Add event listeners for delete buttons
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const idx = e.target.getAttribute("data-index");
+        inventoryData.splice(idx, 1);
+        renderTable();
+      });
+    });
+  }
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped" id="inventory-table">
-      <thead class="table-primary">
-        <tr>
-          <th>Equipment</th>
-          <th>Vendor</th>
-          <th>BrandModel</th>
-          <th>Profile</th>
-          <th>Custodian</th>
-          <th>AssetNo</th>
-          <th>SerialNumber</th>
-          <th>Location</th>
-          <th>StartDate</th>
-          <th>Duration</th>
-          <th>DateUpdated</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
+  // Handle form submission
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-<!-- Modal -->
-<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <form id="inventory-form" class="p-3">
-        <div class="modal-header">
-          <h5 class="modal-title" id="inventoryModalLabel">Add Inventory Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
+    const formData = new FormData(form);
 
-        <div class="modal-body row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Equipment *</label>
-            <select name="Equipment" class="form-select" required>
-              <option value="">Select</option>
-              <option>Desktop</option>
-              <option>Laptop</option>
-              <option>iPad</option>
-              <option>Mobile Cart</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Vendor</label>
-            <input type="text" name="Vendor" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">BrandModel</label>
-            <input type="text" name="BrandModel" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Profile</label>
-            <input type="text" name="Profile" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Custodian</label>
-            <input type="text" name="Custodian" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Asset No</label>
-            <input type="text" name="AssetNo" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Serial Number</label>
-            <input type="text" name="SerialNumber" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Location</label>
-            <input type="text" name="Location" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Start Date</label>
-            <input type="date" name="StartDate" class="form-control" />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Date Updated</label>
-            <input type="text" name="DateUpdated" class="form-control" readonly />
-          </div>
-        </div>
+    // Required: Equipment must be selected
+    if (!formData.get("Equipment")) {
+      alert("Please select Equipment.");
+      return;
+    }
 
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Item</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+    // SerialNumber and AssetNo are NOT required (no validation)
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../inventory.js"></script>
+    // Prepare new item object
+    const newItem = {
+      Equipment: formData.get("Equipment"),
+      Vendor: formData.get("Vendor") || "",
+      BrandModel: formData.get("BrandModel") || "",
+      Profile: formData.get("Profile") || "",
+      Custodian: formData.get("Custodian") || "",
+      AssetNo: formData.get("AssetNo") || "",
+      SerialNumber: formData.get("SerialNumber") || "",
+      Location: formData.get("Location") || "",
+      StartDate: formData.get("StartDate") || "",
+      DateUpdated: formatDate(new Date()),
+    };
 
-</body>
-</html>
+    inventoryData.push(newItem);
+    renderTable();
+    modal.hide();
+  });
+
+  // Update DateUpdated field automatically whenever modal opens or form resets
+  // (already handled in addItemBtn click listener)
+
+  // Filter and search event handlers
+  filterEquipment.addEventListener("change", renderTable);
+  searchInput.addEventListener("input", renderTable);
+
+  // Initial render
+  renderTable();
+});
