@@ -1,224 +1,244 @@
 // inventory.js
 
-const inventoryTableBody = document.querySelector("#inventory-table tbody");
-const addItemBtn = document.getElementById("add-item-btn");
-const inventoryModalEl = document.getElementById("inventoryModal");
-const inventoryModal = new bootstrap.Modal(inventoryModalEl);
-const inventoryForm = document.getElementById("inventory-form");
+document.addEventListener("DOMContentLoaded", () => {
+  const addItemBtn = document.getElementById("add-item-btn");
+  const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+  const inventoryForm = document.getElementById("inventory-form");
+  const tableBody = document.querySelector("#inventory-table tbody");
 
-const equipmentTypeSelect = document.getElementById("equipmentType");
-const equipmentSelect = document.getElementById("equipment");
-const equipmentRequiredStar = document.getElementById("equipment-required-star");
+  // Form fields
+  const equipmentTypeInput = document.getElementById("equipmentType");
+  const equipmentInput = document.getElementById("equipment");
+  const equipmentRequiredStar = document.getElementById("equipment-required-star");
+  const vendorInput = document.getElementById("vendor");
+  const brandModelInput = document.getElementById("brandModel");
+  const profileInput = document.getElementById("profile");
+  const custodianInput = document.getElementById("custodian");
+  const assetNoInput = document.getElementById("assetNo");
+  const serialNumberInput = document.getElementById("serialNumber");
+  const locationInput = document.getElementById("location");
+  const endDateInput = document.getElementById("endDate");
+  const startDateInput = document.getElementById("startDate");
+  const hostnameInput = document.getElementById("hostname");
+  const ssoePoNumberInput = document.getElementById("ssoePoNumber");
+  const cartNoInput = document.getElementById("cartNo");
+  const sanitiseDateInput = document.getElementById("sanitiseDate");
+  const durationInUseInput = document.getElementById("durationInUse");
+  const lampHourInput = document.getElementById("lampHour");
+  const dateUpdatedInput = document.getElementById("dateUpdated");
 
-const durationInUseInput = document.getElementById("durationInUse");
-const startDateInput = document.getElementById("startDate");
-const dateUpdatedInput = document.getElementById("dateUpdated");
+  let inventoryData = [];
+  let editIndex = null; // null means adding new, otherwise editing existing item
 
-let inventoryData = JSON.parse(localStorage.getItem("inventoryData")) || [];
-let editIndex = -1;
+  // Utility: Calculate duration between two dates in years and months
+  function calculateDuration(startDateStr) {
+    if (!startDateStr) return "";
+    const startDate = new Date(startDateStr);
+    const today = new Date();
+    if (startDate > today) return "";
 
-// Utility: format date as "17 June 2025"
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date)) return "";
-  const options = { day: "numeric", month: "long", year: "numeric" };
-  return date.toLocaleDateString("en-GB", options);
-}
+    let years = today.getFullYear() - startDate.getFullYear();
+    let months = today.getMonth() - startDate.getMonth();
 
-// Calculate duration between startDate and today in "X yrs Y mos" format
-function calculateDuration(startDateStr) {
-  if (!startDateStr) return "";
-  const start = new Date(startDateStr);
-  const today = new Date();
-  if (isNaN(start) || start > today) return "";
-  let years = today.getFullYear() - start.getFullYear();
-  let months = today.getMonth() - start.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    if (years < 0) return "";
+
+    let result = "";
+    if (years > 0) result += years + " year" + (years > 1 ? "s" : "");
+    if (months > 0) {
+      if (result) result += " ";
+      result += months + " month" + (months > 1 ? "s" : "");
+    }
+    if (!result) result = "Less than a month";
+    return result;
   }
-  let result = "";
-  if (years > 0) result += years + (years === 1 ? " yr " : " yrs ");
-  if (months > 0) result += months + (months === 1 ? " mo" : " mos");
-  return result.trim();
-}
 
-// Render table rows
-function renderTable() {
-  inventoryTableBody.innerHTML = "";
-  inventoryData.forEach((item, index) => {
-    const tr = document.createElement("tr");
+  // Render inventory table rows
+  function renderTable() {
+    tableBody.innerHTML = "";
+    inventoryData.forEach((item, index) => {
+      const row = document.createElement("tr");
 
-    function createCell(text) {
-      const td = document.createElement("td");
-      td.textContent = text || "";
-      return td;
+      // Create cells in the order of table headers
+      [
+        item.EquipmentType,
+        item.Equipment,
+        item.Vendor,
+        item.BrandModel,
+        item.Profile,
+        item.Custodian,
+        item.AssetNo,
+        item.SerialNumber,
+        item.Location,
+        item.EndDate,
+        item.StartDate,
+        item.Hostname,
+        item.SSOE_PoNumber,
+        item.CartNo,
+        item.SanitiseDate,
+        item.DurationInUse,
+        item.LampHour,
+        item.DateUpdated,
+      ].forEach((val) => {
+        const td = document.createElement("td");
+        td.textContent = val || "";
+        row.appendChild(td);
+      });
+
+      // Actions cell with Edit and Delete buttons
+      const actionTd = document.createElement("td");
+
+      // Edit button
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-primary me-2";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => {
+        openEditModal(index);
+      });
+      actionTd.appendChild(editBtn);
+
+      // Delete button
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete this item?")) {
+          inventoryData.splice(index, 1);
+          renderTable();
+        }
+      });
+      actionTd.appendChild(deleteBtn);
+
+      row.appendChild(actionTd);
+
+      tableBody.appendChild(row);
+    });
+  }
+
+  // Clear form inputs
+  function clearForm() {
+    inventoryForm.reset();
+    durationInUseInput.value = "";
+    dateUpdatedInput.value = "";
+    editIndex = null;
+    equipmentRequiredStar.classList.add("d-none");
+  }
+
+  // Open modal for adding new item
+  function openAddModal() {
+    clearForm();
+    inventoryModal.show();
+  }
+
+  // Open modal for editing existing item
+  function openEditModal(index) {
+    const item = inventoryData[index];
+    editIndex = index;
+
+    equipmentTypeInput.value = item.EquipmentType || "";
+    equipmentInput.value = item.Equipment || "";
+    vendorInput.value = item.Vendor || "";
+    brandModelInput.value = item.BrandModel || "";
+    profileInput.value = item.Profile || "";
+    custodianInput.value = item.Custodian || "";
+    assetNoInput.value = item.AssetNo || "";
+    serialNumberInput.value = item.SerialNumber || "";
+    locationInput.value = item.Location || "";
+    endDateInput.value = item.EndDate || "";
+    startDateInput.value = item.StartDate || "";
+    hostnameInput.value = item.Hostname || "";
+    ssoePoNumberInput.value = item.SSOE_PoNumber || "";
+    cartNoInput.value = item.CartNo || "";
+    sanitiseDateInput.value = item.SanitiseDate || "";
+    durationInUseInput.value = item.DurationInUse || "";
+    lampHourInput.value = item.LampHour || "";
+    dateUpdatedInput.value = item.DateUpdated || "";
+
+    // Show or hide Equipment required star
+    toggleEquipmentRequiredStar();
+
+    inventoryModal.show();
+  }
+
+  // Show or hide Equipment required star depending on EquipmentType
+  function toggleEquipmentRequiredStar() {
+    if (equipmentTypeInput.value === "SSOE") {
+      equipmentRequiredStar.classList.remove("d-none");
+      equipmentInput.setAttribute("required", "required");
+    } else {
+      equipmentRequiredStar.classList.add("d-none");
+      equipmentInput.removeAttribute("required");
+    }
+  }
+
+  // Update Duration In Use on Start Date change
+  startDateInput.addEventListener("change", () => {
+    durationInUseInput.value = calculateDuration(startDateInput.value);
+  });
+
+  // Update star visibility when EquipmentType changes
+  equipmentTypeInput.addEventListener("change", toggleEquipmentRequiredStar);
+
+  // Handle Add Item button click
+  addItemBtn.addEventListener("click", openAddModal);
+
+  // Handle form submit
+  inventoryForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    // Validate form, required fields
+    if (!equipmentTypeInput.value) {
+      alert("Equipment Type is required.");
+      return;
     }
 
-    tr.appendChild(createCell(item.EquipmentType));
-    tr.appendChild(createCell(item.Equipment));
-    tr.appendChild(createCell(item.Vendor));
-    tr.appendChild(createCell(item.BrandModel));
-    tr.appendChild(createCell(item.Profile));
-    tr.appendChild(createCell(item.Custodian));
-    tr.appendChild(createCell(item.AssetNo));
-    tr.appendChild(createCell(item.SerialNumber));
-    tr.appendChild(createCell(item.Location));
-    tr.appendChild(createCell(formatDate(item.EndDate)));
-    tr.appendChild(createCell(formatDate(item.StartDate)));
-    tr.appendChild(createCell(item.Hostname));
-    tr.appendChild(createCell(item.SSOE_PONumber));
-    tr.appendChild(createCell(item.CartNo));
-    tr.appendChild(createCell(formatDate(item.SanitiseDate)));
-    tr.appendChild(createCell(calculateDuration(item.StartDate)));
-    tr.appendChild(createCell(item.LampHour));
-    tr.appendChild(createCell(formatDate(item.DateUpdated)));
+    if (equipmentTypeInput.value === "SSOE" && !equipmentInput.value) {
+      alert("Equipment is required when Equipment Type is SSOE.");
+      return;
+    }
 
-    // Actions cell (Edit + Delete buttons)
-    const actionsTd = document.createElement("td");
+    // Prepare item object
+    const todayStr = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
-    editBtn.className = "btn btn-sm btn-primary me-2";
-    editBtn.addEventListener("click", () => openEditModal(index));
+    const item = {
+      EquipmentType: equipmentTypeInput.value.trim(),
+      Equipment: equipmentInput.value.trim(),
+      Vendor: vendorInput.value.trim(),
+      BrandModel: brandModelInput.value.trim(),
+      Profile: profileInput.value.trim(),
+      Custodian: custodianInput.value.trim(),
+      AssetNo: assetNoInput.value.trim(),
+      SerialNumber: serialNumberInput.value.trim(),
+      Location: locationInput.value.trim(),
+      EndDate: endDateInput.value,
+      StartDate: startDateInput.value,
+      Hostname: hostnameInput.value.trim(),
+      SSOE_PoNumber: ssoePoNumberInput.value.trim(),
+      CartNo: cartNoInput.value.trim(),
+      SanitiseDate: sanitiseDateInput.value,
+      DurationInUse: calculateDuration(startDateInput.value),
+      LampHour: lampHourInput.value ? lampHourInput.value.trim() : "",
+      DateUpdated: todayStr,
+    };
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Delete";
-    deleteBtn.className = "btn btn-sm btn-danger";
-    deleteBtn.addEventListener("click", () => deleteItem(index));
+    if (editIndex === null) {
+      // Add new item
+      inventoryData.push(item);
+    } else {
+      // Update existing item
+      inventoryData[editIndex] = item;
+    }
 
-    actionsTd.appendChild(editBtn);
-    actionsTd.appendChild(deleteBtn);
-
-    tr.appendChild(actionsTd);
-
-    inventoryTableBody.appendChild(tr);
-  });
-}
-
-// Open modal to add new item
-function openAddModal() {
-  editIndex = -1;
-  inventoryForm.reset();
-  equipmentRequiredStar.classList.add("d-none");
-  equipmentSelect.removeAttribute("required");
-  durationInUseInput.value = "";
-  dateUpdatedInput.value = formatDate(new Date());
-  inventoryModal.show();
-}
-
-// Open modal to edit existing item
-function openEditModal(index) {
-  editIndex = index;
-  const item = inventoryData[index];
-
-  equipmentTypeSelect.value = item.EquipmentType || "";
-  equipmentSelect.value = item.Equipment || "";
-  equipmentRequiredStar.classList.toggle("d-none", item.EquipmentType !== "SSOE");
-  if (item.EquipmentType === "SSOE") equipmentSelect.setAttribute("required", "required");
-  else equipmentSelect.removeAttribute("required");
-
-  document.getElementById("vendor").value = item.Vendor || "";
-  document.getElementById("brandModel").value = item.BrandModel || "";
-  document.getElementById("profile").value = item.Profile || "";
-  document.getElementById("custodian").value = item.Custodian || "";
-  document.getElementById("assetNo").value = item.AssetNo || "";
-  document.getElementById("serialNumber").value = item.SerialNumber || "";
-  document.getElementById("location").value = item.Location || "";
-  document.getElementById("endDate").value = item.EndDate || "";
-  startDateInput.value = item.StartDate || "";
-  document.getElementById("hostname").value = item.Hostname || "";
-  document.getElementById("ssoePoNumber").value = item.SSOE_PONumber || "";
-  document.getElementById("cartNo").value = item.CartNo || "";
-  document.getElementById("sanitiseDate").value = item.SanitiseDate || "";
-  durationInUseInput.value = calculateDuration(item.StartDate);
-  document.getElementById("lampHour").value = item.LampHour || "";
-  dateUpdatedInput.value = formatDate(item.DateUpdated || new Date());
-
-  inventoryModal.show();
-}
-
-// Delete item
-function deleteItem(index) {
-  if (confirm("Delete this item?")) {
-    inventoryData.splice(index, 1);
-    saveData();
+    inventoryModal.hide();
     renderTable();
-  }
-}
+  });
 
-// Save data to localStorage
-function saveData() {
-  localStorage.setItem("inventoryData", JSON.stringify(inventoryData));
-}
+  // Initialize star visibility on load
+  toggleEquipmentRequiredStar();
 
-// When EquipmentType changes, toggle Equipment required
-function onEquipmentTypeChange() {
-  if (equipmentTypeSelect.value === "SSOE") {
-    equipmentSelect.setAttribute("required", "required");
-    equipmentRequiredStar.classList.remove("d-none");
-  } else {
-    equipmentSelect.removeAttribute("required");
-    equipmentRequiredStar.classList.add("d-none");
-    equipmentSelect.value = "";
-  }
-}
-
-// Calculate duration live on startDate change
-function onStartDateChange() {
-  durationInUseInput.value = calculateDuration(startDateInput.value);
-}
-
-equipmentTypeSelect.addEventListener("change", onEquipmentTypeChange);
-startDateInput.addEventListener("change", onStartDateChange);
-
-// Handle form submission (Add or Edit)
-inventoryForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  // Gather form data
-  const formData = {
-    EquipmentType: equipmentTypeSelect.value.trim(),
-    Equipment: equipmentSelect.value.trim(),
-    Vendor: document.getElementById("vendor").value.trim(),
-    BrandModel: document.getElementById("brandModel").value.trim(),
-    Profile: document.getElementById("profile").value.trim(),
-    Custodian: document.getElementById("custodian").value.trim(),
-    AssetNo: document.getElementById("assetNo").value.trim(),
-    SerialNumber: document.getElementById("serialNumber").value.trim(),
-    Location: document.getElementById("location").value.trim(),
-    EndDate: document.getElementById("endDate").value,
-    StartDate: startDateInput.value,
-    Hostname: document.getElementById("hostname").value.trim(),
-    SSOE_PONumber: document.getElementById("ssoePoNumber").value.trim(),
-    CartNo: document.getElementById("cartNo").value.trim(),
-    SanitiseDate: document.getElementById("sanitiseDate").value,
-    DurationInUse: durationInUseInput.value,
-    LampHour: document.getElementById("lampHour").value,
-    DateUpdated: new Date().toISOString().split("T")[0], // store as ISO string date
-  };
-
-  // Validate Equipment if EquipmentType is SSOE
-  if (formData.EquipmentType === "SSOE" && !formData.Equipment) {
-    alert("Equipment is required when Equipment Type is SSOE");
-    return;
-  }
-
-  if (editIndex === -1) {
-    // Add new
-    inventoryData.push(formData);
-  } else {
-    // Update existing
-    inventoryData[editIndex] = formData;
-  }
-
-  saveData();
+  // Initial render empty table
   renderTable();
-  inventoryModal.hide();
 });
-
-addItemBtn.addEventListener("click", openAddModal);
-
-// Initial render
-renderTable();
