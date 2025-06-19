@@ -1,47 +1,176 @@
-/* General Body */
+/* General body */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
-  padding-top: 56px;
-  margin: 0;
+  padding-top: 56px; /* navbar height */
 }
 
 /* Navbar */
-.navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.navbar-nav .nav-link.active { font-weight:600; color:#0d6efd!important; }
-
-/* Container */
-.container { max-width:1200px; margin:0 auto; padding:1rem; }
-
-/* Controls row */
-.d-flex.justify-content-between.align-items-center.mb-3 {
-  flex-wrap:wrap; gap:0.5rem;
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.25rem;
 }
-.form-select.w-auto, .form-control.w-auto { min-width:150px; }
 
-/* Table */
+/* Container adjustments */
+main.container {
+  max-width: 1200px;
+}
+
+/* Filter/Search/Add container */
+.d-flex.justify-content-between {
+  gap: 10px;
+}
+
+/* Table styling */
 .inventory-table {
-  width:100%; border-collapse:collapse; table-layout:fixed;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background-color: #fff;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
-.inventory-table th, .inventory-table td {
-  padding:0.5rem; border:1px solid #dee2e6; vertical-align:middle; word-wrap:break-word;
+
+.inventory-table th,
+.inventory-table td {
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  text-align: left;
 }
+
 .inventory-table thead th {
-  background-color:#0d6efd; color:#fff; position:sticky; top:0; z-index:2;
+  background-color: #007bff;
+  color: #fff;
+  user-select: none;
+  white-space: nowrap;
 }
-.inventory-table tbody tr:hover { background-color:#e9f5ff; }
 
 /* Buttons */
-.btn-sm { padding:0.25rem 0.5rem; font-size:0.8rem; }
+.btn {
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+  border-color: #0062cc;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Form controls in table */
+.inventory-table input.form-control-sm,
+.inventory-table select.form-select-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  height: auto;
+  min-width: 100px;
+}
 
 /* Modal */
-.modal-header.bg-primary { background-color:#0d6efd!important; color:#fff; }
-input[readonly] { background-color:#e9ecef; opacity:1; }
+.modal-content {
+  border-radius: 0.3rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
 
-/* Responsive */
-@media (max-width:576px) {
-  .form-select.w-auto, .form-control.w-auto { width:100%!important; }
-  .inventory-table th, .inventory-table td { font-size:0.75rem; padding:0.25rem; }
+.modal-header {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-body {
+  font-size: 0.95rem;
+}
+
+.modal-footer {
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+/* Form labels */
+.form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #filter-equipmenttype,
+  #search-inventory,
+  #add-item-btn {
+    width: 100% !important;
+  }
+}
+
+/* Table scroll on small screens */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Cursor pointer on buttons */
+button.btn {
+  cursor: pointer;
+}
+
+/* Hover effect on table rows */
+.inventory-table tbody tr:hover {
+  background-color: #e9f2ff;
+}
+
+/* Disabled inputs styling */
+input[readonly], input[disabled] {
+  background-color: #e9ecef;
+  opacity: 1;
+  cursor: default;
+}
+
+/* Error state for form inputs */
+input:invalid,
+select:invalid {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+/* Tooltip fix for Bootstrap */
+.tooltip-inner {
+  max-width: 250px;
+  font-size: 0.85rem;
+}
+
+/* Fix for long text in table cells */
+.inventory-table td {
+  word-wrap: break-word;
+  max-width: 150px;
 }
