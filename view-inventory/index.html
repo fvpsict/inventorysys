@@ -1,87 +1,169 @@
-<!DOCTYPE html>
-<html lang="en" data-category="Inventory">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FVPS Inventory System - View Inventory</title>
-  <link href="../styles.css" rel="stylesheet" />
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-</head>
-<body>
-  <!-- Navbar -->
+const tbody = document.querySelector("#inventory-table tbody");
+const filterSelect = document.getElementById("filter-equipmenttype");
+const searchInput = document.getElementById("search-inventory");
+const addItemBtn = document.getElementById("add-item-btn");
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="index.html">FVPS Inventory System</a>
-      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
-        <span class="navbar-toggler-icon"></span></button>
-      <div class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="view-inventory/index.html">View Inventory</a></li>
-          <li class="nav-item"><a class="nav-link active" href="fault-report.html">Fault Report</a></li>
-          <li class="nav-item"><a class="nav-link" href="patching/patching-report.html">Patching Report</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-  
+let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-  <!-- Main Content -->
-  <main class="container mt-5 pt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <select id="filter-equipmenttype" class="form-select w-auto">
-        <option value="all" selected>All</option>
-        <option>SSOE</option>
-        <option>Projector</option>
-        <option>TV</option>
-        <option>Visualiser</option>
-        <option>Projector Screen</option>
+function calculateDuration(startDate, endDate) {
+  if (!startDate) return "";
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+  if (start > end) return "";
+
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  let result = "";
+  if (years > 0) result += `${years} yr${years > 1 ? "s" : ""} `;
+  if (months > 0) result += `${months} mo${months > 1 ? "s" : ""}`;
+  return result.trim() || "<1 mo";
+}
+
+function renderTable() {
+  tbody.innerHTML = "";
+
+  const filterVal = filterSelect.value.toLowerCase();
+  const searchVal = searchInput.value.trim().toLowerCase();
+
+  const filtered = inventory.filter((item) => {
+    const matchesFilter =
+      filterVal === "all" || (item.equipmentType || "").toLowerCase() === filterVal;
+
+    const matchesSearch = Object.values(item)
+      .join(" ")
+      .toLowerCase()
+      .includes(searchVal);
+
+    return matchesFilter && matchesSearch;
+  });
+
+  filtered.forEach((item, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      ${renderCell("equipmentType", item.equipmentType, "select")}
+      ${renderCell("equipment", item.equipment, "dropdown")}
+      ${renderCell("vendor", item.vendor)}
+      ${renderCell("brandModel", item.brandModel)}
+      ${renderCell("profile", item.profile)}
+      ${renderCell("custodian", item.custodian)}
+      ${renderCell("assetNo", item.assetNo)}
+      ${renderCell("serialNumber", item.serialNumber)}
+      ${renderCell("location", item.location)}
+      ${renderCell("endDate", item.endDate, "date")}
+      ${renderCell("startDate", item.startDate, "date")}
+      ${renderCell("hostname", item.hostname)}
+      ${renderCell("ssoePoNumber", item.ssoePoNumber)}
+      ${renderCell("cartNo", item.cartNo)}
+      ${renderCell("sanitiseDate", item.sanitiseDate, "date")}
+      <td class="duration-cell">${calculateDuration(item.startDate, item.endDate)}</td>
+      <td>${item.dateUpdated || ""}</td>
+      <td>
+        <button class="btn btn-danger btn-sm delete-btn" data-index="${index}">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  attachDeleteHandlers();
+  attachChangeHandlers();
+}
+
+function renderCell(field, value = "", type = "text") {
+  if (type === "date") {
+    return `<td><input type="date" class="form-control form-control-sm" data-field="${field}" value="${value || ""}"></td>`;
+  } else if (type === "dropdown" && field === "equipment") {
+    return `<td>
+      <select class="form-select form-select-sm" data-field="${field}">
+        <option value="">Select</option>
+        <option ${value === "Desktop" ? "selected" : ""}>Desktop</option>
+        <option ${value === "Laptop" ? "selected" : ""}>Laptop</option>
+        <option ${value === "iPad" ? "selected" : ""}>iPad</option>
+        <option ${value === "Mobile Cart" ? "selected" : ""}>Mobile Cart</option>
       </select>
+    </td>`;
+  } else if (type === "select" && field === "equipmentType") {
+    return `<td>
+      <select class="form-select form-select-sm" data-field="${field}">
+        <option value="">Select</option>
+        <option ${value === "SSOE" ? "selected" : ""}>SSOE</option>
+        <option ${value === "Projector" ? "selected" : ""}>Projector</option>
+        <option ${value === "TV" ? "selected" : ""}>TV</option>
+        <option ${value === "Visualiser" ? "selected" : ""}>Visualiser</option>
+        <option ${value === "Projector Screen" ? "selected" : ""}>Projector Screen</option>
+      </select>
+    </td>`;
+  } else {
+    return `<td><input type="text" class="form-control form-control-sm" data-field="${field}" value="${value || ""}"></td>`;
+  }
+}
 
-      <input
-        type="text"
-        id="search-inventory"
-        class="form-control w-auto"
-        placeholder="Search..."
-      />
+function attachChangeHandlers() {
+  tbody.querySelectorAll("input, select").forEach((el) => {
+    el.addEventListener("change", (e) => {
+      const td = el.closest("td");
+      const row = el.closest("tr");
+      const index = Array.from(tbody.children).indexOf(row);
+      const field = el.dataset.field;
+      const value = el.value;
 
-      <button id="add-item-btn" class="btn btn-success">Add Item</button>
-    </div>
+      inventory[index][field] = value.trim();
+      inventory[index].dateUpdated = new Date().toLocaleDateString();
 
-    <div class="table-responsive">
-      <table id="inventory-table" class="table table-bordered table-striped inventory-table">
-        <thead>
-          <tr>
-            <th>EquipmentType</th>
-            <th>Equipment</th>
-            <th>Vendor</th>
-            <th>BrandModel</th>
-            <th>Profile</th>
-            <th>Custodian</th>
-            <th>AssetNo</th>
-            <th>SerialNumber</th>
-            <th>Location</th>
-            <th>EndDate</th>
-            <th>StartDate</th>
-            <th>Hostname</th>
-            <th>SSOE PO Number</th>
-            <th>Cart No</th>
-            <th>SanitiseDate</th>
-            <th>Duration in Use</th>
-            <th>Date Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </main>
+      const durationCell = row.querySelector(".duration-cell");
+      durationCell.textContent = calculateDuration(
+        inventory[index].startDate,
+        inventory[index].endDate
+      );
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="inventory.js"></script>
-</body>
-</html>
+      localStorage.setItem("inventoryData", JSON.stringify(inventory));
+      renderTable();
+    });
+  });
+}
+
+function attachDeleteHandlers() {
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.index);
+      if (confirm("Are you sure you want to delete this entry?")) {
+        inventory.splice(idx, 1);
+        localStorage.setItem("inventoryData", JSON.stringify(inventory));
+        renderTable();
+      }
+    });
+  });
+}
+
+addItemBtn.addEventListener("click", () => {
+  const today = new Date().toLocaleDateString();
+  inventory.push({
+    equipmentType: "",
+    equipment: "",
+    vendor: "",
+    brandModel: "",
+    profile: "",
+    custodian: "",
+    assetNo: "",
+    serialNumber: "",
+    location: "",
+    endDate: "",
+    startDate: "",
+    hostname: "",
+    ssoePoNumber: "",
+    cartNo: "",
+    sanitiseDate: "",
+    dateUpdated: today,
+  });
+  localStorage.setItem("inventoryData", JSON.stringify(inventory));
+  renderTable();
+});
+
+filterSelect.addEventListener("change", renderTable);
+searchInput.addEventListener("input", renderTable);
+
+renderTable();
