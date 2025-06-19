@@ -5,7 +5,7 @@ const searchInput = document.getElementById("search-inventory");
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-// Duration calculation
+// Utility: calculate years/months between dates
 function calculateDuration(start, end) {
   if (!start) return "";
   const s = new Date(start);
@@ -20,7 +20,7 @@ function calculateDuration(start, end) {
   return `${y ? `${y} yr${y > 1 ? "s" : ""} ` : ""}${m ? `${m} mo${m > 1 ? "s" : ""}` : ""}`.trim() || "<1 mo";
 }
 
-// Render table
+// Render inventory table
 function renderTable() {
   tbody.innerHTML = "";
   const filter = filterSelect.value.toLowerCase();
@@ -32,23 +32,22 @@ function renderTable() {
     if (!matchesFilter || !matchesSearch) return;
 
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
-      ${createInputCell("EquipmentType", item.EquipmentType, equipmentTypeOptions())}
-      ${createInputCell("Equipment", item.Equipment, equipmentOptions())}
-      ${createTextCell("Vendor", item.Vendor)}
-      ${createTextCell("BrandModel", item.BrandModel)}
-      ${createTextCell("Profile", item.Profile)}
-      ${createTextCell("Custodian", item.Custodian)}
-      ${createTextCell("AssetNo", item.AssetNo)}
-      ${createTextCell("SerialNumber", item.SerialNumber)}
-      ${createTextCell("Location", item.Location)}
-      ${createTextCell("EndDate", item.EndDate, "date")}
-      ${createTextCell("StartDate", item.StartDate, "date")}
-      ${createTextCell("Hostname", item.Hostname)}
-      ${createTextCell("SSOE_PONumber", item["SSOE PO Number"])}
-      ${createTextCell("CartNo", item["Cart No"])}
-      ${createTextCell("SanitiseDate", item.SanitiseDate, "date")}
+      ${dropdownCell("EquipmentType", item.EquipmentType, ["SSOE", "Projector", "TV", "Visualiser", "Projector Screen"])}
+      ${dropdownCell("Equipment", item.Equipment, ["Desktop", "Laptop", "iPad", "Mobile Cart"])}
+      ${inputCell("Vendor", item.Vendor)}
+      ${inputCell("BrandModel", item.BrandModel)}
+      ${inputCell("Profile", item.Profile)}
+      ${inputCell("Custodian", item.Custodian)}
+      ${inputCell("AssetNo", item.AssetNo)}
+      ${inputCell("SerialNumber", item.SerialNumber)}
+      ${inputCell("Location", item.Location)}
+      ${inputCell("EndDate", item.EndDate, "date")}
+      ${inputCell("StartDate", item.StartDate, "date")}
+      ${inputCell("Hostname", item.Hostname)}
+      ${inputCell("SSOE PO Number", item["SSOE PO Number"])}
+      ${inputCell("Cart No", item["Cart No"])}
+      ${inputCell("SanitiseDate", item.SanitiseDate, "date")}
       <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
       <td>${item.DateUpdated || ""}</td>
       <td>
@@ -56,62 +55,49 @@ function renderTable() {
         <button class="btn btn-sm btn-danger delete-btn" data-index="${i}">Delete</button>
       </td>
     `;
-
     tbody.appendChild(tr);
   });
 
-  document.querySelectorAll(".save-btn").forEach(btn =>
-    btn.addEventListener("click", saveRow));
-  document.querySelectorAll(".delete-btn").forEach(btn =>
-    btn.addEventListener("click", deleteRow));
+  document.querySelectorAll(".save-btn").forEach(btn => btn.addEventListener("click", saveRow));
+  document.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", deleteRow));
 }
 
-function createInputCell(name, value, options = "") {
-  return `<td><select class="form-select form-select-sm" data-field="${name}">${options}</select></td>`;
+function dropdownCell(name, value, options) {
+  return `<td><select class="form-select form-select-sm" data-field="${name}">${options.map(o => `<option${o === value ? " selected" : ""}>${o}</option>`).join("")}</select></td>`;
 }
 
-function equipmentTypeOptions(selected) {
-  const types = ["SSOE", "Projector", "TV", "Visualiser", "Projector Screen"];
-  return types.map(t => `<option${t === selected ? " selected" : ""}>${t}</option>`).join("");
+function inputCell(name, value, type = "text") {
+  return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}" /></td>`;
 }
 
-function equipmentOptions(selected) {
-  const options = ["Desktop", "Laptop", "iPad", "Mobile Cart"];
-  return options.map(t => `<option${t === selected ? " selected" : ""}>${t}</option>`).join("");
-}
-
-function createTextCell(name, value, type = "text") {
-  return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}"/></td>`;
-}
-
+// Save row
 function saveRow(e) {
   const index = +e.target.dataset.index;
   const row = e.target.closest("tr");
-  const inputs = row.querySelectorAll("[data-field]");
+  const fields = row.querySelectorAll("[data-field]");
 
   const updated = {};
-  inputs.forEach(el => {
-    const key = el.dataset.field;
-    updated[key] = el.value.trim();
+  fields.forEach(el => {
+    updated[el.dataset.field] = el.value.trim();
   });
-
-  updated["DateUpdated"] = new Date().toLocaleDateString();
-
+  updated.DateUpdated = new Date().toLocaleDateString();
   inventory[index] = updated;
-  saveData();
+
+  saveInventory();
   renderTable();
 }
 
+// Delete row
 function deleteRow(e) {
   const index = +e.target.dataset.index;
-  if (confirm("Delete this item?")) {
+  if (confirm("Are you sure you want to delete this item?")) {
     inventory.splice(index, 1);
-    saveData();
+    saveInventory();
     renderTable();
   }
 }
 
-function saveData() {
+function saveInventory() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
 
@@ -135,13 +121,13 @@ addItemBtn.addEventListener("click", () => {
     SanitiseDate: "",
     DateUpdated: new Date().toLocaleDateString(),
   });
-  saveData();
+  saveInventory();
   renderTable();
 });
 
-// Filter and search
+// Search/filter
 filterSelect.addEventListener("change", renderTable);
 searchInput.addEventListener("input", renderTable);
 
-// Init
+// Initialize
 renderTable();
