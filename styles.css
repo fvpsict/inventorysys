@@ -1,131 +1,80 @@
-/* General body and font */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
-  margin: 0;
-  padding: 0;
+  padding-top: 56px; /* space for fixed navbar */
 }
 
-/* Container spacing */
+.navbar-brand {
+  font-weight: 600;
+}
+
 .container {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* Navbar fix spacing for fixed-top */
-body > nav.navbar.fixed-top + main.container {
-  padding-top: 70px; /* height of navbar */
 }
 
 /* Table styling */
-.inventory-table {
+table.inventory-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
 }
 
-.inventory-table thead th {
-  background-color: #007bff; /* Bootstrap primary blue */
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
+table.inventory-table th,
+table.inventory-table td {
   vertical-align: middle;
-  padding: 10px;
-  border: 1px solid #dee2e6;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
   white-space: nowrap;
 }
 
-.inventory-table tbody td {
-  vertical-align: middle;
-  padding: 6px 10px;
-  border: 1px solid #dee2e6;
+table.inventory-table thead th {
+  background-color: #007bff;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-/* Inputs and selects inside table cells */
-.inventory-table input.form-control-sm,
-.inventory-table select.form-select-sm {
-  height: calc(1.5em + 0.5rem + 2px);
+.form-control-sm,
+.form-select-sm {
   font-size: 0.85rem;
-  padding: 2px 6px;
-  min-width: 80px;
-  box-sizing: border-box;
-  border-radius: 0.2rem;
+  padding: 0.25rem 0.4rem;
 }
 
-/* Action buttons in table */
-.inventory-table button.save-btn {
-  margin-right: 6px;
-}
-
-.inventory-table button.btn-sm {
-  font-size: 0.75rem;
+/* Buttons */
+.btn-sm {
   padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
 }
 
-/* Filter, search, and add button container */
-.d-flex.justify-content-between.mb-3 {
-  flex-wrap: wrap;
-  gap: 10px;
+.d-flex.gap-2 {
+  gap: 0.5rem !important;
 }
 
-.form-select.w-auto {
-  min-width: 160px;
+/* Responsive fixes */
+.table-responsive {
+  max-height: 75vh;
+  overflow-y: auto;
 }
 
-.form-control.w-auto {
-  min-width: 200px;
+/* Filter/Search area */
+#filter-equipmenttype {
+  max-width: 200px;
+}
+
+#search-inventory {
   max-width: 300px;
 }
 
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .inventory-table thead th,
-  .inventory-table tbody td {
-    font-size: 0.75rem;
-    padding: 4px 6px;
-  }
-
-  .form-select.w-auto,
-  .form-control.w-auto {
-    min-width: 140px;
-  }
+/* Ensure inputs and selects fit nicely inside cells */
+td input,
+td select {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Hover highlight on table rows */
-.inventory-table tbody tr:hover {
+/* Hover row highlight */
+table.inventory-table tbody tr:hover {
   background-color: #e9f5ff;
-}
-
-/* Button colors */
-.btn-success {
-  background-color: #198754;
-  border-color: #198754;
-}
-
-.btn-success:hover {
-  background-color: #157347;
-  border-color: #146c43;
-}
-
-.btn-primary {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.btn-primary:hover {
-  background-color: #0b5ed7;
-  border-color: #0a58ca;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-danger:hover {
-  background-color: #bb2d3b;
-  border-color: #b02a37;
 }
