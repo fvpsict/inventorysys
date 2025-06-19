@@ -17,6 +17,7 @@
   </style>
 </head>
 <body>
+
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
@@ -35,10 +36,11 @@
     </div>
   </nav>
 
+  <!-- Main Container -->
   <main class="container mt-4">
     <h2 class="mb-4">Fault Report</h2>
 
-    <!-- Filter & Search -->
+    <!-- Controls -->
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
       <div class="d-flex align-items-center gap-2">
         <label for="filter-equipmenttype" class="fw-bold mb-0">Filter by Equipment Type:</label>
@@ -55,29 +57,27 @@
         </select>
       </div>
 
-      <input type="search" id="search-inventory" placeholder="Search faults..." class="form-control w-auto" />
+      <input type="search" id="search-fault" placeholder="Search faults..." class="form-control w-auto" />
       <button class="btn btn-success" id="add-fault-btn">Add Fault</button>
     </div>
 
     <!-- Fault Table -->
     <div class="table-responsive">
       <table class="table table-bordered table-striped" id="fault-table">
-        <thead class="table-primary">
+        <thead>
           <tr>
-            <th>EquipmentType</th>
+            <th>Equipment Type</th>
             <th>Equipment</th>
             <th>Venue</th>
             <th>Asset No</th>
             <th>Serial No</th>
-            <th>Fault Description</th>
+            <th>Fault</th>
             <th>Status</th>
             <th>Date Reported</th>
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Populated by fault-report.js -->
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
   </main>
@@ -89,14 +89,14 @@
         <form id="fault-form">
           <div class="modal-header bg-primary text-white">
             <h5 class="modal-title" id="faultModalLabel">Add Fault</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-6">
                 <label for="fault-EquipmentType" class="form-label fw-bold">Equipment Type</label>
                 <select id="fault-EquipmentType" name="EquipmentType" class="form-select" required>
-                  <option value="">Select Equipment Type</option>
+                  <option value="">Select</option>
                   <option>Projector</option>
                   <option>Visualiser</option>
                   <option>Projector Screen</option>
@@ -107,32 +107,26 @@
                   <option>SSOE</option>
                 </select>
               </div>
-
               <div class="col-md-6">
                 <label for="fault-Equipment" class="form-label fw-bold">Equipment</label>
                 <input type="text" id="fault-Equipment" name="Equipment" class="form-control" required />
               </div>
-
               <div class="col-md-6">
                 <label for="fault-Venue" class="form-label fw-bold">Venue</label>
-                <input type="text" id="fault-Venue" name="Venue" class="form-control" required />
+                <input type="text" id="fault-Venue" name="Venue" class="form-control" />
               </div>
-
               <div class="col-md-6">
                 <label for="fault-AssetNo" class="form-label fw-bold">Asset No</label>
                 <input type="text" id="fault-AssetNo" name="AssetNo" class="form-control" />
               </div>
-
               <div class="col-md-6">
-                <label for="fault-SerialNumber" class="form-label fw-bold">Serial Number</label>
-                <input type="text" id="fault-SerialNumber" name="SerialNumber" class="form-control" />
+                <label for="fault-SerialNo" class="form-label fw-bold">Serial Number</label>
+                <input type="text" id="fault-SerialNo" name="SerialNo" class="form-control" />
               </div>
-
-              <div class="col-12">
-                <label for="fault-Description" class="form-label fw-bold">Fault Description</label>
-                <textarea id="fault-Description" name="FaultDescription" class="form-control" rows="3" required></textarea>
+              <div class="col-md-6">
+                <label for="fault-Fault" class="form-label fw-bold">Fault Description</label>
+                <textarea id="fault-Fault" name="Fault" class="form-control" rows="2" required></textarea>
               </div>
-
               <div class="col-md-6">
                 <label for="fault-Status" class="form-label fw-bold">Status</label>
                 <select id="fault-Status" name="Status" class="form-select" required>
@@ -144,14 +138,12 @@
                   <option value="Faulty">Faulty</option>
                 </select>
               </div>
-
               <div class="col-md-6">
                 <label for="fault-DateReported" class="form-label fw-bold">Date Reported</label>
                 <input type="date" id="fault-DateReported" name="DateReported" class="form-control" required />
               </div>
             </div>
           </div>
-
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save Fault</button>
