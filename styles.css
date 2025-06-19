@@ -1,36 +1,131 @@
+/* General body and font */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
-  padding-top: 70px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
+  margin: 0;
+  padding: 0;
 }
 
-.navbar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Container spacing */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.inventory-table th {
-  background-color: #007bff;
-  color: white;
+/* Navbar fix spacing for fixed-top */
+body > nav.navbar.fixed-top + main.container {
+  padding-top: 70px; /* height of navbar */
+}
+
+/* Table styling */
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.inventory-table thead th {
+  background-color: #007bff; /* Bootstrap primary blue */
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px;
+  border: 1px solid #dee2e6;
   white-space: nowrap;
 }
 
-.inventory-table td,
-.inventory-table th {
+.inventory-table tbody td {
   vertical-align: middle;
-  text-align: center;
+  padding: 6px 10px;
+  border: 1px solid #dee2e6;
 }
 
-.form-control-sm,
-.form-select-sm {
-  font-size: 0.875rem;
+/* Inputs and selects inside table cells */
+.inventory-table input.form-control-sm,
+.inventory-table select.form-select-sm {
+  height: calc(1.5em + 0.5rem + 2px);
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  min-width: 80px;
+  box-sizing: border-box;
+  border-radius: 0.2rem;
+}
+
+/* Action buttons in table */
+.inventory-table button.save-btn {
+  margin-right: 6px;
+}
+
+.inventory-table button.btn-sm {
+  font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
 }
 
-.table-responsive {
-  max-height: 75vh;
-  overflow-y: auto;
+/* Filter, search, and add button container */
+.d-flex.justify-content-between.mb-3 {
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-button.save-btn {
-  margin-right: 4px;
+.form-select.w-auto {
+  min-width: 160px;
+}
+
+.form-control.w-auto {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .inventory-table thead th,
+  .inventory-table tbody td {
+    font-size: 0.75rem;
+    padding: 4px 6px;
+  }
+
+  .form-select.w-auto,
+  .form-control.w-auto {
+    min-width: 140px;
+  }
+}
+
+/* Hover highlight on table rows */
+.inventory-table tbody tr:hover {
+  background-color: #e9f5ff;
+}
+
+/* Button colors */
+.btn-success {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+  border-color: #146c43;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #bb2d3b;
+  border-color: #b02a37;
 }
