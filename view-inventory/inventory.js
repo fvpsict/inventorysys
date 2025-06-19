@@ -5,100 +5,93 @@ const searchInput = document.getElementById("search-inventory");
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-// Calculate duration between start and end dates in years and months
+// Calculate duration between start and end dates as years and months
 function calculateDuration(start, end) {
   if (!start) return "";
-  const s = new Date(start);
-  const e = end ? new Date(end) : new Date();
-  if (s > e) return "";
-  let y = e.getFullYear() - s.getFullYear();
-  let m = e.getMonth() - s.getMonth();
-  if (m < 0) {
-    y--;
-    m += 12;
+  const startDate = new Date(start);
+  const endDate = end ? new Date(end) : new Date();
+  if (startDate > endDate) return "";
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+  if (months < 0) {
+    years--;
+    months += 12;
   }
-  return `${y ? `${y} yr${y > 1 ? "s" : ""} ` : ""}${m ? `${m} mo${m > 1 ? "s" : ""}` : ""}`.trim() || "<1 mo";
+  return `${years ? years + " yr" + (years > 1 ? "s " : " ") : ""}${months ? months + " mo" + (months > 1 ? "s" : "") : ""}`.trim() || "<1 mo";
 }
 
-// Render the inventory table with filters and search
-function renderTable() {
-  tbody.innerHTML = "";
-  const filter = filterSelect.value.toLowerCase();
-  const search = searchInput.value.toLowerCase();
-
-  inventory.forEach((item, i) => {
-    // Filter by EquipmentType
-    const matchesFilter = filter === "all" || (item.EquipmentType || "").toLowerCase() === filter;
-    // Search across all fields
-    const matchesSearch = Object.values(item).some(v => (v || "").toString().toLowerCase().includes(search));
-
-    if (!matchesFilter || !matchesSearch) return;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      ${dropdownCell("EquipmentType", item.EquipmentType, ["SSOE", "Projector", "TV", "Visualiser", "Projector Screen"])}
-      ${dropdownCell("Equipment", item.Equipment, ["Desktop", "Laptop", "iPad", "Mobile Cart"])}
-      ${inputCell("Vendor", item.Vendor)}
-      ${inputCell("BrandModel", item.BrandModel)}
-      ${inputCell("Profile", item.Profile)}
-      ${inputCell("Custodian", item.Custodian)}
-      ${inputCell("AssetNo", item.AssetNo)}
-      ${inputCell("SerialNumber", item.SerialNumber)}
-      ${inputCell("Location", item.Location)}
-      ${inputCell("EndDate", item.EndDate, "date")}
-      ${inputCell("StartDate", item.StartDate, "date")}
-      ${inputCell("Hostname", item.Hostname)}
-      ${inputCell("SSOE PO Number", item["SSOE PO Number"])}
-      ${inputCell("Cart No", item["Cart No"])}
-      ${inputCell("SanitiseDate", item.SanitiseDate, "date")}
-      <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
-      <td>${item.DateUpdated || ""}</td>
-      <td>
-        <button class="btn btn-sm btn-primary save-btn" data-index="${i}">Save</button>
-        <button class="btn btn-sm btn-danger delete-btn" data-index="${i}">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // Attach event listeners to buttons
-  document.querySelectorAll(".save-btn").forEach(btn => btn.addEventListener("click", saveRow));
-  document.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", deleteRow));
-}
-
-// Helper to create a dropdown <td> with given options
+// Helper to create dropdown/select cell HTML
 function dropdownCell(name, value, options) {
   return `<td><select class="form-select form-select-sm" data-field="${name}">${options
     .map(o => `<option${o === value ? " selected" : ""}>${o}</option>`)
     .join("")}</select></td>`;
 }
 
-// Helper to create an input <td>
+// Helper to create input cell HTML
 function inputCell(name, value, type = "text") {
-  return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}" /></td>`;
+  return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}"></td>`;
 }
 
-// Save a row's data back to inventory and localStorage
+function renderTable() {
+  tbody.innerHTML = "";
+  const filterVal = filterSelect.value.toLowerCase();
+  const searchVal = searchInput.value.toLowerCase();
+
+  inventory.forEach((item, i) => {
+    const matchesFilter = filterVal === "all" || (item.EquipmentType && item.EquipmentType.toLowerCase() === filterVal);
+    const matchesSearch = Object.values(item).some(v => (v ? v.toString().toLowerCase().includes(searchVal) : false));
+    if (!matchesFilter || !matchesSearch) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      dropdownCell("EquipmentType", item.EquipmentType, ["SSOE", "Projector", "TV", "Visualiser", "Projector Screen"]) +
+      dropdownCell("Equipment", item.Equipment, ["Desktop", "Laptop", "iPad", "Mobile Cart"]) +
+      inputCell("Vendor", item.Vendor) +
+      inputCell("BrandModel", item.BrandModel) +
+      inputCell("Profile", item.Profile) +
+      inputCell("Custodian", item.Custodian) +
+      inputCell("AssetNo", item.AssetNo) +
+      inputCell("SerialNumber", item.SerialNumber) +
+      inputCell("Location", item.Location) +
+      inputCell("EndDate", item.EndDate, "date") +
+      inputCell("StartDate", item.StartDate, "date") +
+      inputCell("Hostname", item.Hostname) +
+      inputCell("SSOE PO Number", item["SSOE PO Number"]) +
+      inputCell("Cart No", item["Cart No"]) +
+      inputCell("SanitiseDate", item.SanitiseDate, "date") +
+      `<td>${calculateDuration(item.StartDate, item.EndDate)}</td>` +
+      inputCell("DateUpdated", item.DateUpdated, "text") +
+      `<td>
+        <button class="btn btn-sm btn-primary save-btn" data-index="${i}">Save</button>
+        <button class="btn btn-sm btn-danger delete-btn" data-index="${i}">Delete</button>
+      </td>`;
+
+    tbody.appendChild(tr);
+  });
+
+  // Add event listeners for save and delete buttons
+  document.querySelectorAll(".save-btn").forEach(btn => btn.addEventListener("click", saveRow));
+  document.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", deleteRow));
+}
+
 function saveRow(e) {
   const index = +e.target.dataset.index;
   const row = e.target.closest("tr");
   const fields = row.querySelectorAll("[data-field]");
 
-  const updated = {};
+  const updatedItem = {};
   fields.forEach(el => {
-    updated[el.dataset.field] = el.value.trim();
+    updatedItem[el.dataset.field] = el.value.trim();
   });
 
-  // Update DateUpdated to today
-  updated.DateUpdated = new Date().toLocaleDateString();
+  // Update DateUpdated to current date in locale format
+  updatedItem.DateUpdated = new Date().toLocaleDateString();
 
-  inventory[index] = updated;
-
+  inventory[index] = updatedItem;
   saveInventory();
   renderTable();
 }
 
-// Delete a row from inventory and update storage
 function deleteRow(e) {
   const index = +e.target.dataset.index;
   if (confirm("Are you sure you want to delete this item?")) {
@@ -108,12 +101,10 @@ function deleteRow(e) {
   }
 }
 
-// Save inventory array to localStorage
 function saveInventory() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
 
-// Add a blank new item to inventory
 addItemBtn.addEventListener("click", () => {
   inventory.push({
     EquipmentType: "",
@@ -137,7 +128,6 @@ addItemBtn.addEventListener("click", () => {
   renderTable();
 });
 
-// Filter and Search event handlers
 filterSelect.addEventListener("change", renderTable);
 searchInput.addEventListener("input", renderTable);
 
