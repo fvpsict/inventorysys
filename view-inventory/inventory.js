@@ -1,11 +1,14 @@
 const tbody = document.querySelector("#inventory-table tbody");
-const addItemBtn = document.getElementById("add-item-btn");
 const filterSelect = document.getElementById("filter-equipmenttype");
 const searchInput = document.getElementById("search-inventory");
 
+const addItemForm = document.getElementById("add-item-form");
+const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
+
+// Load inventory data or empty array
 let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-// Utility function to calculate duration in use
+// Calculate duration between start and end dates as "X yr Y mo"
 function calculateDuration(start, end) {
   if (!start) return "";
   const s = new Date(start);
@@ -17,7 +20,7 @@ function calculateDuration(start, end) {
     years--;
     months += 12;
   }
-  return `${years ? years + " yr" + (years > 1 ? "s " : " ") : ""}${months ? months + " mo" + (months > 1 ? "s" : "") : ""}`.trim() || "<1 mo";
+  return `${years ? years + (years > 1 ? " yrs " : " yr ") : ""}${months ? months + (months > 1 ? " mos" : " mo") : ""}`.trim() || "<1 mo";
 }
 
 // Render the inventory table rows
@@ -26,70 +29,49 @@ function renderTable() {
   const filter = filterSelect.value.toLowerCase();
   const search = searchInput.value.toLowerCase();
 
-  inventory.forEach((item, index) => {
-    const matchesFilter = filter === "all" || (item.EquipmentType && item.EquipmentType.toLowerCase() === filter);
-    const matchesSearch = Object.values(item).some(value => value && value.toString().toLowerCase().includes(search));
-    if (!matchesFilter || !matchesSearch) return;
+  inventory.forEach((item, i) => {
+    // Filter by EquipmentType or show all
+    if (filter !== "all" && (item.EquipmentType || "").toLowerCase() !== filter) return;
+
+    // Search across all fields
+    const combinedValues = Object.values(item).join(" ").toLowerCase();
+    if (!combinedValues.includes(search)) return;
 
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
-      ${dropdownCell("EquipmentType", item.EquipmentType, ["SSOE", "Projector", "TV", "Visualiser", "Projector Screen"])}
-      ${dropdownCell("Equipment", item.Equipment, ["Desktop", "Laptop", "iPad", "Mobile Cart"])}
-      ${inputCell("Vendor", item.Vendor)}
-      ${inputCell("BrandModel", item.BrandModel)}
-      ${inputCell("Profile", item.Profile)}
-      ${inputCell("Custodian", item.Custodian)}
-      ${inputCell("AssetNo", item.AssetNo)}
-      ${inputCell("SerialNumber", item.SerialNumber)}
-      ${inputCell("Location", item.Location)}
-      ${inputCell("EndDate", item.EndDate, "date")}
-      ${inputCell("StartDate", item.StartDate, "date")}
-      ${inputCell("Hostname", item.Hostname)}
-      ${inputCell("SSOE PO Number", item["SSOE PO Number"])}
-      ${inputCell("Cart No", item["Cart No"])}
-      ${inputCell("SanitiseDate", item.SanitiseDate, "date")}
+      <td>${item.EquipmentType || ""}</td>
+      <td>${item.Equipment || ""}</td>
+      <td>${item.Vendor || ""}</td>
+      <td>${item.BrandModel || ""}</td>
+      <td>${item.Profile || ""}</td>
+      <td>${item.Custodian || ""}</td>
+      <td>${item.AssetNo || ""}</td>
+      <td>${item.SerialNumber || ""}</td>
+      <td>${item.Location || ""}</td>
+      <td>${item.EndDate || ""}</td>
+      <td>${item.StartDate || ""}</td>
+      <td>${item.Hostname || ""}</td>
+      <td>${item["SSOE PO Number"] || ""}</td>
+      <td>${item["Cart No"] || ""}</td>
+      <td>${item.SanitiseDate || ""}</td>
       <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
       <td>${item.DateUpdated || ""}</td>
       <td>
-        <button class="btn btn-sm btn-primary save-btn" data-index="${index}">Save</button>
-        <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+        <button class="btn btn-sm btn-danger btn-delete" data-index="${i}">Delete</button>
       </td>
     `;
+
     tbody.appendChild(tr);
   });
 
-  // Attach event listeners after rendering
-  document.querySelectorAll(".save-btn").forEach(btn => btn.addEventListener("click", saveRow));
-  document.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", deleteRow));
-}
-
-// Helpers for creating cells
-function dropdownCell(name, value, options) {
-  return `<td><select class="form-select form-select-sm" data-field="${name}">${options.map(o => `<option${o === value ? " selected" : ""}>${o}</option>`).join("")}</select></td>`;
-}
-
-function inputCell(name, value, type = "text") {
-  return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}" /></td>`;
-}
-
-// Save edited row
-function saveRow(e) {
-  const index = +e.target.dataset.index;
-  const row = e.target.closest("tr");
-  const fields = row.querySelectorAll("[data-field]");
-
-  const updated = {};
-  fields.forEach(el => {
-    updated[el.dataset.field] = el.value.trim();
+  // Attach delete listeners
+  document.querySelectorAll(".btn-delete").forEach(btn => {
+    btn.addEventListener("click", deleteRow);
   });
-  updated.DateUpdated = new Date().toLocaleDateString();
-
-  inventory[index] = updated;
-  saveInventory();
-  renderTable();
 }
 
-// Delete row
+// Delete a row by index
 function deleteRow(e) {
   const index = +e.target.dataset.index;
   if (confirm("Are you sure you want to delete this item?")) {
@@ -104,48 +86,41 @@ function saveInventory() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
 
-// Add item modal logic
-const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
-const addItemForm = document.getElementById("add-item-form");
-
-// Show modal on Add Item click
-addItemBtn.addEventListener("click", () => {
-  addItemForm.reset();
-  addItemModal.show();
-});
-
-// Handle add item form submission
+// Handle Add Item form submit
 addItemForm.addEventListener("submit", e => {
   e.preventDefault();
 
   const formData = new FormData(addItemForm);
   const newItem = {
-    EquipmentType: formData.get("EquipmentType") || "",
-    Equipment: formData.get("Equipment") || "",
-    Vendor: formData.get("Vendor") || "",
-    BrandModel: formData.get("BrandModel") || "",
-    Profile: formData.get("Profile") || "",
-    Custodian: formData.get("Custodian") || "",
-    AssetNo: formData.get("AssetNo")?.trim() || "",
-    SerialNumber: formData.get("SerialNumber") || "",
-    Location: formData.get("Location") || "",
-    EndDate: formData.get("EndDate") || "",
-    StartDate: formData.get("StartDate") || "",
-    Hostname: formData.get("Hostname") || "",
-    "SSOE PO Number": formData.get("SSOE PO Number") || "",
-    "Cart No": formData.get("Cart No") || "",
-    SanitiseDate: formData.get("SanitiseDate") || "",
+    EquipmentType: formData.get("EquipmentType").trim(),
+    Equipment: formData.get("Equipment").trim(),
+    Vendor: formData.get("Vendor").trim(),
+    BrandModel: formData.get("BrandModel").trim(),
+    Profile: formData.get("Profile").trim(),
+    Custodian: formData.get("Custodian").trim(),
+    AssetNo: formData.get("AssetNo").trim(),
+    SerialNumber: formData.get("SerialNumber").trim(),
+    Location: formData.get("Location").trim(),
+    EndDate: formData.get("EndDate"),
+    StartDate: formData.get("StartDate"),
+    Hostname: formData.get("Hostname").trim(),
+    "SSOE PO Number": formData.get("SSOE PO Number").trim(),
+    "Cart No": formData.get("Cart No").trim(),
+    SanitiseDate: formData.get("SanitiseDate"),
     DateUpdated: new Date().toLocaleDateString(),
   };
 
+  // Validate required fields
   if (!newItem.EquipmentType || !newItem.Equipment || !newItem.AssetNo) {
-    alert("Please fill in Equipment Type, Equipment, and AssetNo.");
+    alert("Please fill in all required fields: Equipment Type, Equipment, and Asset No.");
     return;
   }
 
+  // Add new item
   inventory.push(newItem);
   saveInventory();
   renderTable();
+  addItemForm.reset();
   addItemModal.hide();
 });
 
@@ -153,5 +128,5 @@ addItemForm.addEventListener("submit", e => {
 filterSelect.addEventListener("change", renderTable);
 searchInput.addEventListener("input", renderTable);
 
-// Initial render
+// Initial table render
 renderTable();
