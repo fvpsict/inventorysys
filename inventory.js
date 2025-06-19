@@ -1,196 +1,107 @@
-// inventory.js
-
-const inventoryModalElement = document.getElementById('inventoryModal');
-const inventoryModal = new bootstrap.Modal(inventoryModalElement);
-const inventoryForm = document.getElementById('inventory-modal-form');
-const tbody = document.querySelector('#inventory-table tbody');
-const filterSelect = document.getElementById('filter-equipmenttype');
-const searchInput = document.getElementById('search-inventory');
-const addItemBtn = document.getElementById('add-item-btn');
-
-let inventory = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+const tbody = document.querySelector("#inventory-table tbody");
+const filterSelect = document.getElementById("filter-equipmenttype");
+const searchInput = document.getElementById("search-inventory");
+const addItemBtn = document.getElementById("add-item-btn");
+const form = document.getElementById("inventory-modal-form");
+const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
+let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 let editingIndex = null;
 
-// Calculate duration in use (years and months)
-function calculateDuration(startDateStr, endDateStr) {
-  if (!startDateStr) return '';
-  const startDate = new Date(startDateStr);
-  const endDate = endDateStr ? new Date(endDateStr) : new Date();
-
-  if (startDate > endDate) return '';
-
-  let years = endDate.getFullYear() - startDate.getFullYear();
-  let months = endDate.getMonth() - startDate.getMonth();
-
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-
-  let result = '';
-  if (years > 0) result += `${years} yr${years > 1 ? 's' : ''} `;
-  if (months > 0) result += `${months} mo${months > 1 ? 's' : ''}`;
-  return result.trim() || '<1 mo';
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// Render table
+function calculateDuration(start, end) {
+  if (!start) return "";
+  const s = new Date(start), e = end ? new Date(end) : new Date();
+  if (s > e) return "";
+  let years = e.getFullYear() - s.getFullYear(), months = e.getMonth() - s.getMonth();
+  if (months < 0) { years--; months += 12; }
+  let parts = [];
+  if (years) parts.push(`${years} yr${years>1?'s':''}`);
+  if (months) parts.push(`${months} mo${months>1?'s':''}`);
+  return parts.length ? parts.join(" ") : "<1 mo";
+}
+
 function renderTable() {
-  tbody.innerHTML = '';
-
+  tbody.innerHTML = "";
   const filterVal = filterSelect.value.toLowerCase();
-  const searchTerm = searchInput.value.trim().toLowerCase();
+  const searchVal = searchInput.value.toLowerCase();
+  inventory.forEach((item, idx) => {
+    if (filterVal !== "all" && item.EquipmentType?.toLowerCase() !== filterVal) return;
+    if (!Object.values(item).some(x => x?.toString().toLowerCase().includes(searchVal))) return;
 
-  const filtered = inventory.filter(item => {
-    const matchesFilter =
-      filterVal === 'all' || filterVal === '' || (item.equipmentType || '').toLowerCase() === filterVal;
-
-    if (!matchesFilter) return false;
-
-    const fields = [
-      item.equipmentType,
-      item.equipment,
-      item.vendor,
-      item.brandModel,
-      item.profile,
-      item.custodian,
-      item.assetNo,
-      item.serialNumber,
-      item.location,
-      item.hostname,
-      item.ssoePoNumber,
-      item.cartNo,
-    ];
-
-    return fields.some(f => f && f.toLowerCase().includes(searchTerm));
-  });
-
-  filtered.forEach((item, index) => {
-    const tr = document.createElement('tr');
+    const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${item.equipmentType || ''}</td>
-      <td>${item.equipment || ''}</td>
-      <td>${item.vendor || ''}</td>
-      <td>${item.brandModel || ''}</td>
-      <td>${item.profile || ''}</td>
-      <td>${item.custodian || ''}</td>
-      <td>${item.assetNo || ''}</td>
-      <td>${item.serialNumber || ''}</td>
-      <td>${item.location || ''}</td>
-      <td>${item.endDate || ''}</td>
-      <td>${item.startDate || ''}</td>
-      <td>${calculateDuration(item.startDate, item.endDate)}</td>
-      <td>${item.hostname || ''}</td>
-      <td>${item.ssoePoNumber || ''}</td>
-      <td>${item.cartNo || ''}</td>
-      <td>${item.sanitiseDate || ''}</td>
-      <td>${item.lampHour || ''}</td>
-      <td>${item.dateUpdated || ''}</td>
+      <td>${item.EquipmentType||""}</td><td>${item.Equipment||""}</td><td>${item.Vendor||""}</td>
+      <td>${item.BrandModel||""}</td><td>${item.Profile||""}</td><td>${item.Custodian||""}</td>
+      <td>${item.AssetNo||""}</td><td>${item.SerialNumber||""}</td><td>${item.Location||""}</td>
+      <td>${formatDate(item.StartDate)}</td><td>${formatDate(item.EndDate)}</td>
+      <td>${calculateDuration(item.StartDate,item.EndDate)}</td><td>${item.Hostname||""}</td>
+      <td>${item.SSOE_PO_No||""}</td><td>${item.CartNo||""}</td><td>${formatDate(item.SanitiseDate)}</td>
+      <td>${item.LampHour||""}</td><td>${item.DateUpdated||""}</td>
       <td>
-        <button class="btn btn-sm btn-primary btn-edit" data-index="${index}">Edit</button>
-        <button class="btn btn-sm btn-danger btn-delete" data-index="${index}">Delete</button>
-      </td>
-    `;
+        <button class="btn btn-sm btn-primary btn-edit" data-idx="${idx}">Edit</button>
+        <button class="btn btn-sm btn-danger btn-delete" data-idx="${idx}">Delete</button>
+      </td>`;
     tbody.appendChild(tr);
   });
-
-  attachRowListeners();
+  attachButtons();
 }
 
-function attachRowListeners() {
-  document.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.removeEventListener('click', handleEdit);
-    btn.addEventListener('click', handleEdit);
+function attachButtons() {
+  document.querySelectorAll(".btn-edit").forEach(b => {
+    b.onclick = () => { editingIndex = b.dataset.idx; fillForm(inventory[editingIndex]); modal.show(); };
   });
-
-  document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.removeEventListener('click', handleDelete);
-    btn.addEventListener('click', handleDelete);
+  document.querySelectorAll(".btn-delete").forEach(b => {
+    b.onclick = () => {
+      if (confirm("Delete this item?")) {
+        inventory.splice(b.dataset.idx,1);
+        saveAndRender();
+      }
+    };
   });
 }
 
-function handleEdit(e) {
-  const index = +e.target.dataset.index;
-  openEditModal(index);
-}
-
-function handleDelete(e) {
-  const index = +e.target.dataset.index;
-  if (confirm('Are you sure you want to delete this item?')) {
-    inventory.splice(index, 1);
-    saveAndRender();
-  }
-}
-
-function openEditModal(index = null) {
-  editingIndex = index;
-  inventoryForm.classList.remove('was-validated');
-
-  if (index !== null) {
-    const item = inventory[index];
-    fillForm(item);
-    inventoryModalElement.querySelector('.modal-title').textContent = 'Edit Inventory Item';
-  } else {
-    inventoryForm.reset();
-    document.getElementById('dateUpdated').value = '';
-    inventoryModalElement.querySelector('.modal-title').textContent = 'Add Inventory Item';
-  }
-
-  inventoryModal.show();
+function resetForm() {
+  editingIndex = null;
+  form.reset();
+  form.DateUpdated.value = formatDate(new Date().toISOString().split('T')[0]);
 }
 
 function fillForm(item) {
-  Object.entries(item).forEach(([key, value]) => {
-    const input = inventoryForm.elements.namedItem(key);
-    if (input) {
-      input.value = value;
-    }
-  });
+  for (const key in item) {
+    if (form[key] !== undefined) form[key].value = item[key];
+  }
 }
 
-function saveItem(e) {
+form.addEventListener("submit", e => {
   e.preventDefault();
+  if (!form.checkValidity()) { form.classList.add("was-validated"); return; }
 
-  if (!inventoryForm.checkValidity()) {
-    inventoryForm.classList.add('was-validated');
-    return;
-  }
+  const fd = new FormData(form);
+  let item = {};
+  fd.forEach((v, k) => item[k] = v);
+  item.DateUpdated = formatDate(new Date().toISOString().split("T")[0]);
 
-  const formData = new FormData(inventoryForm);
-  const item = {};
-
-  for (const [key, value] of formData.entries()) {
-    item[key] = value.trim();
-  }
-
-  item.dateUpdated = new Date().toLocaleDateString();
-
-  if (editingIndex === null) {
-    const exists = inventory.some(i => i.assetNo === item.assetNo);
-    if (exists) {
-      alert('Asset No must be unique.');
-      return;
-    }
-    inventory.push(item);
-  } else {
-    inventory[editingIndex] = item;
-  }
+  if (editingIndex !== null) inventory[editingIndex] = item;
+  else inventory.push(item);
 
   saveAndRender();
-  inventoryModal.hide();
-  editingIndex = null;
-  inventoryForm.classList.remove('was-validated');
-}
+  modal.hide();
+});
 
 function saveAndRender() {
-  localStorage.setItem('inventoryData', JSON.stringify(inventory));
+  localStorage.setItem("inventoryData", JSON.stringify(inventory));
   renderTable();
 }
 
-// Event Listeners
-addItemBtn.addEventListener('click', () => openEditModal(null));
-inventoryForm.addEventListener('submit', saveItem);
-filterSelect.addEventListener('change', renderTable);
-searchInput.addEventListener('input', renderTable);
+addItemBtn.onclick = () => { resetForm(); modal.show(); };
+filterSelect.onchange = renderTable;
+searchInput.oninput = renderTable;
 
 // Initial
 renderTable();
