@@ -1,86 +1,61 @@
-/* General Body & Font */
+/* General body and fonts */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #212529;
-  padding-top: 56px; /* space for fixed navbar */
-  margin: 0;
+  padding-top: 56px; /* To offset fixed navbar */
 }
 
 /* Navbar */
-.navbar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.25rem;
 }
 
-/* Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-left: 15px;
-  padding-right: 15px;
+/* Active nav link highlight */
+.navbar-nav .nav-link.active {
+  color: #0d6efd; /* Bootstrap primary */
+  font-weight: 600;
 }
 
-/* Filter/Search/Add container */
-.d-flex.justify-content-between.align-items-center {
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-/* Table styles */
-.inventory-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.inventory-table th, .inventory-table td {
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #dee2e6;
-  word-wrap: break-word;
-}
-
-.inventory-table thead th {
-  background-color: #0d6efd; /* Bootstrap primary blue */
+/* Table styling */
+.inventory-table thead tr {
+  background-color: #0d6efd; /* Bootstrap primary */
   color: white;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-.inventory-table tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+  user-select: none;
 }
 
 .inventory-table tbody tr:hover {
-  background-color: #e9ecef;
+  background-color: #e9f5ff;
 }
 
-/* Inputs & selects inside table */
+/* Table cell input and selects */
 .inventory-table input.form-control-sm,
 .inventory-table select.form-select-sm {
-  font-size: 0.8rem;
-  padding: 0.2rem 0.4rem;
-  height: 30px;
-  margin: 0;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
   border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+}
+
+.inventory-table input.form-control-sm:focus,
+.inventory-table select.form-select-sm:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 0.25);
+  outline: none;
 }
 
 /* Buttons */
-.btn-sm {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-}
-
 .btn-primary {
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
 
-.btn-primary:hover, .btn-primary:focus {
+.btn-primary:hover,
+.btn-primary:focus {
   background-color: #0b5ed7;
   border-color: #0a58ca;
+  box-shadow: none;
 }
 
 .btn-danger {
@@ -88,32 +63,72 @@ body {
   border-color: #dc3545;
 }
 
-.btn-danger:hover, .btn-danger:focus {
+.btn-danger:hover,
+.btn-danger:focus {
   background-color: #bb2d3b;
   border-color: #b02a37;
-}
-
-/* Responsive table container */
-.table-responsive {
-  max-height: 70vh;
-  overflow-y: auto;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
-  background: white;
+  box-shadow: none;
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
-  .d-flex.justify-content-between.align-items-center {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 575.98px) {
+  .inventory-table thead {
+    display: none;
   }
 
-  #search-inventory {
-    width: 100% !important;
+  .inventory-table tbody td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  #filter-equipmenttype {
-    width: 100% !important;
+  .inventory-table tbody tr {
+    margin-bottom: 1rem;
+    display: block;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    background-color: #fff;
   }
+
+  .inventory-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .inventory-table tbody td:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* Modal tweaks */
+.modal-header.bg-primary {
+  background-color: #0d6efd !important;
+  color: white;
+}
+
+.modal-footer button {
+  min-width: 100px;
+}
+
+/* Input date fields */
+input[type="date"] {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Fix for small modal inputs */
+.modal-lg .form-control,
+.modal-lg .form-select {
+  font-size: 0.9rem;
+}
+
+/* Utility margin tweaks */
+.mt-5 {
+  margin-top: 3rem !important;
+}
+
+.pt-4 {
+  padding-top: 1.5rem !important;
 }
