@@ -12,9 +12,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand" href="../index.html">FVPS Inventory System</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-              data-bs-target="#nav" aria-controls="nav" aria-expanded="false"
-              aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="nav">
@@ -49,7 +47,7 @@
 
     <div class="table-responsive">
       <table id="inventory-table" class="table table-bordered table-striped inventory-table">
-        <thead>
+        <thead class="table-primary">
           <tr>
             <th>EquipmentType</th>
             <th>Equipment</th>
@@ -76,7 +74,7 @@
     </div>
   </main>
 
-  <!-- Add/Edit Item Modal -->
+  <!-- Add/Edit Inventory Modal -->
   <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -87,7 +85,6 @@
           </div>
           <div class="modal-body">
             <div class="row g-3">
-              <!-- EquipmentType -->
               <div class="col-md-6">
                 <label for="equipmentType" class="form-label">Equipment Type *</label>
                 <select id="equipmentType" name="EquipmentType" class="form-select" required>
@@ -99,7 +96,7 @@
                   <option>Projector Screen</option>
                 </select>
               </div>
-              <!-- Equipment (optional) -->
+
               <div class="col-md-6">
                 <label for="equipment" class="form-label">Equipment</label>
                 <select id="equipment" name="Equipment" class="form-select">
@@ -110,72 +107,72 @@
                   <option>Mobile Cart</option>
                 </select>
               </div>
-              <!-- Vendor -->
+
               <div class="col-md-6">
                 <label for="vendor" class="form-label">Vendor</label>
                 <input type="text" id="vendor" name="Vendor" class="form-control" />
               </div>
-              <!-- BrandModel -->
+
               <div class="col-md-6">
                 <label for="brandModel" class="form-label">BrandModel</label>
                 <input type="text" id="brandModel" name="BrandModel" class="form-control" />
               </div>
-              <!-- Profile -->
+
               <div class="col-md-6">
                 <label for="profile" class="form-label">Profile</label>
                 <input type="text" id="profile" name="Profile" class="form-control" />
               </div>
-              <!-- Custodian -->
+
               <div class="col-md-6">
                 <label for="custodian" class="form-label">Custodian</label>
                 <input type="text" id="custodian" name="Custodian" class="form-control" />
               </div>
-              <!-- AssetNo -->
+
               <div class="col-md-6">
-                <label for="assetNo" class="form-label">AssetNo *</label>
+                <label for="assetNo" class="form-label">Asset No *</label>
                 <input type="text" id="assetNo" name="AssetNo" class="form-control" required />
               </div>
-              <!-- SerialNumber -->
+
               <div class="col-md-6">
-                <label for="serialNumber" class="form-label">SerialNumber</label>
+                <label for="serialNumber" class="form-label">Serial Number</label>
                 <input type="text" id="serialNumber" name="SerialNumber" class="form-control" />
               </div>
-              <!-- Location -->
+
               <div class="col-md-6">
                 <label for="location" class="form-label">Location</label>
                 <input type="text" id="location" name="Location" class="form-control" />
               </div>
-              <!-- EndDate -->
+
               <div class="col-md-6">
-                <label for="endDate" class="form-label">EndDate</label>
+                <label for="endDate" class="form-label">End Date</label>
                 <input type="date" id="endDate" name="EndDate" class="form-control" />
               </div>
-              <!-- StartDate -->
+
               <div class="col-md-6">
-                <label for="startDate" class="form-label">StartDate</label>
+                <label for="startDate" class="form-label">Start Date</label>
                 <input type="date" id="startDate" name="StartDate" class="form-control" />
               </div>
-              <!-- Hostname -->
+
               <div class="col-md-6">
                 <label for="hostname" class="form-label">Hostname</label>
                 <input type="text" id="hostname" name="Hostname" class="form-control" />
               </div>
-              <!-- SSOE PO Number -->
+
               <div class="col-md-6">
                 <label for="ssoePoNumber" class="form-label">SSOE PO Number</label>
                 <input type="text" id="ssoePoNumber" name="SSOE PO Number" class="form-control" />
               </div>
-              <!-- Cart No -->
+
               <div class="col-md-6">
                 <label for="cartNo" class="form-label">Cart No</label>
                 <input type="text" id="cartNo" name="Cart No" class="form-control" />
               </div>
-              <!-- SanitiseDate -->
+
               <div class="col-md-6">
-                <label for="sanitiseDate" class="form-label">SanitiseDate</label>
+                <label for="sanitiseDate" class="form-label">Sanitise Date</label>
                 <input type="date" id="sanitiseDate" name="SanitiseDate" class="form-control" />
               </div>
-              <!-- Duration in Use (readonly) -->
+
               <div class="col-md-6">
                 <label for="durationInUse" class="form-label">Duration in Use</label>
                 <input type="text" id="durationInUse" name="Duration in Use" class="form-control" readonly />
@@ -191,6 +188,7 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="inventory.js"></script>
 </body>
