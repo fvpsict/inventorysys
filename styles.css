@@ -9,89 +9,39 @@ body {
 }
 
 /* Navbar */
-.navbar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.navbar-nav .nav-link.active {
-  font-weight: 600;
-  color: #0d6efd !important;
-}
+.navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.navbar-nav .nav-link.active { font-weight:600; color:#0d6efd!important; }
 
 /* Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
+.container { max-width:1200px; margin:0 auto; padding:1rem; }
 
 /* Controls row */
 .d-flex.justify-content-between.align-items-center.mb-3 {
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-wrap:wrap; gap:0.5rem;
 }
-.form-select.w-auto,
-.form-control.w-auto {
-  min-width: 150px;
-}
+.form-select.w-auto, .form-control.w-auto { min-width:150px; }
 
 /* Table */
 .inventory-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+  width:100%; border-collapse:collapse; table-layout:fixed;
 }
-.inventory-table th,
-.inventory-table td {
-  padding: 0.5rem;
-  border: 1px solid #dee2e6;
-  vertical-align: middle;
-  word-wrap: break-word;
+.inventory-table th, .inventory-table td {
+  padding:0.5rem; border:1px solid #dee2e6; vertical-align:middle; word-wrap:break-word;
 }
 .inventory-table thead th {
-  background-color: #0d6efd;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  background-color:#0d6efd; color:#fff; position:sticky; top:0; z-index:2;
 }
-.inventory-table tbody tr:hover {
-  background-color: #e9f5ff;
-}
-
-/* Inputs in table (if any in future) */
-.inventory-table input,
-.inventory-table select {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.4rem;
-}
+.inventory-table tbody tr:hover { background-color:#e9f5ff; }
 
 /* Buttons */
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-}
+.btn-sm { padding:0.25rem 0.5rem; font-size:0.8rem; }
 
 /* Modal */
-.modal-header.bg-primary {
-  background-color: #0d6efd !important;
-  color: #fff;
-}
-
-/* Duration & DateUpdated read-only */
-input[readonly] {
-  background-color: #e9ecef;
-  opacity: 1;
-}
+.modal-header.bg-primary { background-color:#0d6efd!important; color:#fff; }
+input[readonly] { background-color:#e9ecef; opacity:1; }
 
 /* Responsive */
-@media (max-width: 576px) {
-  .form-select.w-auto,
-  .form-control.w-auto {
-    width: 100% !important;
-  }
-  .inventory-table th,
-  .inventory-table td {
-    font-size: 0.75rem;
-    padding: 0.25rem;
-  }
+@media (max-width:576px) {
+  .form-select.w-auto, .form-control.w-auto { width:100%!important; }
+  .inventory-table th, .inventory-table td { font-size:0.75rem; padding:0.25rem; }
 }
