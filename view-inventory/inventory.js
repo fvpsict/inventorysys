@@ -1,5 +1,4 @@
 const tbody = document.querySelector("#inventory-table tbody");
-const addItemBtn = document.getElementById("add-item-btn");
 const filterSelect = document.getElementById("filter-equipmenttype");
 const searchInput = document.getElementById("search-inventory");
 const inventoryForm = document.getElementById("inventory-form");
@@ -8,46 +7,47 @@ const inventoryModal = new bootstrap.Modal(document.getElementById("inventoryMod
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-// Utility: format date to "DD MMM YYYY"
+// Format Date Updated as "DD Month YYYY"
 function formatDateLong(dateStr) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   if (isNaN(date)) return "";
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "short",
-    year: "numeric",
+    month: "long",
+    year: "numeric"
   });
 }
 
-// Utility: calculate duration between two dates as years and months
+// Calculate Duration in Use (X yrs Y mos)
 function calculateDuration(start, end) {
   if (!start) return "";
   const s = new Date(start);
   const e = end ? new Date(end) : new Date();
-  if (s > e) return "";
-  let years = e.getFullYear() - s.getFullYear();
-  let months = e.getMonth() - s.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
+  if (isNaN(s) || isNaN(e) || s > e) return "";
+  let yrs = e.getFullYear() - s.getFullYear();
+  let mos = e.getMonth() - s.getMonth();
+  if (mos < 0) {
+    yrs--;
+    mos += 12;
   }
-  let result = "";
-  if (years > 0) result += years + (years === 1 ? " yr " : " yrs ");
-  if (months > 0) result += months + (months === 1 ? " mo" : " mos");
-  return result.trim() || "<1 mo";
+  let out = "";
+  if (yrs > 0) out += yrs + (yrs === 1 ? " yr " : " yrs ");
+  if (mos > 0) out += mos + (mos === 1 ? " mo" : " mos");
+  return out.trim() || "<1 mo";
 }
 
-// Render the inventory table rows
+// Render table rows
 function renderTable() {
   tbody.innerHTML = "";
   const filter = filterSelect.value.toLowerCase();
   const search = searchInput.value.toLowerCase();
 
-  inventory.forEach((item, index) => {
-    const matchesFilter = filter === "all" || (item.EquipmentType && item.EquipmentType.toLowerCase() === filter);
-    const matchesSearch = Object.values(item).some(v => (v || "").toString().toLowerCase().includes(search));
-    if (!matchesFilter || !matchesSearch) return;
+  inventory.forEach((item, i) => {
+    if (filter !== "all" && (item.EquipmentType || "").toLowerCase() !== filter) return;
+
+    const combined = Object.values(item).join(" ").toLowerCase();
+    if (search && !combined.includes(search)) return;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -69,7 +69,7 @@ function renderTable() {
       <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
       <td>${formatDateLong(item.DateUpdated)}</td>
       <td>
-        <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+        <button class="btn btn-sm btn-danger delete-btn" data-index="${i}">Delete</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -77,9 +77,9 @@ function renderTable() {
 
   // Attach delete handlers
   document.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const idx = +e.target.dataset.index;
-      if (confirm("Are you sure you want to delete this item?")) {
+    btn.addEventListener("click", () => {
+      const idx = +btn.dataset.index;
+      if (confirm("Delete this item?")) {
         inventory.splice(idx, 1);
         saveInventory();
         renderTable();
@@ -88,54 +88,49 @@ function renderTable() {
   });
 }
 
+// Save to localStorage
 function saveInventory() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
 
-// Calculate and update duration field live when StartDate or EndDate changes
+// Update duration live as dates change
 function updateDuration() {
-  const startDate = inventoryForm.startDate.value;
-  const endDate = inventoryForm.endDate.value;
-  durationInput.value = calculateDuration(startDate, endDate);
+  const sd = inventoryForm.startDate.value;
+  const ed = inventoryForm.endDate.value;
+  durationInput.value = calculateDuration(sd, ed);
 }
-
-// Event listeners for live duration update on date fields
 inventoryForm.startDate.addEventListener("change", updateDuration);
 inventoryForm.endDate.addEventListener("change", updateDuration);
 
-// Handle form submission to add new inventory item
-inventoryForm.addEventListener("submit", (e) => {
+// Handle form submission to add new item
+inventoryForm.addEventListener("submit", e => {
   e.preventDefault();
-
-  // Gather form values
+  const fd = new FormData(inventoryForm);
   const newItem = {
-    EquipmentType: inventoryForm.EquipmentType.value.trim(),
-    Equipment: inventoryForm.Equipment.value.trim(),
-    Vendor: inventoryForm.Vendor.value.trim(),
-    BrandModel: inventoryForm.BrandModel.value.trim(),
-    Profile: inventoryForm.Profile.value.trim(),
-    Custodian: inventoryForm.Custodian.value.trim(),
-    AssetNo: inventoryForm.AssetNo.value.trim(),
-    SerialNumber: inventoryForm.SerialNumber.value.trim(),
-    Location: inventoryForm.Location.value.trim(),
-    EndDate: inventoryForm.EndDate.value,
-    StartDate: inventoryForm.StartDate.value,
-    Hostname: inventoryForm.Hostname.value.trim(),
-    "SSOE PO Number": inventoryForm["SSOE PO Number"].value.trim(),
-    "Cart No": inventoryForm["Cart No"].value.trim(),
-    SanitiseDate: inventoryForm.SanitiseDate.value,
-    DateUpdated: new Date().toISOString().slice(0, 10), // Save raw ISO date for formatting on render
+    EquipmentType: fd.get("EquipmentType").trim(),
+    Equipment: fd.get("Equipment").trim(),
+    Vendor: fd.get("Vendor").trim(),
+    BrandModel: fd.get("BrandModel").trim(),
+    Profile: fd.get("Profile").trim(),
+    Custodian: fd.get("Custodian").trim(),
+    AssetNo: fd.get("AssetNo").trim(),
+    SerialNumber: fd.get("SerialNumber").trim(),
+    Location: fd.get("Location").trim(),
+    EndDate: fd.get("EndDate"),
+    StartDate: fd.get("StartDate"),
+    Hostname: fd.get("Hostname").trim(),
+    "SSOE PO Number": fd.get("SSOE PO Number").trim(),
+    "Cart No": fd.get("Cart No").trim(),
+    SanitiseDate: fd.get("SanitiseDate"),
+    DateUpdated: new Date().toISOString().slice(0,10)
   };
 
-  // Basic validation (EquipmentType and Equipment required)
-  if (!newItem.EquipmentType || !newItem.Equipment) {
-    alert("Please select Equipment Type and Equipment.");
+  if (!newItem.EquipmentType || !newItem.AssetNo) {
+    alert("Please fill in Equipment Type and AssetNo.");
     return;
   }
 
-  // Add new item
   inventory.push(newItem);
-
   saveInventory();
   renderTable();
   inventoryForm.reset();
@@ -143,7 +138,7 @@ inventoryForm.addEventListener("submit", (e) => {
   inventoryModal.hide();
 });
 
-// Filter and search event listeners
+// Filter & Search bindings
 filterSelect.addEventListener("change", renderTable);
 searchInput.addEventListener("input", renderTable);
 
