@@ -1,106 +1,147 @@
-const inventory = JSON.parse(localStorage.getItem('inventoryData') || '[]');
-const tableBody = document.querySelector('#inventory-table tbody');
-const form = document.getElementById('inventory-modal-form');
-const modalElement = document.getElementById('inventoryModal');
-const modal = new bootstrap.Modal(modalElement);
-const filterSelect = document.getElementById('filter-equipmenttype');
-const searchInput = document.getElementById('search-inventory');
+const tbody = document.querySelector("#inventory-table tbody");
+const addItemBtn = document.getElementById("add-item-btn");
+const filterSelect = document.getElementById("filter-equipmenttype");
+const searchInput = document.getElementById("search-inventory");
 
-let editingIndex = null;
+let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-// Render inventory table
+// Duration calculation
+function calculateDuration(start, end) {
+  if (!start) return "";
+  const s = new Date(start);
+  const e = end ? new Date(end) : new Date();
+  if (s > e) return "";
+  let y = e.getFullYear() - s.getFullYear();
+  let m = e.getMonth() - s.getMonth();
+  if (m < 0) {
+    y--;
+    m += 12;
+  }
+  return `${y ? `${y} yr${y > 1 ? "s" : ""} ` : ""}${m ? `${m} mo${m > 1 ? "s" : ""}` : ""}`.trim() || "<1 mo";
+}
+
+// Render table
 function renderTable() {
-  tableBody.innerHTML = '';
+  tbody.innerHTML = "";
   const filter = filterSelect.value.toLowerCase();
   const search = searchInput.value.toLowerCase();
 
-  inventory
-    .filter(item => {
-      const matchesFilter = filter === 'all' || item.equipmentType?.toLowerCase() === filter;
-      const matchesSearch = Object.values(item).some(val => (val || '').toLowerCase().includes(search));
-      return matchesFilter && matchesSearch;
-    })
-    .forEach((item, index) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${item.equipmentType || ''}</td>
-        <td>${item.equipment || ''}</td>
-        <td>${item.assetNo || ''}</td>
-        <td>${item.serialNumber || ''}</td>
-        <td>${item.dateUpdated || ''}</td>
-        <td>
-          <button class="btn btn-sm btn-primary" onclick="editItem(${index})">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
-        </td>`;
-      tableBody.appendChild(row);
-    });
+  inventory.forEach((item, i) => {
+    const matchesFilter = filter === "all" || item.EquipmentType?.toLowerCase() === filter;
+    const matchesSearch = Object.values(item).some(v => v?.toLowerCase().includes(search));
+    if (!matchesFilter || !matchesSearch) return;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      ${createInputCell("EquipmentType", item.EquipmentType, equipmentTypeOptions())}
+      ${createInputCell("Equipment", item.Equipment, equipmentOptions())}
+      ${createTextCell("Vendor", item.Vendor)}
+      ${createTextCell("BrandModel", item.BrandModel)}
+      ${createTextCell("Profile", item.Profile)}
+      ${createTextCell("Custodian", item.Custodian)}
+      ${createTextCell("AssetNo", item.AssetNo)}
+      ${createTextCell("SerialNumber", item.SerialNumber)}
+      ${createTextCell("Location", item.Location)}
+      ${createTextCell("EndDate", item.EndDate, "date")}
+      ${createTextCell("StartDate", item.StartDate, "date")}
+      ${createTextCell("Hostname", item.Hostname)}
+      ${createTextCell("SSOE_PONumber", item["SSOE PO Number"])}
+      ${createTextCell("CartNo", item["Cart No"])}
+      ${createTextCell("SanitiseDate", item.SanitiseDate, "date")}
+      <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
+      <td>${item.DateUpdated || ""}</td>
+      <td>
+        <button class="btn btn-sm btn-primary save-btn" data-index="${i}">Save</button>
+        <button class="btn btn-sm btn-danger delete-btn" data-index="${i}">Delete</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  document.querySelectorAll(".save-btn").forEach(btn =>
+    btn.addEventListener("click", saveRow));
+  document.querySelectorAll(".delete-btn").forEach(btn =>
+    btn.addEventListener("click", deleteRow));
 }
 
-// Reset form before adding
-function resetForm() {
-  form.reset();
-  editingIndex = null;
-  form.classList.remove('was-validated');
-  document.getElementById('dateUpdated').value = new Date().toLocaleDateString();
+function createInputCell(name, value, options = "") {
+  return `<td><select class="form-select form-select-sm" data-field="${name}">${options}</select></td>`;
 }
 
-// Edit item
-window.editItem = function(index) {
-  editingIndex = index;
-  const item = inventory[index];
-  for (const key in item) {
-    const input = form.elements.namedItem(key);
-    if (input) input.value = item[key];
-  }
-  modal.show();
+function equipmentTypeOptions(selected) {
+  const types = ["SSOE", "Projector", "TV", "Visualiser", "Projector Screen"];
+  return types.map(t => `<option${t === selected ? " selected" : ""}>${t}</option>`).join("");
 }
 
-// Delete item
-window.deleteItem = function(index) {
-  if (confirm('Are you sure you want to delete this item?')) {
-    inventory.splice(index, 1);
-    saveAndRender();
-  }
+function equipmentOptions(selected) {
+  const options = ["Desktop", "Laptop", "iPad", "Mobile Cart"];
+  return options.map(t => `<option${t === selected ? " selected" : ""}>${t}</option>`).join("");
 }
 
-// Save or update item
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  if (!form.checkValidity()) {
-    form.classList.add('was-validated');
-    return;
-  }
+function createTextCell(name, value, type = "text") {
+  return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}"/></td>`;
+}
 
-  const formData = new FormData(form);
-  const item = Object.fromEntries(formData.entries());
-  item.dateUpdated = new Date().toLocaleDateString();
+function saveRow(e) {
+  const index = +e.target.dataset.index;
+  const row = e.target.closest("tr");
+  const inputs = row.querySelectorAll("[data-field]");
 
-  if (editingIndex !== null) {
-    inventory[editingIndex] = item;
-  } else {
-    // Prevent duplicate Asset No
-    if (inventory.some(i => i.assetNo === item.assetNo)) {
-      alert('Asset No must be unique.');
-      return;
-    }
-    inventory.push(item);
-  }
+  const updated = {};
+  inputs.forEach(el => {
+    const key = el.dataset.field;
+    updated[key] = el.value.trim();
+  });
 
-  saveAndRender();
-  modal.hide();
-  form.reset();
-});
+  updated["DateUpdated"] = new Date().toLocaleDateString();
 
-// Save to localStorage and render
-function saveAndRender() {
-  localStorage.setItem('inventoryData', JSON.stringify(inventory));
+  inventory[index] = updated;
+  saveData();
   renderTable();
 }
 
-// Event bindings
-document.getElementById('add-item-btn').addEventListener('click', resetForm);
-filterSelect.addEventListener('change', renderTable);
-searchInput.addEventListener('input', renderTable);
+function deleteRow(e) {
+  const index = +e.target.dataset.index;
+  if (confirm("Delete this item?")) {
+    inventory.splice(index, 1);
+    saveData();
+    renderTable();
+  }
+}
 
-// Initial render
+function saveData() {
+  localStorage.setItem("inventoryData", JSON.stringify(inventory));
+}
+
+// Add new row
+addItemBtn.addEventListener("click", () => {
+  inventory.push({
+    EquipmentType: "",
+    Equipment: "",
+    Vendor: "",
+    BrandModel: "",
+    Profile: "",
+    Custodian: "",
+    AssetNo: "",
+    SerialNumber: "",
+    Location: "",
+    EndDate: "",
+    StartDate: "",
+    Hostname: "",
+    "SSOE PO Number": "",
+    "Cart No": "",
+    SanitiseDate: "",
+    DateUpdated: new Date().toLocaleDateString(),
+  });
+  saveData();
+  renderTable();
+});
+
+// Filter and search
+filterSelect.addEventListener("change", renderTable);
+searchInput.addEventListener("input", renderTable);
+
+// Init
 renderTable();
