@@ -33,7 +33,7 @@ function calculateDuration(startDateStr, endDateStr) {
   return result.trim() || '<1 mo';
 }
 
-// Render table rows based on inventory, filter, and search
+// Render table
 function renderTable() {
   tbody.innerHTML = '';
 
@@ -41,13 +41,12 @@ function renderTable() {
   const searchTerm = searchInput.value.trim().toLowerCase();
 
   const filtered = inventory.filter(item => {
-    const matchFilter =
+    const matchesFilter =
       filterVal === 'all' || filterVal === '' || (item.equipmentType || '').toLowerCase() === filterVal;
 
-    if (!matchFilter) return false;
+    if (!matchesFilter) return false;
 
-    // Search all text fields for match
-    const fieldsToSearch = [
+    const fields = [
       item.equipmentType,
       item.equipment,
       item.vendor,
@@ -62,10 +61,10 @@ function renderTable() {
       item.cartNo,
     ];
 
-    return fieldsToSearch.some(f => f && f.toLowerCase().includes(searchTerm));
+    return fields.some(f => f && f.toLowerCase().includes(searchTerm));
   });
 
-  filtered.forEach((item, idx) => {
+  filtered.forEach((item, index) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${item.equipmentType || ''}</td>
@@ -87,8 +86,8 @@ function renderTable() {
       <td>${item.lampHour || ''}</td>
       <td>${item.dateUpdated || ''}</td>
       <td>
-        <button class="btn btn-primary btn-sm btn-edit me-1" data-index="${idx}">Edit</button>
-        <button class="btn btn-danger btn-sm btn-delete" data-index="${idx}">Delete</button>
+        <button class="btn btn-sm btn-primary btn-edit" data-index="${index}">Edit</button>
+        <button class="btn btn-sm btn-danger btn-delete" data-index="${index}">Delete</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -97,63 +96,57 @@ function renderTable() {
   attachRowListeners();
 }
 
-// Attach edit and delete button listeners
 function attachRowListeners() {
   document.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.removeEventListener('click', editHandler);
-    btn.addEventListener('click', editHandler);
+    btn.removeEventListener('click', handleEdit);
+    btn.addEventListener('click', handleEdit);
   });
 
   document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.removeEventListener('click', deleteHandler);
-    btn.addEventListener('click', deleteHandler);
+    btn.removeEventListener('click', handleDelete);
+    btn.addEventListener('click', handleDelete);
   });
 }
 
-function editHandler(e) {
-  const idx = Number(e.target.dataset.index);
-  openEditModal(idx);
+function handleEdit(e) {
+  const index = +e.target.dataset.index;
+  openEditModal(index);
 }
 
-function deleteHandler(e) {
-  const idx = Number(e.target.dataset.index);
+function handleDelete(e) {
+  const index = +e.target.dataset.index;
   if (confirm('Are you sure you want to delete this item?')) {
-    inventory.splice(idx, 1);
+    inventory.splice(index, 1);
     saveAndRender();
   }
 }
 
-// Open modal for add or edit
 function openEditModal(index = null) {
   editingIndex = index;
   inventoryForm.classList.remove('was-validated');
 
   if (index !== null) {
-    // Editing existing
     const item = inventory[index];
     fillForm(item);
     inventoryModalElement.querySelector('.modal-title').textContent = 'Edit Inventory Item';
   } else {
-    // Adding new
     inventoryForm.reset();
-    inventoryModalElement.querySelector('.modal-title').textContent = 'Add Inventory Item';
-    // Reset Date Updated
     document.getElementById('dateUpdated').value = '';
+    inventoryModalElement.querySelector('.modal-title').textContent = 'Add Inventory Item';
   }
+
   inventoryModal.show();
 }
 
-// Fill modal form fields from item data
 function fillForm(item) {
-  Object.entries(item).forEach(([key, val]) => {
-    const field = inventoryForm.elements.namedItem(key);
-    if (field) {
-      field.value = val;
+  Object.entries(item).forEach(([key, value]) => {
+    const input = inventoryForm.elements.namedItem(key);
+    if (input) {
+      input.value = value;
     }
   });
 }
 
-// Save form data (add or update)
 function saveItem(e) {
   e.preventDefault();
 
@@ -163,25 +156,23 @@ function saveItem(e) {
   }
 
   const formData = new FormData(inventoryForm);
-  const newItem = {};
+  const item = {};
 
-  for (const [key, val] of formData.entries()) {
-    newItem[key] = val.trim();
+  for (const [key, value] of formData.entries()) {
+    item[key] = value.trim();
   }
 
-  // Auto-update dateUpdated to today's date
-  newItem.dateUpdated = new Date().toLocaleDateString();
+  item.dateUpdated = new Date().toLocaleDateString();
 
-  // Prevent duplicate AssetNo if adding new
   if (editingIndex === null) {
-    if (inventory.find(i => i.assetNo === newItem.assetNo)) {
+    const exists = inventory.some(i => i.assetNo === item.assetNo);
+    if (exists) {
       alert('Asset No must be unique.');
       return;
     }
-    inventory.push(newItem);
+    inventory.push(item);
   } else {
-    // Editing existing
-    inventory[editingIndex] = newItem;
+    inventory[editingIndex] = item;
   }
 
   saveAndRender();
@@ -190,17 +181,16 @@ function saveItem(e) {
   inventoryForm.classList.remove('was-validated');
 }
 
-// Save to localStorage and render table
 function saveAndRender() {
   localStorage.setItem('inventoryData', JSON.stringify(inventory));
   renderTable();
 }
 
-// Event listeners
+// Event Listeners
 addItemBtn.addEventListener('click', () => openEditModal(null));
+inventoryForm.addEventListener('submit', saveItem);
 filterSelect.addEventListener('change', renderTable);
 searchInput.addEventListener('input', renderTable);
-inventoryForm.addEventListener('submit', saveItem);
 
-// Initial render
+// Initial
 renderTable();
