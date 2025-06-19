@@ -23,22 +23,24 @@ function formatDate(dateStr) {
   });
 }
 
-// Calculate duration between start and end dates in years and months
-function calculateDuration(startStr, endStr) {
-  if (!startStr) return "";
-  const start = new Date(startStr);
-  const end = endStr ? new Date(endStr) : new Date();
-  if (isNaN(start) || isNaN(end) || start > end) return "";
-  let years = end.getFullYear() - start.getFullYear();
-  let months = end.getMonth() - start.getMonth();
+function calculateDuration(start, end) {
+  if (!start) return "";
+  const s = new Date(start);
+  const e = end ? new Date(end) : new Date();
+  if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return "";
+
+  let years = e.getFullYear() - s.getFullYear();
+  let months = e.getMonth() - s.getMonth();
+
   if (months < 0) {
     years--;
     months += 12;
   }
-  let result = "";
-  if (years > 0) result += years + " yr" + (years > 1 ? "s " : " ");
-  if (months > 0) result += months + " mo" + (months > 1 ? "s" : "");
-  return result.trim() || "<1 mo";
+
+  const yearStr = years > 0 ? `${years} yr${years > 1 ? "s" : ""}` : "";
+  const monthStr = months > 0 ? `${months} mo${months > 1 ? "s" : ""}` : "";
+
+  return [yearStr, monthStr].filter(Boolean).join(" ") || "<1 mo";
 }
 
 // Render the inventory table rows
