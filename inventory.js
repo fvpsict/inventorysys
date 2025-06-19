@@ -1,107 +1,91 @@
-const tbody = document.querySelector("#inventory-table tbody");
-const filterSelect = document.getElementById("filter-equipmenttype");
-const searchInput = document.getElementById("search-inventory");
-const addItemBtn = document.getElementById("add-item-btn");
-const form = document.getElementById("inventory-modal-form");
-const modal = new bootstrap.Modal(document.getElementById("inventoryModal"));
-let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
+const inventory = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+const tableBody = document.querySelector('#inventory-table tbody');
+const filterSelect = document.getElementById('filter-equipmenttype');
+const searchInput = document.getElementById('search-inventory');
+const form = document.getElementById('inventory-modal-form');
+const modalElement = document.getElementById('inventoryModal');
+const modal = new bootstrap.Modal(modalElement);
 let editingIndex = null;
 
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "";
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-function calculateDuration(start, end) {
-  if (!start) return "";
-  const s = new Date(start), e = end ? new Date(end) : new Date();
-  if (s > e) return "";
-  let years = e.getFullYear() - s.getFullYear(), months = e.getMonth() - s.getMonth();
-  if (months < 0) { years--; months += 12; }
-  let parts = [];
-  if (years) parts.push(`${years} yr${years>1?'s':''}`);
-  if (months) parts.push(`${months} mo${months>1?'s':''}`);
-  return parts.length ? parts.join(" ") : "<1 mo";
-}
-
 function renderTable() {
-  tbody.innerHTML = "";
-  const filterVal = filterSelect.value.toLowerCase();
-  const searchVal = searchInput.value.toLowerCase();
-  inventory.forEach((item, idx) => {
-    if (filterVal !== "all" && item.EquipmentType?.toLowerCase() !== filterVal) return;
-    if (!Object.values(item).some(x => x?.toString().toLowerCase().includes(searchVal))) return;
+  tableBody.innerHTML = '';
+  const filter = filterSelect.value.toLowerCase();
+  const search = searchInput.value.toLowerCase();
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${item.EquipmentType||""}</td><td>${item.Equipment||""}</td><td>${item.Vendor||""}</td>
-      <td>${item.BrandModel||""}</td><td>${item.Profile||""}</td><td>${item.Custodian||""}</td>
-      <td>${item.AssetNo||""}</td><td>${item.SerialNumber||""}</td><td>${item.Location||""}</td>
-      <td>${formatDate(item.StartDate)}</td><td>${formatDate(item.EndDate)}</td>
-      <td>${calculateDuration(item.StartDate,item.EndDate)}</td><td>${item.Hostname||""}</td>
-      <td>${item.SSOE_PO_No||""}</td><td>${item.CartNo||""}</td><td>${formatDate(item.SanitiseDate)}</td>
-      <td>${item.LampHour||""}</td><td>${item.DateUpdated||""}</td>
-      <td>
-        <button class="btn btn-sm btn-primary btn-edit" data-idx="${idx}">Edit</button>
-        <button class="btn btn-sm btn-danger btn-delete" data-idx="${idx}">Delete</button>
-      </td>`;
-    tbody.appendChild(tr);
-  });
-  attachButtons();
-}
-
-function attachButtons() {
-  document.querySelectorAll(".btn-edit").forEach(b => {
-    b.onclick = () => { editingIndex = b.dataset.idx; fillForm(inventory[editingIndex]); modal.show(); };
-  });
-  document.querySelectorAll(".btn-delete").forEach(b => {
-    b.onclick = () => {
-      if (confirm("Delete this item?")) {
-        inventory.splice(b.dataset.idx,1);
-        saveAndRender();
-      }
-    };
-  });
+  inventory
+    .filter(item => {
+      const matchFilter = filter === 'all' || item.equipmentType?.toLowerCase() === filter;
+      const matchSearch = Object.values(item).some(val => (val || '').toLowerCase().includes(search));
+      return matchFilter && matchSearch;
+    })
+    .forEach((item, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.equipmentType || ''}</td>
+        <td>${item.equipment || ''}</td>
+        <td>${item.assetNo || ''}</td>
+        <td>${item.serialNumber || ''}</td>
+        <td>${item.dateUpdated || ''}</td>
+        <td>
+          <button class="btn btn-sm btn-primary" onclick="editItem(${index})">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem(${index})">Delete</button>
+        </td>`;
+      tableBody.appendChild(row);
+    });
 }
 
 function resetForm() {
-  editingIndex = null;
   form.reset();
-  form.DateUpdated.value = formatDate(new Date().toISOString().split('T')[0]);
+  editingIndex = null;
+  form.classList.remove('was-validated');
+  document.getElementById('dateUpdated').value = new Date().toLocaleDateString();
 }
 
-function fillForm(item) {
-  for (const key in item) {
-    if (form[key] !== undefined) form[key].value = item[key];
+function editItem(index) {
+  editingIndex = index;
+  const item = inventory[index];
+  Object.keys(item).forEach(key => {
+    const input = form.elements.namedItem(key);
+    if (input) input.value = item[key];
+  });
+  modal.show();
+}
+
+function deleteItem(index) {
+  if (confirm('Delete this item?')) {
+    inventory.splice(index, 1);
+    saveAndRender();
   }
 }
 
-form.addEventListener("submit", e => {
+form.addEventListener('submit', e => {
   e.preventDefault();
-  if (!form.checkValidity()) { form.classList.add("was-validated"); return; }
+  if (!form.checkValidity()) {
+    form.classList.add('was-validated');
+    return;
+  }
 
-  const fd = new FormData(form);
-  let item = {};
-  fd.forEach((v, k) => item[k] = v);
-  item.DateUpdated = formatDate(new Date().toISOString().split("T")[0]);
+  const formData = new FormData(form);
+  const item = Object.fromEntries(formData.entries());
+  item.dateUpdated = new Date().toLocaleDateString();
 
-  if (editingIndex !== null) inventory[editingIndex] = item;
-  else inventory.push(item);
+  if (editingIndex !== null) {
+    inventory[editingIndex] = item;
+  } else {
+    inventory.push(item);
+  }
 
   saveAndRender();
   modal.hide();
 });
 
 function saveAndRender() {
-  localStorage.setItem("inventoryData", JSON.stringify(inventory));
+  localStorage.setItem('inventoryData', JSON.stringify(inventory));
   renderTable();
 }
 
-addItemBtn.onclick = () => { resetForm(); modal.show(); };
-filterSelect.onchange = renderTable;
-searchInput.oninput = renderTable;
+filterSelect.addEventListener('change', renderTable);
+searchInput.addEventListener('input', renderTable);
+document.getElementById('add-item-btn').addEventListener('click', resetForm);
 
-// Initial
 renderTable();
