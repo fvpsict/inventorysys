@@ -5,7 +5,16 @@ const searchInput = document.getElementById("search-inventory");
 
 let inventory = JSON.parse(localStorage.getItem("inventoryData") || "[]");
 
-// Utility: calculate years/months between dates
+// Helper: format date for input[type=date], returns "" if invalid
+function formatDateForInput(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  // YYYY-MM-DD
+  return d.toISOString().slice(0, 10);
+}
+
+// Calculate duration (years + months)
 function calculateDuration(start, end) {
   if (!start) return "";
   const s = new Date(start);
@@ -20,16 +29,21 @@ function calculateDuration(start, end) {
   return `${y ? `${y} yr${y > 1 ? "s" : ""} ` : ""}${m ? `${m} mo${m > 1 ? "s" : ""}` : ""}`.trim() || "<1 mo";
 }
 
-// Render inventory table
+// Render inventory table rows
 function renderTable() {
   tbody.innerHTML = "";
   const filter = filterSelect.value.toLowerCase();
   const search = searchInput.value.toLowerCase();
 
   inventory.forEach((item, i) => {
-    const matchesFilter = filter === "all" || item.EquipmentType?.toLowerCase() === filter;
-    const matchesSearch = Object.values(item).some(v => v?.toLowerCase().includes(search));
-    if (!matchesFilter || !matchesSearch) return;
+    // Normalize equipmentType for filtering
+    const eqType = (item.EquipmentType || "").toLowerCase();
+    if (filter !== "all" && eqType !== filter) return;
+
+    // Search across all values safely
+    const searchableValues = Object.values(item)
+      .map(v => (v || "").toString().toLowerCase());
+    if (!searchableValues.some(v => v.includes(search))) return;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -42,12 +56,12 @@ function renderTable() {
       ${inputCell("AssetNo", item.AssetNo)}
       ${inputCell("SerialNumber", item.SerialNumber)}
       ${inputCell("Location", item.Location)}
-      ${inputCell("EndDate", item.EndDate, "date")}
-      ${inputCell("StartDate", item.StartDate, "date")}
+      ${inputCell("EndDate", formatDateForInput(item.EndDate), "date")}
+      ${inputCell("StartDate", formatDateForInput(item.StartDate), "date")}
       ${inputCell("Hostname", item.Hostname)}
       ${inputCell("SSOE PO Number", item["SSOE PO Number"])}
       ${inputCell("Cart No", item["Cart No"])}
-      ${inputCell("SanitiseDate", item.SanitiseDate, "date")}
+      ${inputCell("SanitiseDate", formatDateForInput(item.SanitiseDate), "date")}
       <td>${calculateDuration(item.StartDate, item.EndDate)}</td>
       <td>${item.DateUpdated || ""}</td>
       <td>
@@ -58,19 +72,22 @@ function renderTable() {
     tbody.appendChild(tr);
   });
 
+  // Add listeners
   document.querySelectorAll(".save-btn").forEach(btn => btn.addEventListener("click", saveRow));
   document.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", deleteRow));
 }
 
+// Dropdown cell for selects
 function dropdownCell(name, value, options) {
   return `<td><select class="form-select form-select-sm" data-field="${name}">${options.map(o => `<option${o === value ? " selected" : ""}>${o}</option>`).join("")}</select></td>`;
 }
 
-function inputCell(name, value, type = "text") {
+// Input cell for text/date inputs
+function inputCell(name, value = "", type = "text") {
   return `<td><input type="${type}" class="form-control form-control-sm" data-field="${name}" value="${value || ""}" /></td>`;
 }
 
-// Save row
+// Save row data on save button click
 function saveRow(e) {
   const index = +e.target.dataset.index;
   const row = e.target.closest("tr");
@@ -81,8 +98,9 @@ function saveRow(e) {
     updated[el.dataset.field] = el.value.trim();
   });
   updated.DateUpdated = new Date().toLocaleDateString();
-  inventory[index] = updated;
 
+  // Update inventory array and persist
+  inventory[index] = updated;
   saveInventory();
   renderTable();
 }
@@ -97,11 +115,12 @@ function deleteRow(e) {
   }
 }
 
+// Save to localStorage
 function saveInventory() {
   localStorage.setItem("inventoryData", JSON.stringify(inventory));
 }
 
-// Add new row
+// Add new empty row with current date updated
 addItemBtn.addEventListener("click", () => {
   inventory.push({
     EquipmentType: "",
@@ -125,9 +144,9 @@ addItemBtn.addEventListener("click", () => {
   renderTable();
 });
 
-// Search/filter
+// Filter and search events
 filterSelect.addEventListener("change", renderTable);
 searchInput.addEventListener("input", renderTable);
 
-// Initialize
+// Initial render
 renderTable();
