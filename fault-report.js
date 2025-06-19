@@ -1,6 +1,25 @@
+const faultTableBody = document.querySelector("#fault-table tbody");
+const searchInput = document.getElementById("search-fault");
+const addFaultBtn = document.getElementById("add-fault-btn");
+const faultModal = new bootstrap.Modal(document.getElementById("faultModal"));
+const faultForm = document.getElementById("fault-form");
+
+let faultData = JSON.parse(localStorage.getItem("faultData") || "[]");
+let editingIndex = -1;
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function renderTable() {
-  const search = document.getElementById("search-inventory")?.value?.toLowerCase() || "";
   faultTableBody.innerHTML = "";
+  const search = searchInput.value.toLowerCase();
 
   faultData.forEach((item, index) => {
     const combined = Object.values(item).join(" ").toLowerCase();
@@ -12,7 +31,7 @@ function renderTable() {
       <td>${item.Equipment || ""}</td>
       <td>${item.Venue || ""}</td>
       <td>${item.AssetNo || ""}</td>
-      <td>${item.SerialNumber || ""}</td>
+      <td>${item.SerialNo || ""}</td>
       <td>${item.Fault || ""}</td>
       <td>${item.Status || ""}</td>
       <td>${formatDate(item.DateReported)}</td>
@@ -25,37 +44,24 @@ function renderTable() {
   });
 }
 
-// Fill form for edit
-function fillForm(item) {
-  document.getElementById("fault-EquipmentType").value = item.EquipmentType || "";
-  document.getElementById("fault-Equipment").value = item.Equipment || "";
-  document.getElementById("fault-Venue").value = item.Venue || "";
-  document.getElementById("fault-AssetNo").value = item.AssetNo || "";
-  document.getElementById("fault-SerialNumber").value = item.SerialNumber || "";
-  document.getElementById("fault-Description").value = item.Fault || "";
-  document.getElementById("fault-Status").value = item.Status || "";
-  document.getElementById("fault-DateReported").value = item.DateReported || "";
+function resetForm() {
+  faultForm.reset();
+  editingIndex = -1;
+  document.getElementById("fault-DateReported").value = new Date().toISOString().split("T")[0];
 }
 
-// Handle save
+function fillForm(item) {
+  for (const key in item) {
+    const field = document.querySelector(`[name="${key}"]`);
+    if (field) field.value = item[key];
+  }
+}
+
 faultForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const item = {
-    EquipmentType: faultForm["EquipmentType"].value,
-    Equipment: faultForm["Equipment"].value,
-    Venue: faultForm["Venue"].value,
-    AssetNo: faultForm["AssetNo"].value,
-    SerialNumber: faultForm["SerialNumber"].value,
-    Fault: faultForm["FaultDescription"].value,
-    Status: faultForm["Status"].value,
-    DateReported: faultForm["DateReported"].value,
-  };
-
-  if (!item.EquipmentType || !item.Equipment || !item.Fault || !item.Status || !item.DateReported || !item.Venue) {
-    alert("Please fill in all required fields.");
-    return;
-  }
+  const formData = new FormData(faultForm);
+  const item = Object.fromEntries(formData.entries());
 
   if (editingIndex >= 0) {
     faultData[editingIndex] = item;
@@ -63,6 +69,32 @@ faultForm.addEventListener("submit", (e) => {
     faultData.push(item);
   }
 
-  faultModal.hide();
+  localStorage.setItem("faultData", JSON.stringify(faultData));
   renderTable();
+  faultModal.hide();
 });
+
+addFaultBtn.addEventListener("click", () => {
+  resetForm();
+  document.getElementById("faultModalLabel").textContent = "Add Fault";
+  faultModal.show();
+});
+
+faultTableBody.addEventListener("click", (e) => {
+  const index = +e.target.dataset.index;
+  if (e.target.classList.contains("btn-edit")) {
+    editingIndex = index;
+    fillForm(faultData[index]);
+    document.getElementById("faultModalLabel").textContent = "Edit Fault";
+    faultModal.show();
+  } else if (e.target.classList.contains("btn-delete")) {
+    if (confirm("Delete this fault record?")) {
+      faultData.splice(index, 1);
+      localStorage.setItem("faultData", JSON.stringify(faultData));
+      renderTable();
+    }
+  }
+});
+
+searchInput.addEventListener("input", renderTable);
+renderTable();
